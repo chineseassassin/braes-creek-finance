@@ -75,7 +75,7 @@ function AddVendorModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function VendorsPage() {
-  const { vendors, expenses } = useAppStore();
+  const { vendors, expenses, deleteVendor } = useAppStore();
   const [showAdd, setShowAdd] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -132,12 +132,22 @@ export default function VendorsPage() {
                   <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>{vendor.name}</div>
                   <span className={`badge ${categoryMap[vendor.category] || 'badge-gray'}`}>{vendor.category}</span>
                 </div>
-                {spend > 0 && (
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--accent-red)' }}>{new Intl.NumberFormat('en-JM', { style: 'currency', currency: 'JMD', minimumFractionDigits: 0 }).format(spend)}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{txns} transactions</div>
-                  </div>
-                )}
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  {spend > 0 && (
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--accent-red)' }}>{new Intl.NumberFormat('en-JM', { style: 'currency', currency: 'JMD', minimumFractionDigits: 0 }).format(spend)}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{txns} transactions</div>
+                    </div>
+                  )}
+                  <button 
+                    className="btn btn-ghost btn-sm btn-icon" 
+                    title="Delete Vendor" 
+                    onClick={() => window.confirm('Delete this vendor?') && deleteVendor(vendor.id)}
+                    style={{ color: 'var(--accent-red)', opacity: 0.6 }}
+                  >
+                    🗑
+                  </button>
+                </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {vendor.contact && <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>👤 {vendor.contact}</div>}

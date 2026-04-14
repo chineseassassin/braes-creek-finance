@@ -2,7 +2,7 @@
 import { useAppStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/data';
 
-function LivestockCard({ unit }: { unit: import('@/lib/data').LivestockUnit }) {
+function LivestockCard({ unit, onDelete }: { unit: import('@/lib/data').LivestockUnit, onDelete: (id: string) => void }) {
   const costPerHead = unit.quantity > 0 ? unit.acquisition_cost / unit.quantity : 0;
   const valuePerHead = unit.quantity > 0 ? unit.current_value / unit.quantity : 0;
   const roi = unit.acquisition_cost > 0 ? ((unit.current_value - unit.acquisition_cost) / unit.acquisition_cost * 100) : 0;
@@ -14,8 +14,18 @@ function LivestockCard({ unit }: { unit: import('@/lib/data').LivestockUnit }) {
           <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{unit.animal_type}</h3>
           <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{unit.breed} · {unit.location}</p>
         </div>
-        <div style={{ fontSize: 32, opacity: 0.8 }}>
-          {unit.animal_type.includes('Broiler') ? '🐔' : unit.animal_type.includes('Layer') ? '🥚' : unit.animal_type.includes('Goat') ? '🐐' : unit.animal_type.includes('Pig') ? '🐷' : '🐄'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button 
+            className="btn btn-ghost btn-sm btn-icon" 
+            title="Delete Record" 
+            onClick={() => window.confirm('Permanently delete this livestock record?') && onDelete(unit.id)}
+            style={{ color: 'var(--accent-red)', opacity: 0.6 }}
+          >
+            🗑
+          </button>
+          <div style={{ fontSize: 32, opacity: 0.8 }}>
+            {unit.animal_type.includes('Broiler') ? '🐔' : unit.animal_type.includes('Layer') ? '🥚' : unit.animal_type.includes('Goat') ? '🐐' : unit.animal_type.includes('Pig') ? '🐷' : '🐄'}
+          </div>
         </div>
       </div>
 
@@ -61,7 +71,7 @@ function LivestockCard({ unit }: { unit: import('@/lib/data').LivestockUnit }) {
 }
 
 export default function LivestockPage() {
-  const { livestockUnits, expenses } = useAppStore();
+  const { livestockUnits, expenses, deleteLivestockUnit } = useAppStore();
 
   const totalHead = livestockUnits.reduce((s, u) => s + u.quantity, 0);
   const totalAcqCost = livestockUnits.reduce((s, u) => s + u.acquisition_cost, 0);
@@ -138,7 +148,7 @@ export default function LivestockPage() {
       </div>
 
       <div className="grid-auto">
-        {livestockUnits.map(unit => <LivestockCard key={unit.id} unit={unit} />)}
+        {livestockUnits.map(unit => <LivestockCard key={unit.id} unit={unit} onDelete={deleteLivestockUnit} />)}
       </div>
 
       {/* Cost breakdown by animal type */}

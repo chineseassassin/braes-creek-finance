@@ -113,7 +113,7 @@ function RunPayrollModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function PayrollPage() {
-  const { payroll } = useAppStore();
+  const { payroll, deletePayroll } = useAppStore();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [showRunModal, setShowRunModal] = useState(false);
@@ -266,6 +266,7 @@ export default function PayrollPage() {
                 <th>Payment Date</th>
                 <th>Status</th>
                 <th className="text-right">Net Pay</th>
+                <th style={{ width: 50 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -284,6 +285,9 @@ export default function PayrollPage() {
                     </span>
                   </td>
                   <td className="text-right font-bold" style={{ color: 'var(--accent-teal)', whiteSpace: 'nowrap' }}>{formatCurrency(p.net_pay)}</td>
+                  <td>
+                    <button className="btn btn-ghost btn-sm btn-icon" title="Delete" onClick={() => deletePayroll(p.id)} style={{ color: 'var(--accent-red)' }}>🗑</button>
+                  </td>
                 </tr>
               ))}
             </tbody>

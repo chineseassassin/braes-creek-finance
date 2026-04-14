@@ -123,7 +123,7 @@ function AddMaintenanceModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function MaintenancePage() {
-  const { maintenanceRecords, expenses } = useAppStore();
+  const { maintenanceRecords, expenses, deleteMaintenanceRecord } = useAppStore();
   const [showModal, setShowModal] = useState(false);
   
   const feedExpenses = expenses.filter(e => ['cat-006', 'cat-007', 'cat-008', 'cat-009', 'cat-010'].includes(e.category_id));
@@ -165,6 +165,7 @@ export default function MaintenancePage() {
                 <th>Next Due</th>
                 <th>Status</th>
                 <th className="text-right">Cost</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -181,6 +182,9 @@ export default function MaintenancePage() {
                     </span>
                   </td>
                   <td className="text-right" style={{ color: m.cost > 0 ? 'var(--accent-red)' : 'var(--text-muted)', fontWeight: m.cost > 0 ? 700 : 400 }}>{m.cost > 0 ? formatCurrency(m.cost) : '—'}</td>
+                  <td>
+                    <button className="btn btn-ghost btn-sm btn-icon" title="Delete" onClick={() => deleteMaintenanceRecord(m.id)} style={{ color: 'var(--accent-red)' }}>🗑</button>
+                  </td>
                 </tr>
               ))}
             </tbody>

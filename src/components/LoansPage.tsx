@@ -173,7 +173,7 @@ function AddPaymentModal({ loan, onClose }: { loan: Loan; onClose: () => void })
 }
 
 export default function LoansPage() {
-  const { loans, loanPayments } = useAppStore();
+  const { loans, loanPayments, deleteLoan } = useAppStore();
   const [showAdd, setShowAdd] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [viewPayments, setViewPayments] = useState<string | null>(null);
@@ -302,6 +302,7 @@ export default function LoansPage() {
                   {loan.status !== 'paid_off' && (
                     <button className="btn btn-success btn-sm" onClick={() => setSelectedLoan(loan)}>+ Record Payment</button>
                   )}
+                  <button className="btn btn-ghost btn-sm btn-icon" title="Delete Loan" onClick={() => window.confirm('Delete this loan and all payment history?') && deleteLoan(loan.id)} style={{ color: 'var(--accent-red)' }}>🗑</button>
                 </div>
               </div>
 

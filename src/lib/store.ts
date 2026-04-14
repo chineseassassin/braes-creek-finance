@@ -40,25 +40,34 @@ interface AppState {
 
   addLoan: (loan: Loan) => void;
   updateLoan: (id: string, updates: Partial<Loan>) => void;
+  deleteLoan: (id: string) => void;
 
   addLoanPayment: (payment: LoanPayment) => void;
+  deleteLoanPayment: (id: string) => void;
 
   addLaborEntry: (entry: LaborEntry) => void;
   updateLaborEntry: (id: string, updates: Partial<LaborEntry>) => void;
+  deleteLaborEntry: (id: string) => void;
 
   addPayroll: (entry: PayrollEntry) => void;
   updatePayroll: (id: string, updates: Partial<PayrollEntry>) => void;
+  deletePayroll: (id: string) => void;
 
   addVendor: (vendor: Vendor) => void;
   updateVendor: (id: string, updates: Partial<Vendor>) => void;
+  deleteVendor: (id: string) => void;
 
   addCropType: (crop: CropType) => void;
   updateCropType: (id: string, updates: Partial<CropType>) => void;
+  deleteCropType: (id: string) => void;
 
   addLivestockUnit: (unit: LivestockUnit) => void;
   updateLivestockUnit: (id: string, updates: Partial<LivestockUnit>) => void;
+  deleteLivestockUnit: (id: string) => void;
 
   addMaintenanceRecord: (record: MaintenanceRecord) => void;
+  deleteMaintenanceRecord: (id: string) => void;
+  
   addSalesRecord: (record: any) => Promise<void>;
   addProductionRecord: (record: any) => Promise<void>;
   deleteSalesRecord: (id: string) => Promise<void>;
@@ -242,6 +251,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       set((s) => ({ loans: s.loans.map(l => l.id === id ? { ...l, ...updates } : l) }));
     }
   },
+  deleteLoan: async (id) => {
+    set((s) => ({ loans: s.loans.filter(l => l.id !== id) }));
+    await supabase.from('loans').delete().eq('id', id);
+  },
 
   addLoanPayment: (payment) => set((s) => ({
     loanPayments: [payment, ...s.loanPayments],
@@ -249,6 +262,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       ? { ...l, amount_repaid: l.amount_repaid + payment.amount, remaining_balance: Math.max(0, l.remaining_balance - payment.amount) }
       : l),
   })),
+  deleteLoanPayment: (id) => set((s) => ({ loanPayments: s.loanPayments.filter(p => p.id !== id) })),
 
   addLaborEntry: async (entry) => {
     const localId = entry.id || `pending-${Date.now()}`;
@@ -273,6 +287,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!error) {
       set((s) => ({ laborEntries: s.laborEntries.map(e => e.id === id ? { ...e, ...updates } : e) }));
     }
+  },
+  deleteLaborEntry: async (id) => {
+    set((s) => ({ laborEntries: s.laborEntries.filter(e => e.id !== id) }));
+    await supabase.from('labor').delete().eq('id', id);
   },
 
   addPayroll: async (entry) => {
@@ -299,15 +317,22 @@ export const useAppStore = create<AppState>((set, get) => ({
       set((s) => ({ payroll: s.payroll.map(e => e.id === id ? { ...e, ...updates } : e) }));
     }
   },
+  deletePayroll: async (id) => {
+    set((s) => ({ payroll: s.payroll.filter(p => p.id !== id) }));
+    await supabase.from('payroll').delete().eq('id', id);
+  },
 
   addVendor: (vendor) => set((s) => ({ vendors: [vendor, ...s.vendors] })),
   updateVendor: (id, updates) => set((s) => ({ vendors: s.vendors.map(v => v.id === id ? { ...v, ...updates } : v) })),
+  deleteVendor: (id) => set((s) => ({ vendors: s.vendors.filter(v => v.id !== id) })),
 
   addCropType: (crop) => set((s) => ({ cropTypes: [crop, ...s.cropTypes] })),
   updateCropType: (id, updates) => set((s) => ({ cropTypes: s.cropTypes.map(c => c.id === id ? { ...c, ...updates } : c) })),
+  deleteCropType: (id) => set((s) => ({ cropTypes: s.cropTypes.filter(c => c.id !== id) })),
 
   addLivestockUnit: (unit) => set((s) => ({ livestockUnits: [unit, ...s.livestockUnits] })),
   updateLivestockUnit: (id, updates) => set((s) => ({ livestockUnits: s.livestockUnits.map(u => u.id === id ? { ...u, ...updates } : u) })),
+  deleteLivestockUnit: (id) => set((s) => ({ livestockUnits: s.livestockUnits.filter(u => u.id !== id) })),
 
   addMaintenanceRecord: async (record) => {
     const localId = record.id || `pending-${Date.now()}`;
@@ -332,6 +357,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (data) {
       set((s) => ({ maintenanceRecords: [data[0], ...s.maintenanceRecords] }));
     }
+  },
+  deleteMaintenanceRecord: async (id) => {
+    set((s) => ({ maintenanceRecords: s.maintenanceRecords.filter(m => m.id !== id) }));
+    await supabase.from('maintenance').delete().eq('id', id);
   },
 
   addSalesRecord: async (record) => {

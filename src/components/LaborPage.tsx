@@ -130,7 +130,7 @@ function AddLaborModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function LaborPage() {
-  const { laborEntries } = useAppStore();
+  const { laborEntries, deleteLaborEntry } = useAppStore();
   const [showAdd, setShowAdd] = useState(false);
   const [search, setSearch] = useState('');
   const [workerFilter, setWorkerFilter] = useState('');
@@ -299,6 +299,7 @@ export default function LaborPage() {
                     <th>Hours</th>
                     <th>Rate/hr</th>
                     <th className="text-right">Total Cost</th>
+                    <th style={{ width: 50 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -314,6 +315,9 @@ export default function LaborPage() {
                       <td style={{ fontWeight: 600 }}>{entry.total_hours.toFixed(1)}</td>
                       <td>{formatCurrency(entry.hourly_rate)}</td>
                       <td className="text-right font-bold" style={{ color: 'var(--accent-purple)', whiteSpace: 'nowrap' }}>{formatCurrency(entry.total_cost)}</td>
+                      <td>
+                        <button className="btn btn-ghost btn-sm btn-icon" title="Delete" onClick={() => deleteLaborEntry(entry.id)} style={{ color: 'var(--accent-red)' }}>🗑</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

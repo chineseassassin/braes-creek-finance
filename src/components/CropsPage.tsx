@@ -102,7 +102,7 @@ function AddCropModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function CropsPage() {
-  const { cropTypes, expenses } = useAppStore();
+  const { cropTypes, expenses, deleteCropType } = useAppStore();
   const [showAdd, setShowAdd] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -185,7 +185,17 @@ export default function CropsPage() {
                   <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>{crop.name}</h3>
                   <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{crop.variety} · {crop.season}</p>
                 </div>
-                <StatusBadge status={crop.status} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <button 
+                    className="btn btn-ghost btn-sm btn-icon" 
+                    title="Delete Crop" 
+                    onClick={() => window.confirm('Permanently delete this crop record?') && deleteCropType(crop.id)}
+                    style={{ color: 'var(--accent-red)', opacity: 0.6 }}
+                  >
+                    🗑
+                  </button>
+                  <StatusBadge status={crop.status} />
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
