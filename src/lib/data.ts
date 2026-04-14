@@ -208,6 +208,16 @@ export interface AuditLog {
   timestamp: string;
 }
 
+export interface Notification {
+  id: string;
+  type: 'info' | 'warning' | 'danger' | 'success';
+  title: string;
+  desc: string;
+  icon: string;
+  created_at: string;
+  read: boolean;
+}
+
 // ============================================================
 // SAMPLE DATA
 // ============================================================

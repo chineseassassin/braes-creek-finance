@@ -29,6 +29,7 @@ interface AppState {
   weatherIcon: string;
   currentUser: { name: string; email: string; role: string };
   sidebarOpen: boolean;
+  notifications: import('./data').Notification[];
 
   // Real DB Loading
   loadAllData: (userId: string) => Promise<void>;
@@ -84,6 +85,8 @@ interface AppState {
   addAuditLog: (log: AuditLog) => void;
   addDocument: (doc: Document) => void;
   deleteDocument: (id: string) => void;
+  addNotification: (notification: import('./data').Notification) => void;
+  markNotificationAsRead: (id: string) => void;
   setSidebarOpen: (open: boolean) => void;
 }
 
@@ -108,6 +111,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   weatherIcon: '☀️',
   currentUser: { name: 'Admin User', email: 'admin@braescreek.com', role: 'admin' },
   sidebarOpen: true,
+  notifications: [],
 
   loadAllData: async (userId: string) => {
     // 1. Fetch Expenses
@@ -402,6 +406,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   addAuditLog: (log) => set((s) => ({ auditLogs: [log, ...s.auditLogs] })),
+  addNotification: (notification) => set((s) => ({ notifications: [notification, ...s.notifications] })),
+  markNotificationAsRead: (id) => set((s) => ({ notifications: s.notifications.map(n => n.id === id ? { ...n, read: true } : n) })),
   addDocument: (doc) => set((s) => ({ documents: [doc, ...s.documents] })),
   deleteDocument: async (id) => {
     // 1. Instant local removal

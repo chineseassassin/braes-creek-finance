@@ -22,10 +22,12 @@ import DocumentsPage from '@/components/DocumentsPage';
 import InventoryPage from '@/components/InventoryPage';
 import NotificationCenter from '@/components/NotificationCenter';
 import SettingsPage from '@/components/SettingsPage';
+import AlertsPage from '@/components/AlertsPage';
 import ThemeToggle from '@/components/ThemeToggle';
 
 const PAGE_TITLES: Record<string, string> = {
   dashboard: 'Dashboard',
+  alerts: 'Alerts & Notifications',
   expenses: 'Expenses',
   loans: 'Loans',
   labor: 'Labor',
@@ -48,6 +50,10 @@ export default function PlatformShell() {
   const [loadingSession, setLoadingSession] = useState(true);
   const [activePage, setActivePage] = useState('dashboard');
   const { sidebarOpen, setSidebarOpen, loadAllData } = useAppStore();
+
+  useEffect(() => {
+    (window as any).__onNavigate = setActivePage;
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -98,6 +104,7 @@ export default function PlatformShell() {
       case 'audit': return <AuditPage />;
       case 'inventory': return <InventoryPage />;
       case 'documents': return <DocumentsPage />;
+      case 'alerts': return <AlertsPage />;
       case 'settings': return <SettingsPage />;
       default: return <Dashboard />;
     }

@@ -8,6 +8,7 @@ const NAV_SECTIONS = [
     label: 'Overview',
     items: [
       { id: 'dashboard', label: 'Dashboard', icon: '📊', color: 'blue' },
+      { id: 'alerts', label: 'Alerts Hub', icon: '🔔', color: 'red' },
       { id: 'reports', label: 'Reports', icon: '📋', color: 'purple' },
     ],
   },
