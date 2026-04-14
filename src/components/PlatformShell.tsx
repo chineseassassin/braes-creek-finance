@@ -153,7 +153,7 @@ export default function PlatformShell() {
 
         <main className="page-content">
           <Suspense fallback={<div className="loader"></div>}>
-            <div className="content-inner">{renderPage()}</div>
+            <div className="content-inner" key={activePage}>{renderPage()}</div>
           </Suspense>
         </main>
 

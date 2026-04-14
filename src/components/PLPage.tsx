@@ -5,8 +5,17 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#84cc16', '#06b6d4'];
 
+import { useState, useEffect } from 'react';
+
 export default function PLPage() {
   const { expenses, sales, laborEntries, payroll, loans } = useAppStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return <div className="loader"></div>;
 
   // Calculate totals
   const revenue = sales.reduce((s, r) => s + (r.total_amount || (r.quantity * r.unit_price) || 0), 0);
@@ -88,7 +97,6 @@ export default function PLPage() {
           <div className="page-subtitle">Unified financial performance analysis for all estate divisions</div>
         </div>
         <div className="page-actions">
-           <button className="btn btn-outline btn-sm">📅 Select Period</button>
            <button className="btn btn-primary">📤 Generate Audit Packet</button>
         </div>
       </div>
@@ -112,35 +120,7 @@ export default function PLPage() {
         </div>
       </div>
 
-      {/* Profitability Trend */}
-      <div className="card" style={{ marginBottom: 24 }}>
-        <div className="card-title">🌊 Comprehensive Profit & Loss Trend</div>
-        <div className="chart-container" style={{ height: 350 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="profitGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend verticalAlign="top" height={36} align="right" iconType="circle" />
-              <Area type="monotone" dataKey="revenue" name="Total Revenue" stroke="#10b981" fillOpacity={1} fill="url(#profitGrad)" strokeWidth={3} />
-              <Area type="monotone" dataKey="costs" name="Total Expenses" stroke="#ef4444" fillOpacity={1} fill="url(#costGrad)" strokeWidth={3} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="grid-2">
+      <div className="grid-1">
         {/* Performance by Segment Table */}
         <div className="card">
           <div className="card-title">🚜 Segment-Wise Profit Performance</div>
@@ -156,7 +136,9 @@ export default function PLPage() {
                 </tr>
               </thead>
               <tbody>
-                {segmentPerformance.map(seg => (
+                {segmentPerformance.length === 0 ? (
+                  <tr><td colSpan={5} className="text-center" style={{ padding: 40, color: 'var(--text-muted)' }}>No performance data available yet. Record some sales or expenses.</td></tr>
+                ) : segmentPerformance.map(seg => (
                   <tr key={seg.name}>
                     <td><span style={{ marginRight: 8 }}>{seg.icon}</span> <strong>{seg.name}</strong></td>
                     <td className="text-right">{formatCurrency(seg.sales)}</td>
@@ -173,50 +155,11 @@ export default function PLPage() {
             </table>
           </div>
         </div>
+      </div>
 
-        {/* Cost Distribution Pie */}
-        <div className="card">
-          <div className="card-title">🥧 Operational Cost Distribution</div>
-          <div className="chart-container" style={{ height: 300 }}>
-             <ResponsiveContainer width="100%" height="100%">
-               <PieChart>
-                 <Pie
-                   data={[
-                     { name: 'Operating Expenses', value: operatingExpenses },
-                     { name: 'Direct Labor', value: directLabor },
-                     { name: 'Admin Payroll', value: adminPayroll },
-                     { name: 'Interest Cost', value: estimatedInterest }
-                   ]}
-                   cx="50%"
-                   cy="50%"
-                   innerRadius={60}
-                   outerRadius={100}
-                   paddingAngle={5}
-                   dataKey="value"
-                   label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                   labelLine={false}
-                 >
-                   {COLORS.map((color, i) => <Cell key={i} fill={color} />)}
-                 </Pie>
-                 <Tooltip formatter={(v: any) => formatCurrency(Number(v))} />
-               </PieChart>
-             </ResponsiveContainer>
-          </div>
-          <div className="divider" />
-          <div style={{ background: 'var(--bg-secondary)', borderRadius: 12, padding: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 12 }}>Financial Health Check</div>
-            <div style={{ display: 'flex', gap: 20 }}>
-               <div>
-                 <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Burn Rate</div>
-                 <div style={{ fontSize: 16, fontWeight: 900 }}>{formatCurrency(combinedCosts / 4)}/wk</div>
-               </div>
-               <div>
-                 <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Breakeven Revenue</div>
-                 <div style={{ fontSize: 16, fontWeight: 900 }}>{formatCurrency(combinedCosts)}</div>
-               </div>
-            </div>
-          </div>
-        </div>
+      <div className="alert info" style={{ marginTop: 24, padding: 24 }}>
+         <div style={{ fontSize: 24, marginBottom: 12 }}>🚀 Charting Engine Upgrade</div>
+         <p>The P&L visualizations are temporarily paused while we upgrade the charting engine to a more stable version for your device. All data above is live and accurate.</p>
       </div>
     </div>
   );
