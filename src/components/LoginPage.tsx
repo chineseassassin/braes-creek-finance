@@ -23,11 +23,14 @@ export default function LoginPage({ onLogin }: LoginProps) {
 
   function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    const user = USERS.find(u => u.email === email && u.password === password);
+    // Allow 'admin' as an alias for the full email
+    const normalizedEmail = email.toLowerCase() === 'admin' ? 'admin@braescreek.com' : email;
+    const user = USERS.find(u => u.email === normalizedEmail && u.password === password);
+    
     if (user) {
       onLogin(user.role);
     } else {
-      setError('Invalid credentials. Try admin@braescreek.com / admin123');
+      setError('Invalid credentials. Tip: You can just use "admin" as the email!');
     }
   }
 
