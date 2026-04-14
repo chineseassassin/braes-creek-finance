@@ -94,7 +94,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   sales: [],
   production: [],
   inventory: [],
-  farmLocation: 'Braes Creek, JM',
+  farmLocation: '',
   temperature: '88°F',
   weatherIcon: '☀️',
   currentUser: { name: 'Admin User', email: 'admin@braescreek.com', role: 'admin' },
