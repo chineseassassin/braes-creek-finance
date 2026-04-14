@@ -193,7 +193,7 @@ export interface MaintenanceRecord {
   date: string;
   cost: number;
   vendor: string;
-  next_due_date: string;
+  next_due_date?: string;
   notes: string;
   status: 'completed' | 'scheduled' | 'overdue';
 }

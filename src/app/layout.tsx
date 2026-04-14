@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Braes Creek Estate | Farm & Business Finance Platform',
   description: 'Enterprise-grade financial and operations management for mixed agriculture and business enterprise. Track loans, expenses, labor, livestock, and crops.',
@@ -22,10 +24,14 @@ export const metadata: Metadata = {
 
 };
 
+import { Suspense } from 'react';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0, padding: 0 }}>{children}</body>
+      <body style={{ margin: 0, padding: 0 }}>
+        {children}
+      </body>
     </html>
   );
 }

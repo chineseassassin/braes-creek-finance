@@ -27,7 +27,7 @@ interface AppState {
   farmLocation: string;
   temperature: string;
   weatherIcon: string;
-  currentUser: { name: string; role: string };
+  currentUser: { name: string; email: string; role: string };
   sidebarOpen: boolean;
 
   // Real DB Loading
@@ -67,6 +67,7 @@ interface AppState {
   updateStock: (id: string, newStock: number) => Promise<void>;
   deleteInventoryItem: (id: string) => Promise<void>;
   setFarmLocation: (loc: string) => void;
+  fetchWeather: (loc: string) => Promise<void>;
   addBudget: (budget: any) => Promise<void>;
   updateBudget: (id: string, updates: any) => Promise<void>;
   deleteBudget: (id: string) => Promise<void>;
@@ -96,7 +97,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   farmLocation: 'Braes Creek, JM',
   temperature: '88°F',
   weatherIcon: '☀️',
-  currentUser: { name: 'Admin User', role: 'admin' },
+  currentUser: { name: 'Admin User', email: 'admin@braescreek.com', role: 'admin' },
   sidebarOpen: true,
 
   loadAllData: async (userId: string) => {
@@ -370,9 +371,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!user) return;
     await supabase.from('production').delete().eq('id', id);
   },
-
-  addBudget: (budget) => set((s) => ({ budgets: [budget, ...s.budgets] })),
-  updateBudget: (id, updates) => set((s) => ({ budgets: s.budgets.map(b => b.id === id ? { ...b, ...updates } : b) })),
 
   addAuditLog: (log) => set((s) => ({ auditLogs: [log, ...s.auditLogs] })),
   addDocument: (doc) => set((s) => ({ documents: [doc, ...s.documents] })),

@@ -47,8 +47,9 @@ function RunPayrollModal({ onClose }: { onClose: () => void }) {
     const entry = {
       ...form,
       net_pay: netPay,
-      status: 'pending',
+      status: 'pending' as const,
       created_at: new Date().toISOString(),
+      id: Math.random().toString(36).slice(2),
     };
     await addPayroll(entry);
     addAuditLog({
@@ -209,7 +210,7 @@ export default function PayrollPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" />
                 <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11 }} />
                 <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                <Tooltip formatter={(v: any) => formatCurrency(Number(v))} />
                 <Bar dataKey="total" name="Net Pay (YTD)" fill="#14b8a6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

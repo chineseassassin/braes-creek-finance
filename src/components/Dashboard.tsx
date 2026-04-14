@@ -50,17 +50,16 @@ export default function Dashboard() {
     setIsDownloading(true);
     
     // Generate CSV data from global expenses
-    const headers = ['Transaction ID', 'Date', 'Amount', 'Vendor', 'Category', 'Business Segment', 'Status'];
+    const headers = ['Transaction ID', 'Date', 'Amount', 'Vendor', 'Category', 'Business Segment'];
     const csvContent = [
       headers.join(','),
       ...expenses.map(e => [
         e.id, 
         e.date, 
         e.amount, 
-        `"${e.vendor_name || e.vendor || ''}"`, 
+        `"${e.vendor_name || ''}"`, 
         `"${e.category_name}"`, 
-        `"${e.segment_name}"`, 
-        e.status || 'paid'
+        `"${e.segment_name}"`
       ].join(','))
     ].join('\n');
 
@@ -279,7 +278,7 @@ export default function Dashboard() {
                 <Pie data={segmentData} cx="40%" cy="50%" outerRadius={90} dataKey="value" nameKey="name" label={false}>
                   {segmentData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
-                <Tooltip formatter={(val: number) => formatCurrency(val)} />
+                <Tooltip formatter={(val: any) => formatCurrency(Number(val))} />
                 <Legend iconSize={8} iconType="circle" wrapperStyle={{ fontSize: '11px', right: 0, top: '50%', transform: 'translateY(-50%)', position: 'absolute', maxWidth: '40%' }} />
               </PieChart>
             </ResponsiveContainer>

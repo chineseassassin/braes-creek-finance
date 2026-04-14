@@ -243,7 +243,7 @@ export default function LaborPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" />
                   <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11 }} />
                   <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                  <Tooltip formatter={(v: any) => formatCurrency(Number(v))} />
                   <Bar dataKey="cost" name="Labor Cost" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -257,7 +257,7 @@ export default function LaborPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" />
                   <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
                   <YAxis dataKey="name" type="category" tick={{ fill: '#64748b', fontSize: 11 }} />
-                  <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                  <Tooltip formatter={(v: any) => formatCurrency(Number(v))} />
                   <Bar dataKey="cost" name="Cost" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
