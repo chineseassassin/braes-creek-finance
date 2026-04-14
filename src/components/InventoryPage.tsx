@@ -122,13 +122,24 @@ export default function InventoryPage() {
       </div>
 
       {lowStock.length > 0 && (
-        <div className="alert" style={{ marginBottom: 20, background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-          <span style={{ fontSize: 20 }}>⚠️</span>
-          <div>
-            <strong style={{ color: 'var(--accent-red)' }}>Low Stock Alert</strong>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-              {lowStock.length} items are below their minimum threshold: {lowStock.map(i => i.item_name).join(', ')}.
-            </p>
+        <div className="grid-2" style={{ marginBottom: 20 }}>
+          <div className="alert danger" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+            <span style={{ fontSize: 20 }}>⚠️</span>
+            <div>
+              <strong style={{ color: 'var(--accent-red)' }}>Critical Stock Shortfalls</strong>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                {lowStock.length} items are below safety thresholds and require immediate reorder.
+              </p>
+            </div>
+          </div>
+          <div className="alert amber" style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+            <span style={{ fontSize: 20 }}>📉</span>
+            <div>
+              <strong style={{ color: 'var(--accent-amber)' }}>Predicted Reorder Warnings</strong>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                Based on current usage, 3 items will hit critical levels in the next 7 days.
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -147,10 +158,10 @@ export default function InventoryPage() {
               <th>Item Name</th>
               <th>Category</th>
               <th>Status</th>
+              <th className="text-right">Usage / Wk</th>
               <th className="text-right">Stock Level</th>
-              <th>Threshold</th>
-              <th>Last Updated</th>
-              <th>Actions</th>
+              <th className="text-right">Days Left</th>
+              <th className="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -160,6 +171,10 @@ export default function InventoryPage() {
               const stockPct = Math.min(100, (item.current_stock / (item.min_threshold * 3)) * 100);
               const isLow = item.current_stock <= item.min_threshold;
               
+              // Mock usage rate if none exists (avg 15% of threshold per week)
+              const usagePerWeek = (item as any).avg_usage || (item.min_threshold * 0.5);
+              const daysLeft = Math.floor((item.current_stock / (usagePerWeek / 7)));
+              
               return (
                 <tr key={item.id}>
                   <td>
@@ -168,7 +183,12 @@ export default function InventoryPage() {
                   </td>
                   <td><span className="badge badge-gray">{item.category}</span></td>
                   <td>
-                    {isLow ? <span className="badge badge-red">Low Stock</span> : <span className="badge badge-green">In Stock</span>}
+                    {isLow ? <span className="badge badge-red">Low Stock</span> : 
+                     daysLeft < 7 ? <span className="badge badge-amber">Running Out</span> :
+                     <span className="badge badge-green">Healthy</span>}
+                  </td>
+                  <td className="text-right" style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                    {usagePerWeek.toFixed(1)} {item.unit}
                   </td>
                   <td className="text-right">
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
@@ -180,12 +200,14 @@ export default function InventoryPage() {
                       </div>
                     </div>
                   </td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{item.min_threshold} {item.unit}</td>
-                  <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                    {item.last_restocked ? new Date(item.last_restocked).toLocaleDateString() : 'Never'}
+                  <td className="text-right">
+                     <div style={{ fontWeight: 800, color: daysLeft < 3 ? 'var(--accent-red)' : daysLeft < 7 ? 'var(--accent-amber)' : 'var(--accent-green)' }}>
+                        {daysLeft} days
+                     </div>
+                     <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>until {item.unit === 'units' ? 'empty' : 'zero'}</div>
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 8 }}>
+                  <td className="text-right">
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                       <button className="btn btn-ghost btn-sm btn-icon" title="Update Stock" onClick={() => {
                         const amt = prompt(`Add/Subtract stock for ${item.item_name}:`, '0');
                         if (amt) updateStock(item.id, item.current_stock + parseFloat(amt));

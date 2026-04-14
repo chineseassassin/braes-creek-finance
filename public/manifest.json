@@ -1,29 +1,23 @@
 {
-  "name": "Braes Creek Estate",
-  "short_name": "Braes Creek",
-  "description": "Premium Farm & Business Finance Dashboard",
+  "name": "Braes Creek estate Platform",
+  "short_name": "BraesCreek",
+  "description": "Enterprise Agriculture & Business Management Platform",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0d14",
-  "theme_color": "#0a0d14",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
   "icons": [
     {
-      "src": "/logo.png",
+      "src": "/logo-transparent.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "/logo.png",
+      "src": "/logo-transparent.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/logo.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ]
 }

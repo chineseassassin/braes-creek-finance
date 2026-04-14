@@ -183,7 +183,19 @@ export default function MaintenancePage() {
                   </td>
                   <td className="text-right" style={{ color: m.cost > 0 ? 'var(--accent-red)' : 'var(--text-muted)', fontWeight: m.cost > 0 ? 700 : 400 }}>{m.cost > 0 ? formatCurrency(m.cost) : '—'}</td>
                   <td>
-                    <button className="btn btn-ghost btn-sm btn-icon" title="Delete" onClick={() => deleteMaintenanceRecord(m.id)} style={{ color: 'var(--accent-red)' }}>🗑</button>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button 
+                        className="btn btn-ghost btn-sm btn-icon" 
+                        title="Generate QR Tag" 
+                        onClick={() => {
+                          const code = `BC-EQUIP-${m.id.slice(0,8)}`;
+                          alert(`[SIMULATED QR ACTIVATED]\n\nEquipment: ${m.equipment_name}\nUnique ID: ${code}\n\nIn a production environment, this would generate a printable sticker for the tractor/house.`);
+                        }}
+                      >
+                        📱
+                      </button>
+                      <button className="btn btn-ghost btn-sm btn-icon" title="Delete" onClick={() => deleteMaintenanceRecord(m.id)} style={{ color: 'var(--accent-red)' }}>🗑</button>
+                    </div>
                   </td>
                 </tr>
               ))}

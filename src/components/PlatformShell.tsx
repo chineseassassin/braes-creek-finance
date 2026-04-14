@@ -23,10 +23,12 @@ import InventoryPage from '@/components/InventoryPage';
 import NotificationCenter from '@/components/NotificationCenter';
 import SettingsPage from '@/components/SettingsPage';
 import AlertsPage from '@/components/AlertsPage';
+import PLPage from '@/components/PLPage';
 import ThemeToggle from '@/components/ThemeToggle';
 
 const PAGE_TITLES: Record<string, string> = {
   dashboard: 'Dashboard',
+  pl: 'P&L Intelligence',
   alerts: 'Alerts & Notifications',
   expenses: 'Expenses',
   loans: 'Loans',
@@ -105,6 +107,7 @@ export default function PlatformShell() {
       case 'inventory': return <InventoryPage />;
       case 'documents': return <DocumentsPage />;
       case 'alerts': return <AlertsPage />;
+      case 'pl': return <PLPage />;
       case 'settings': return <SettingsPage />;
       default: return <Dashboard />;
     }

@@ -15,6 +15,7 @@ const NAV_SECTIONS = [
   {
     label: 'Finance',
     items: [
+      { id: 'pl', label: 'P&L Intelligence', icon: '📈', color: 'green' },
       { id: 'expenses', label: 'Expenses', icon: '💸', color: 'red' },
       { id: 'loans', label: 'Loans', icon: '🏦', color: 'blue' },
       { id: 'budgets', label: 'Budgets', icon: '🎯', color: 'amber' },

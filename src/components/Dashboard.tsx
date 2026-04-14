@@ -144,15 +144,31 @@ export default function Dashboard() {
           <p style={{ color: 'hsl(var(--text-secondary))', fontSize: 14, maxWidth: 460 }}>
             Here is what is happening with Braes Creek Estate today. You have {overdueLoans.length + overdueMaintenace.length} items requiring immediate attention.
           </p>
-          <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+          <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
             <button 
               className={`btn btn-primary ${isDownloading ? 'animate-pulse' : ''}`} 
               onClick={handleDownload}
               disabled={isDownloading}
             >
-              {isDownloading ? 'Generating...' : 'Download Report'}
+              {isDownloading ? '⏳ Generating...' : '📄 Download Report'}
             </button>
-            <button className="btn btn-outline" onClick={scrollToAnalytics}>View Analytics</button>
+            <button className="btn btn-outline" onClick={scrollToAnalytics}>📊 View Analytics</button>
+            
+            <div className="divider-v mobile-hide" />
+            
+            <button 
+              className="btn btn-outline" 
+              style={{ borderColor: 'var(--accent-teal)', color: 'var(--accent-teal)' }}
+              onClick={() => {
+                const choice = prompt("[FIELD SCANNER INITIATED]\nEnter Equipment ID (e.g. BC-EQUIP-1):");
+                if (choice) {
+                   const nav = (window as any).__onNavigate;
+                   if (nav) nav('maintenance');
+                }
+              }}
+            >
+              📱 Scan QR Tag
+            </button>
           </div>
         </div>
         
