@@ -1,14 +1,13 @@
 'use client';
 import { useAppStore } from '@/lib/store';
 import { formatCurrency, BUSINESS_SEGMENTS } from '@/lib/data';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, Cell, PieChart, Pie } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { useState, useEffect } from 'react';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#84cc16', '#06b6d4'];
 
-import { useState, useEffect } from 'react';
-
 export default function PLPage() {
-  const { expenses, sales, laborEntries, payroll, loans } = useAppStore();
+  const { expenses, sales, laborEntries, payroll, loans, addAuditLog, currentUser } = useAppStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -25,10 +24,7 @@ export default function PLPage() {
   const combinedCosts = operatingExpenses + directLabor + adminPayroll;
   
   const grossProfit = revenue - combinedCosts;
-  const grossMargin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
-  
   const estimatedInterest = loans.reduce((s, l) => s + ((l.remaining_balance || 0) * ((l.interest_rate || 0) / 100) / 12), 0);
-  const ebitda = grossProfit;
   const netProfit = grossProfit - estimatedInterest;
   const netMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
 
@@ -73,6 +69,53 @@ export default function PLPage() {
     profit: data.revenue - data.costs
   }));
 
+  const handleGenerateAudit = () => {
+    const reportDate = new Date().toLocaleString();
+    const content = `
+BRAES CREEK ESTATE - FINANCIAL AUDIT PACKET
+Report Generated: ${reportDate}
+---------------------------------------------
+
+EXECUTIVE SUMMARY
+Total Net Revenue: ${formatCurrency(revenue)}
+Total COGS & Operating Costs: ${formatCurrency(combinedCosts)}
+Operational Net Profit: ${formatCurrency(netProfit)}
+Net Margin: ${netMargin.toFixed(1)}%
+
+DIVISION PERFORMANCE breakdown
+${segmentPerformance.map(s => `- ${s.name}: Revenue ${formatCurrency(s.sales)} | Costs ${formatCurrency(s.costs)} | Profit ${formatCurrency(s.profit)} (${s.margin.toFixed(1)}%)`).join('\n')}
+
+DEBT OBLIGATIONS
+Total Loan Balance: ${formatCurrency(loans.reduce((s, l) => s + (l.remaining_balance || 0), 0))}
+Estimated Monthly Interest: ${formatCurrency(estimatedInterest)}
+
+CERTIFICATION
+This packet serves as an internal audit snapshot of the farm's financial state as of ${reportDate}.
+All data derived from real-time operational records.
+    `;
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Braes_Creek_Financial_Audit_${new Date().toISOString().split('T')[0]}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    // Log it
+    addAuditLog({
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      user_name: currentUser.name,
+      action: 'CREATE',
+      table_name: 'Financial Reports',
+      record_id: 'P&L-AUDIT',
+      details: 'Generated a comprehensive financial audit packet'
+    });
+
+    alert('✅ Audit Packet Generated and Logged successfully.');
+  };
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -97,11 +140,10 @@ export default function PLPage() {
           <div className="page-subtitle">Unified financial performance analysis for all estate divisions</div>
         </div>
         <div className="page-actions">
-           <button className="btn btn-primary">📤 Generate Audit Packet</button>
+           <button className="btn btn-primary" onClick={handleGenerateAudit}>📤 Generate Audit Packet</button>
         </div>
       </div>
 
-      {/* High-Level Overview */}
       <div className="grid-3" style={{ marginBottom: 24 }}>
         <div className="card" style={{ background: 'linear-gradient(135deg, hsl(var(--bg-card)), #064e3b)' }}>
           <div className="card-title" style={{ color: '#ecfdf5' }}>Total Net Revenue</div>
@@ -120,8 +162,60 @@ export default function PLPage() {
         </div>
       </div>
 
+      <div className="grid-2" style={{ marginBottom: 24 }}>
+        <div className="card">
+          <div className="card-title">📈 Profit vs. Cost Trend</div>
+          <div className="chart-container" style={{ height: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trendData}>
+                <defs>
+                  <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border-light))" opacity={0.5} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'hsl(var(--text-muted))' }} />
+                <YAxis hide />
+                <Tooltip content={<CustomTooltip />} />
+                <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
+                <Area type="monotone" dataKey="costs" name="Costs" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorCost)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-title">🥧 Division Performance Contribution</div>
+          <div className="chart-container" style={{ height: 300 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={segmentPerformance}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="sales"
+                  nameKey="name"
+                >
+                  {segmentPerformance.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
       <div className="grid-1">
-        {/* Performance by Segment Table */}
         <div className="card">
           <div className="card-title">🚜 Segment-Wise Profit Performance</div>
           <div style={{ overflowX: 'auto' }}>
@@ -155,11 +249,6 @@ export default function PLPage() {
             </table>
           </div>
         </div>
-      </div>
-
-      <div className="alert info" style={{ marginTop: 24, padding: 24 }}>
-         <div style={{ fontSize: 24, marginBottom: 12 }}>🚀 Charting Engine Upgrade</div>
-         <p>The P&L visualizations are temporarily paused while we upgrade the charting engine to a more stable version for your device. All data above is live and accurate.</p>
       </div>
     </div>
   );
