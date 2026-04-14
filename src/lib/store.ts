@@ -368,11 +368,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   addSalesRecord: async (record) => {
-    const localId = record.id || `pending-${Date.now()}`;
-    set((s) => ({ sales: [{ ...record, id: localId }, ...s.sales] }));
+    const total_amount = (record.quantity || 0) * (record.unit_price || 0);
+    const enrichedRecord = { ...record, total_amount };
+    const localId = enrichedRecord.id || `pending-${Date.now()}`;
+    
+    set((s) => ({ sales: [{ ...enrichedRecord, id: localId }, ...s.sales] }));
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { id, ...dbEntry } = record as any;
+    const { id, ...dbEntry } = enrichedRecord as any;
     const { data, error } = await supabase.from('sales').insert([{ ...dbEntry, user_id: user.id }]).select();
     if (!error && data) {
       set((s) => ({ sales: s.sales.map(x => x.id === localId ? data[0] : x) }));

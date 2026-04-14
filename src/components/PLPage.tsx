@@ -9,25 +9,25 @@ export default function PLPage() {
   const { expenses, sales, laborEntries, payroll, loans } = useAppStore();
 
   // Calculate totals
-  const revenue = sales.reduce((s, r) => s + (r.total_amount || 0), 0);
-  const operatingExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-  const directLabor = laborEntries.reduce((s, l) => s + l.total_cost, 0);
-  const adminPayroll = payroll.reduce((s, p) => s + p.net_pay, 0);
+  const revenue = sales.reduce((s, r) => s + (r.total_amount || (r.quantity * r.unit_price) || 0), 0);
+  const operatingExpenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+  const directLabor = laborEntries.reduce((s, l) => s + (l.total_cost || 0), 0);
+  const adminPayroll = payroll.reduce((s, p) => s + (p.net_pay || 0), 0);
   const combinedCosts = operatingExpenses + directLabor + adminPayroll;
   
   const grossProfit = revenue - combinedCosts;
   const grossMargin = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
   
-  const estimatedInterest = loans.reduce((s, l) => s + (l.remaining_balance * (l.interest_rate / 100) / 12), 0);
-  const ebitda = grossProfit; // Simple estimation
+  const estimatedInterest = loans.reduce((s, l) => s + ((l.remaining_balance || 0) * ((l.interest_rate || 0) / 100) / 12), 0);
+  const ebitda = grossProfit;
   const netProfit = grossProfit - estimatedInterest;
   const netMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
 
   // Segment Wise P&L
   const segmentPerformance = BUSINESS_SEGMENTS.map(seg => {
-    const segSales = sales.filter(s => s.segment_id === seg.id).reduce((sum, r) => sum + (r.total_amount || 0), 0);
-    const segExpenses = expenses.filter(e => e.segment_id === seg.id).reduce((sum, e) => sum + e.amount, 0);
-    const segLabor = laborEntries.filter(l => l.segment_id === seg.id).reduce((sum, l) => sum + l.total_cost, 0);
+    const segSales = sales.filter(s => s.segment_id === seg.id).reduce((sum, r) => sum + (r.total_amount || (r.quantity * r.unit_price) || 0), 0);
+    const segExpenses = expenses.filter(e => e.segment_id === seg.id).reduce((sum, e) => sum + (e.amount || 0), 0);
+    const segLabor = laborEntries.filter(l => l.segment_id === seg.id).reduce((sum, l) => sum + (l.total_cost || 0), 0);
     const totalSegCost = segExpenses + segLabor;
     const profit = segSales - totalSegCost;
     
@@ -43,15 +43,19 @@ export default function PLPage() {
 
   // Chart Data: Profit vs Cost Trend
   const monthlyAgg: Record<string, { revenue: number, costs: number }> = {};
+  
   sales.forEach(s => {
+    if (!s.date) return;
     const m = s.date.substring(0, 7);
     if (!monthlyAgg[m]) monthlyAgg[m] = { revenue: 0, costs: 0 };
-    monthlyAgg[m].revenue += (s.total_amount || 0);
+    monthlyAgg[m].revenue += (s.total_amount || (s.quantity * s.unit_price) || 0);
   });
+
   expenses.forEach(e => {
+    if (!e.date) return;
     const m = e.date.substring(0, 7);
     if (!monthlyAgg[m]) monthlyAgg[m] = { revenue: 0, costs: 0 };
-    monthlyAgg[m].costs += e.amount;
+    monthlyAgg[m].costs += (e.amount || 0);
   });
   const trendData = Object.entries(monthlyAgg).sort().map(([month, data]) => ({
     month,
