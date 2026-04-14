@@ -330,13 +330,45 @@ export const useAppStore = create<AppState>((set, get) => ({
   updateVendor: (id, updates) => set((s) => ({ vendors: s.vendors.map(v => v.id === id ? { ...v, ...updates } : v) })),
   deleteVendor: (id) => set((s) => ({ vendors: s.vendors.filter(v => v.id !== id) })),
 
-  addCropType: (crop) => set((s) => ({ cropTypes: [crop, ...s.cropTypes] })),
-  updateCropType: (id, updates) => set((s) => ({ cropTypes: s.cropTypes.map(c => c.id === id ? { ...c, ...updates } : c) })),
-  deleteCropType: (id) => set((s) => ({ cropTypes: s.cropTypes.filter(c => c.id !== id) })),
+  addCropType: async (crop) => {
+    const localId = crop.id || `pending-${Date.now()}`;
+    set((s) => ({ cropTypes: [{ ...crop, id: localId }, ...s.cropTypes] }));
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { id, ...dbEntry } = crop as any;
+    const { data, error } = await supabase.from('crops').insert([{ ...dbEntry, user_id: user.id }]).select();
+    if (!error && data) {
+      set((s) => ({ cropTypes: s.cropTypes.map(x => x.id === localId ? data[0] : x) }));
+    }
+  },
+  updateCropType: async (id, updates) => {
+    const { error } = await supabase.from('crops').update(updates).eq('id', id);
+    if (!error) set((s) => ({ cropTypes: s.cropTypes.map(c => c.id === id ? { ...c, ...updates } : c) }));
+  },
+  deleteCropType: async (id) => {
+    set((s) => ({ cropTypes: s.cropTypes.filter(c => c.id !== id) }));
+    await supabase.from('crops').delete().eq('id', id);
+  },
 
-  addLivestockUnit: (unit) => set((s) => ({ livestockUnits: [unit, ...s.livestockUnits] })),
-  updateLivestockUnit: (id, updates) => set((s) => ({ livestockUnits: s.livestockUnits.map(u => u.id === id ? { ...u, ...updates } : u) })),
-  deleteLivestockUnit: (id) => set((s) => ({ livestockUnits: s.livestockUnits.filter(u => u.id !== id) })),
+  addLivestockUnit: async (unit) => {
+    const localId = unit.id || `pending-${Date.now()}`;
+    set((s) => ({ livestockUnits: [{ ...unit, id: localId }, ...s.livestockUnits] }));
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { id, ...dbEntry } = unit as any;
+    const { data, error } = await supabase.from('livestock').insert([{ ...dbEntry, user_id: user.id }]).select();
+    if (!error && data) {
+      set((s) => ({ livestockUnits: s.livestockUnits.map(x => x.id === localId ? data[0] : x) }));
+    }
+  },
+  updateLivestockUnit: async (id, updates) => {
+    const { error } = await supabase.from('livestock').update(updates).eq('id', id);
+    if (!error) set((s) => ({ livestockUnits: s.livestockUnits.map(u => u.id === id ? { ...u, ...updates } : u) }));
+  },
+  deleteLivestockUnit: async (id) => {
+    set((s) => ({ livestockUnits: s.livestockUnits.filter(u => u.id !== id) }));
+    await supabase.from('livestock').delete().eq('id', id);
+  },
 
   addMaintenanceRecord: async (record) => {
     const localId = record.id || `pending-${Date.now()}`;

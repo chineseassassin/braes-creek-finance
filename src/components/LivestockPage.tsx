@@ -1,6 +1,101 @@
-'use client';
+import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
-import { formatCurrency } from '@/lib/data';
+import { formatCurrency, BUSINESS_SEGMENTS } from '@/lib/data';
+
+function AddLivestockModal({ onClose }: { onClose: () => void }) {
+  const { addLivestockUnit } = useAppStore();
+  const [form, setForm] = useState({
+    animal_type: '',
+    breed: '',
+    quantity: '',
+    purchase_date: new Date().toISOString().split('T')[0],
+    acquisition_date: new Date().toISOString().split('T')[0],
+    acquisition_cost: '',
+    current_value: '',
+    location: '',
+    segment_id: '',
+    notes: '',
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await addLivestockUnit({
+      animal_type: form.animal_type,
+      breed: form.breed,
+      quantity: parseInt(form.quantity),
+      purchase_date: form.purchase_date,
+      acquisition_date: form.acquisition_date,
+      acquisition_cost: parseFloat(form.acquisition_cost),
+      current_value: parseFloat(form.current_value),
+      mortality_qty: 0,
+      location: form.location,
+      segment_id: form.segment_id,
+      notes: form.notes,
+    });
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content glass" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div className="modal-title">🐄 Add New Livestock Unit</div>
+          <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
+        </div>
+        <form onSubmit={handleSubmit} className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div className="form-group">
+            <label>Animal Type</label>
+            <input type="text" className="form-input" placeholder="e.g. Broiler Chicken, Boer Goat" required value={form.animal_type} onChange={e => setForm({...form, animal_type: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label>Breed</label>
+            <input type="text" className="form-input" placeholder="e.g. Ross 308, Angus" value={form.breed} onChange={e => setForm({...form, breed: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label>Initial Quantity</label>
+            <input type="number" className="form-input" required value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label>Location / Pen</label>
+            <input type="text" className="form-input" placeholder="e.g. House A, Back Pasture" required value={form.location} onChange={e => setForm({...form, location: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label>Purchase Date</label>
+            <input type="date" className="form-input" required value={form.purchase_date} onChange={e => setForm({...form, purchase_date: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label>Internal Track Date</label>
+            <input type="date" className="form-input" value={form.acquisition_date} onChange={e => setForm({...form, acquisition_date: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label>Total Acquisition Cost ($)</label>
+            <input type="number" className="form-input" required value={form.acquisition_cost} onChange={e => setForm({...form, acquisition_cost: e.target.value})} />
+          </div>
+          <div className="form-group">
+            <label>Current Est. Value ($)</label>
+            <input type="number" className="form-input" required value={form.current_value} onChange={e => setForm({...form, current_value: e.target.value})} />
+          </div>
+          <div className="form-group full-width" style={{ gridColumn: 'span 2' }}>
+            <label>Business Segment</label>
+            <select className="form-select" required value={form.segment_id} onChange={e => setForm({...form, segment_id: e.target.value})}>
+              <option value="">Select segment...</option>
+              {BUSINESS_SEGMENTS.filter(s => ['seg-001','seg-002','seg-003','seg-004','seg-005'].includes(s.id)).map(s => (
+                <option key={s.id} value={s.id}>{s.icon} {s.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group full-width" style={{ gridColumn: 'span 2' }}>
+            <label>Notes</label>
+            <textarea className="form-input" placeholder="Vaccination status, source, etc." value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} />
+          </div>
+          <div style={{ gridColumn: 'span 2', marginTop: 8 }}>
+            <button type="submit" className="btn btn-primary w-full">Save Livestock Record</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 function LivestockCard({ unit, onDelete }: { unit: import('@/lib/data').LivestockUnit, onDelete: (id: string) => void }) {
   const costPerHead = unit.quantity > 0 ? unit.acquisition_cost / unit.quantity : 0;
@@ -24,23 +119,25 @@ function LivestockCard({ unit, onDelete }: { unit: import('@/lib/data').Livestoc
             🗑
           </button>
           <div style={{ fontSize: 32, opacity: 0.8 }}>
-            {unit.animal_type.includes('Broiler') ? '🐔' : unit.animal_type.includes('Layer') ? '🥚' : unit.animal_type.includes('Goat') ? '🐐' : unit.animal_type.includes('Pig') ? '🐷' : '🐄'}
+            {unit.animal_type.toLowerCase().includes('chicken') || unit.animal_type.toLowerCase().includes('broiler') ? '🐔' : 
+             unit.animal_type.toLowerCase().includes('layer') ? '🥚' : 
+             unit.animal_type.toLowerCase().includes('goat') ? '🐐' : 
+             unit.animal_type.toLowerCase().includes('pig') ? '🐷' : '🐄'}
           </div>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 12 }}>
         {[
-          { label: 'Quantity', value: unit.quantity.toLocaleString(), color: 'var(--accent-blue)' },
-          { label: 'Mortality', value: unit.mortality_qty.toLocaleString(), color: unit.mortality_qty > 0 ? 'var(--accent-red)' : 'var(--text-muted)' },
-          { label: 'Acq. Date', value: unit.acquisition_date, color: 'var(--text-muted)' },
-          { label: 'Pur. Date', value: unit.purchase_date, color: 'var(--text-muted)' },
-          { label: 'Acquisition Cost', value: formatCurrency(unit.acquisition_cost), color: 'var(--text-primary)' },
-          { label: 'Current Value', value: formatCurrency(unit.current_value), color: roi >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' },
+          { label: 'Quantity', value: unit.quantity?.toLocaleString() || '0', color: 'var(--accent-blue)' },
+          { label: 'Mortality', value: unit.mortality_qty?.toLocaleString() || '0', color: (unit.mortality_qty || 0) > 0 ? 'var(--accent-red)' : 'var(--text-muted)' },
+          { label: 'Acq. Date', value: unit.acquisition_date || '—', color: 'var(--text-muted)' },
+          { label: 'Pur. Date', value: unit.purchase_date || '—', color: 'var(--text-muted)' },
+          { label: 'Acq. Cost', value: formatCurrency(unit.acquisition_cost || 0), color: 'var(--text-primary)' },
+          { label: 'Current Value', value: formatCurrency(unit.current_value || 0), color: roi >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' },
           { label: 'Cost/Head', value: formatCurrency(costPerHead), color: 'var(--text-secondary)' },
           { label: 'Value/Head', value: formatCurrency(valuePerHead), color: 'var(--text-secondary)' },
-          { label: 'Gross Profit', value: formatCurrency(unit.gross_profit || 0), color: 'var(--accent-teal)' },
-          { label: 'Net Profit', value: formatCurrency(unit.net_profit || 0), color: 'var(--accent-green)' },
+          { label: 'Net Profit', value: formatCurrency(unit.net_profit || (unit.current_value - unit.acquisition_cost)), color: 'var(--accent-green)' },
         ].map(s => (
           <div key={s.label} style={{ background: 'var(--bg-secondary)', borderRadius: 6, padding: '8px 12px' }}>
             <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</div>
@@ -72,10 +169,11 @@ function LivestockCard({ unit, onDelete }: { unit: import('@/lib/data').Livestoc
 
 export default function LivestockPage() {
   const { livestockUnits, expenses, deleteLivestockUnit } = useAppStore();
+  const [showModal, setShowModal] = useState(false);
 
-  const totalHead = livestockUnits.reduce((s, u) => s + u.quantity, 0);
-  const totalAcqCost = livestockUnits.reduce((s, u) => s + u.acquisition_cost, 0);
-  const totalCurrentValue = livestockUnits.reduce((s, u) => s + u.current_value, 0);
+  const totalHead = livestockUnits.reduce((s, u) => s + (u.quantity || 0), 0);
+  const totalAcqCost = livestockUnits.reduce((s, u) => s + (u.acquisition_cost || 0), 0);
+  const totalCurrentValue = livestockUnits.reduce((s, u) => s + (u.current_value || 0), 0);
   const livestockExpenses = expenses.filter(e => ['seg-001', 'seg-002', 'seg-003', 'seg-004', 'seg-005'].includes(e.segment_id));
   const totalOpCost = livestockExpenses.reduce((s, e) => s + e.amount, 0);
 
@@ -109,6 +207,8 @@ export default function LivestockPage() {
 
   return (
     <div>
+      {showModal && <AddLivestockModal onClose={() => setShowModal(false)} />}
+      
       <div className="page-header">
         <div>
           <div className="page-title">🐄 Livestock Operations</div>
@@ -116,7 +216,7 @@ export default function LivestockPage() {
         </div>
         <div className="page-actions">
           <button className="btn btn-outline btn-sm" onClick={handleExport}>📤 Export to Excel</button>
-          <button className="btn btn-primary">+ Add Livestock</button>
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add Livestock</button>
         </div>
       </div>
 
@@ -137,7 +237,7 @@ export default function LivestockPage() {
           <div className="kpi-icon">📈</div>
           <div className="kpi-label">Current Livestock Value</div>
           <div className="kpi-value">{formatCurrency(totalCurrentValue)}</div>
-          <div className="kpi-sub">{((totalCurrentValue - totalAcqCost) / totalAcqCost * 100).toFixed(1)}% gain</div>
+          <div className="kpi-sub">{totalAcqCost > 0 ? ((totalCurrentValue - totalAcqCost) / totalAcqCost * 100).toFixed(1) : 0}% gain</div>
         </div>
         <div className="kpi-card amber">
           <div className="kpi-icon">💸</div>
@@ -166,7 +266,9 @@ export default function LivestockPage() {
               </tr>
             </thead>
             <tbody>
-              {livestockExpenses.sort((a, b) => b.date.localeCompare(a.date)).map(e => (
+              {livestockExpenses.length === 0 ? (
+                <tr><td colSpan={5} className="text-center" style={{ padding: 40, color: 'var(--text-muted)' }}>No livestock expenses found.</td></tr>
+              ) : livestockExpenses.sort((a, b) => b.date.localeCompare(a.date)).map(e => (
                 <tr key={e.id}>
                   <td style={{ color: 'var(--text-muted)' }}>{e.date}</td>
                   <td>{e.description}</td>
