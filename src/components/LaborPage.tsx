@@ -299,7 +299,7 @@ export default function LaborPage() {
                     <th>Hours</th>
                     <th>Rate/hr</th>
                     <th className="text-right">Total Cost</th>
-                    <th style={{ width: 50 }}>Actions</th>
+                    <th className="text-right" style={{ width: 80 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -315,8 +315,15 @@ export default function LaborPage() {
                       <td style={{ fontWeight: 600 }}>{entry.total_hours.toFixed(1)}</td>
                       <td>{formatCurrency(entry.hourly_rate)}</td>
                       <td className="text-right font-bold" style={{ color: 'var(--accent-purple)', whiteSpace: 'nowrap' }}>{formatCurrency(entry.total_cost)}</td>
-                      <td>
-                        <button className="btn btn-ghost btn-sm btn-icon" title="Delete" onClick={() => deleteLaborEntry(entry.id)} style={{ color: 'var(--accent-red)' }}>🗑</button>
+                      <td className="text-right">
+                        <button 
+                          className="btn btn-ghost btn-sm btn-icon" 
+                          title="Delete Entry" 
+                          onClick={() => window.confirm('Are you sure you want to delete this labor entry?') && deleteLaborEntry(entry.id)} 
+                          style={{ color: 'var(--accent-red)', background: 'hsl(var(--accent-red) / 0.1)' }}
+                        >
+                          🗑
+                        </button>
                       </td>
                     </tr>
                   ))}
