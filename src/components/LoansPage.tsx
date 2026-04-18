@@ -142,10 +142,10 @@ function AddPaymentModal({ loan, onClose }: { loan: Loan; onClose: () => void })
           <div className="modal-title">💳 Record Payment</div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
         </div>
-        <div style={{ background: 'var(--bg-secondary)', borderRadius: 8, padding: '12px 16px', marginBottom: 20 }}>
-          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Loan</p>
-          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{loan.lender_name}</p>
-          <p style={{ fontSize: 12, color: 'var(--accent-red)', marginTop: 4 }}>Outstanding: {formatCurrency(loan.remaining_balance)}</p>
+        <div style={{ background: 'hsl(var(--bg-secondary))', borderRadius: 8, padding: '12px 16px', marginBottom: 20 }}>
+          <p style={{ fontSize: 12, color: 'hsl(var(--text-muted))', marginBottom: 4 }}>Loan</p>
+          <p style={{ fontSize: 14, fontWeight: 600, color: 'hsl(var(--text-primary))' }}>{loan.lender_name}</p>
+          <p style={{ fontSize: 12, color: 'hsl(var(--accent-red))', marginTop: 4 }}>Outstanding: {formatCurrency(loan.remaining_balance)}</p>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
@@ -173,7 +173,7 @@ function AddPaymentModal({ loan, onClose }: { loan: Loan; onClose: () => void })
 }
 
 export default function LoansPage() {
-  const { loans, loanPayments, deleteLoan } = useAppStore();
+  const { loans, loanPayments, deleteLoan, setSelectedItem } = useAppStore();
   const [showAdd, setShowAdd] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [viewPayments, setViewPayments] = useState<string | null>(null);
@@ -284,16 +284,16 @@ export default function LoansPage() {
             const pct = Math.min(100, (loan.amount_repaid / loan.principal) * 100);
             const payments = loanPayments.filter(p => p.loan_id === loan.id);
             return (
-            <div className="card" key={loan.id}>
+            <div className="card" key={loan.id} onClick={() => setSelectedItem(loan)} style={{ cursor: 'pointer', transition: 'all 0.2s', border: '1px solid transparent' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'hsl(var(--accent-blue))'} onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, gap: 16, flexWrap: 'wrap' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
-                    <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>{loan.lender_name}</h3>
+                    <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'hsl(var(--text-primary))' }}>{loan.lender_name}</h3>
                     <StatusBadge status={loan.status} />
                     {loan.segment_name && <span className="badge badge-purple">{loan.segment_name}</span>}
                   </div>
-                  <p style={{ fontSize: '13px', color: 'var(--text-muted)', maxWidth: 500 }}>{loan.purpose}</p>
-                  {loan.notes && <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: 4, fontStyle: 'italic' }}>{loan.notes}</p>}
+                  <p style={{ fontSize: '13px', color: 'hsl(var(--text-muted))', maxWidth: 500 }}>{loan.purpose}</p>
+                  {loan.notes && <p style={{ fontSize: '12px', color: 'hsl(var(--text-muted))', marginTop: 4, fontStyle: 'italic' }}>{loan.notes}</p>}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="btn btn-outline btn-sm" onClick={() => setViewPayments(viewPayments === loan.id ? null : loan.id)}>
@@ -302,7 +302,7 @@ export default function LoansPage() {
                   {loan.status !== 'paid_off' && (
                     <button className="btn btn-success btn-sm" onClick={() => setSelectedLoan(loan)}>+ Record Payment</button>
                   )}
-                  <button className="btn btn-ghost btn-sm btn-icon" title="Delete Loan" onClick={() => window.confirm('Delete this loan and all payment history?') && deleteLoan(loan.id)} style={{ color: 'var(--accent-red)' }}>🗑</button>
+                  <button className="btn btn-ghost btn-sm btn-icon" title="Delete Loan" onClick={() => window.confirm('Delete this loan and all payment history?') && deleteLoan(loan.id)} style={{ color: 'hsl(var(--accent-red))' }}>🗑</button>
                 </div>
               </div>
 

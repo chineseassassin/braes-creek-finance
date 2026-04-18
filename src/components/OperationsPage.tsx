@@ -254,15 +254,15 @@ export default function OperationsPage() {
                 <tr><td colSpan={8} className="text-center" style={{ padding: 40, color: 'var(--text-muted)' }}>No sales recorded. Start tracking your income!</td></tr>
               ) : sales.sort((a,b) => b.date.localeCompare(a.date)).map(s => (
                 <tr key={s.id}>
-                  <td style={{ color: 'var(--text-muted)' }}>{s.date}</td>
+                  <td style={{ color: 'hsl(var(--text-muted))' }}>{s.date}</td>
                   <td style={{ fontWeight: 600 }}>{s.item_name}</td>
                   <td style={{ fontSize: 12 }}>{s.customer || '—'}</td>
                   <td><span className="badge badge-blue">{s.segment_name}</span></td>
                   <td className="text-right">{s.quantity}</td>
                   <td className="text-right">{formatCurrency(s.unit_price)}</td>
-                  <td className="text-right font-bold" style={{ color: 'var(--accent-teal)' }}>{formatCurrency(s.total_amount || s.quantity * s.unit_price)}</td>
+                  <td className="text-right font-bold" style={{ color: 'hsl(var(--accent-teal))' }}>{formatCurrency(s.total_amount || s.quantity * s.unit_price)}</td>
                   <td className="text-right">
-                    <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--accent-red)' }} onClick={() => deleteSalesRecord(s.id)}>🗑️</button>
+                    <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'hsl(var(--accent-red))' }} onClick={() => deleteSalesRecord(s.id)}>🗑️</button>
                   </td>
                 </tr>
               ))}
@@ -289,13 +289,13 @@ export default function OperationsPage() {
                 <tr><td colSpan={6} className="text-center" style={{ padding: 40, color: 'var(--text-muted)' }}>No production logs found. Record your first harvest!</td></tr>
               ) : production.sort((a,b) => b.date.localeCompare(a.date)).map(p => (
                 <tr key={p.id}>
-                  <td style={{ color: 'var(--text-muted)' }}>{p.date}</td>
+                  <td style={{ color: 'hsl(var(--text-muted))' }}>{p.date}</td>
                   <td style={{ fontWeight: 600 }}>{p.item_name}</td>
                   <td><span className="badge badge-amber">{p.segment_name}</span></td>
                   <td className="text-right font-bold">{p.quantity}</td>
-                  <td style={{ color: 'var(--text-muted)' }}>{p.unit}</td>
+                  <td style={{ color: 'hsl(var(--text-muted))' }}>{p.unit}</td>
                   <td className="text-right">
-                    <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--accent-red)' }} onClick={() => deleteProductionRecord(p.id)}>🗑️</button>
+                    <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'hsl(var(--accent-red))' }} onClick={() => deleteProductionRecord(p.id)}>🗑️</button>
                   </td>
                 </tr>
               ))}

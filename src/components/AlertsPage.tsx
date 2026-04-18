@@ -1,13 +1,105 @@
-'use client';
+import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { formatCurrency, Notification } from '@/lib/data';
+
+function AddAlertModal({ onClose }: { onClose: () => void }) {
+  const { addNotification } = useAppStore();
+  const [form, setForm] = useState({
+    title: '',
+    desc: '',
+    type: 'info' as Notification['type'],
+    icon: '🔔'
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await addNotification({
+      id: '', // Will be set by store/DB
+      ...form,
+      created_at: new Date().toISOString(),
+      read: false
+    });
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content glass" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
+        <div className="modal-header">
+          <div className="modal-title">🔔 Create New Alert</div>
+          <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
+        </div>
+        <form onSubmit={handleSubmit} className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+          <div className="form-group">
+            <label>Alert Title</label>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="e.g. Call Vet, Order Feed" 
+              required 
+              value={form.title} 
+              onChange={e => setForm({...form, title: e.target.value})} 
+            />
+          </div>
+          <div className="form-group">
+            <label>Description</label>
+            <textarea 
+              className="form-input" 
+              placeholder="Provide more details..." 
+              style={{ minHeight: 80 }}
+              value={form.desc} 
+              onChange={e => setForm({...form, desc: e.target.value})} 
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div className="form-group">
+              <label>Alert Priority</label>
+              <select 
+                className="form-select" 
+                value={form.type} 
+                onChange={e => setForm({...form, type: e.target.value as any})}
+              >
+                <option value="info">ℹ️ Info (Blue)</option>
+                <option value="success">✅ Success (Green)</option>
+                <option value="warning">⚠️ Warning (Amber)</option>
+                <option value="danger">🚨 Danger (Red)</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Icon / Emoji</label>
+              <select 
+                className="form-select" 
+                value={form.icon} 
+                onChange={e => setForm({...form, icon: e.target.value})}
+              >
+                <option value="🔔">🔔 Bell</option>
+                <option value="📞">📞 Call</option>
+                <option value="🚜">🚜 Tractor</option>
+                <option value="💊">💊 Vet/Medicine</option>
+                <option value="🌾">🌾 Feed</option>
+                <option value="💰">💰 Finance</option>
+                <option value="⚠️">⚠️ Warning</option>
+              </select>
+            </div>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <button type="submit" className="btn btn-primary w-full shadow-lg">Save Alert Reminder</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 export default function AlertsPage() {
   const { 
     loans, maintenanceRecords, livestockUnits, 
     notifications: userNotifications, 
-    markNotificationAsRead 
+    markNotificationAsRead,
+    deleteNotification
   } = useAppStore();
+
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const overdueLoans = loans.filter(l => l.status === 'overdue');
   const overdueMaint = maintenanceRecords.filter(m => m.status === 'overdue');
@@ -60,6 +152,18 @@ export default function AlertsPage() {
 
   return (
     <div className="alerts-page" style={{ animation: 'fadeIn 0.5s ease' }}>
+      {showAddModal && <AddAlertModal onClose={() => setShowAddModal(false)} />}
+
+      <div className="page-header" style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div className="page-title">🔔 Alerts & Notifications</div>
+          <div className="page-subtitle">Manage system triggers and manual team reminders</div>
+        </div>
+        <button className="btn btn-primary shadow-lg" onClick={() => setShowAddModal(true)}>
+          + Add Manual Alert
+        </button>
+      </div>
+
       <div className="grid-4" style={{ marginBottom: 32 }}>
         <div className="kpi-card blue">
           <div className="kpi-label">Total Alerts</div>
@@ -80,7 +184,7 @@ export default function AlertsPage() {
       </div>
 
       <div className="card">
-        <div className="card-title">🔔 Alerts & Notification History</div>
+        <div className="card-title">📝 Notification History</div>
         <div className="search-bar" style={{ marginBottom: 20 }}>
           <input className="form-input" placeholder="Search alerts..." style={{ maxWidth: 400 }} />
         </div>
@@ -117,31 +221,43 @@ export default function AlertsPage() {
                       <div className={`notification-item-icon ${alert.type}`} style={{ fontSize: 20 }}>{alert.icon}</div>
                     </td>
                     <td>
-                      <div style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{alert.title}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{alert.desc}</div>
+                      <div style={{ fontWeight: 800, color: 'hsl(var(--text-primary))' }}>{alert.title}</div>
+                      <div style={{ fontSize: 12, color: 'hsl(var(--text-muted))' }}>{alert.desc}</div>
                     </td>
                     <td>
                       <span className={`badge ${alert.isSystem ? 'badge-amber' : 'badge-teal'}`}>
                         {alert.isSystem ? 'System' : 'Manual'}
                       </span>
                     </td>
-                    <td style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                    <td style={{ fontSize: 13, color: 'hsl(var(--text-muted))' }}>
                       {new Date(alert.created_at).toLocaleDateString()}
                     </td>
                     <td className="text-right">
-                      {!alert.read && !alert.isSystem && (
-                        <button 
-                          className="btn btn-ghost btn-sm" 
-                          onClick={() => markNotificationAsRead(alert.id)}
-                          style={{ color: 'var(--accent-blue)' }}
-                        >
-                          Acknowledge
-                        </button>
-                      )}
-                      {alert.isSystem && (
-                        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic' }}>Auto-resolver active</span>
-                      )}
-                      {alert.read && <span style={{ color: 'var(--accent-green)' }}>✓</span>}
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
+                        {!alert.read && !alert.isSystem && (
+                          <button 
+                            className="btn btn-ghost btn-sm" 
+                            onClick={() => markNotificationAsRead(alert.id)}
+                            style={{ color: 'hsl(var(--accent-blue))' }}
+                          >
+                            Acknowledge
+                          </button>
+                        )}
+                        {!alert.isSystem && (
+                          <button 
+                            className="btn btn-ghost btn-sm btn-icon" 
+                            title="Delete Alert"
+                            onClick={() => deleteNotification(alert.id)}
+                            style={{ color: 'hsl(var(--accent-red))' }}
+                          >
+                            🗑
+                          </button>
+                        )}
+                        {alert.isSystem && (
+                          <span style={{ fontSize: 11, color: 'hsl(var(--text-muted))', fontStyle: 'italic' }}>Auto-resolver active</span>
+                        )}
+                        {alert.read && <span style={{ color: 'hsl(var(--accent-green))' }}>✓</span>}
+                      </div>
                     </td>
                   </tr>
                 ))

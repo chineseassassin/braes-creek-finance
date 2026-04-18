@@ -5,7 +5,7 @@ import { DOCUMENT_CATEGORIES, Document } from '@/lib/data';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function DocumentsPage() {
-  const { documents, addDocument, deleteDocument, currentUser, addAuditLog } = useAppStore();
+  const { documents, deleteDocument, uploadDocument } = useAppStore();
   const [search, setSearch] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -15,39 +15,19 @@ export default function DocumentsPage() {
     d.category.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsUploading(true);
-    
-    // Simulate upload delay
-    setTimeout(() => {
-      const newDoc: Document = {
-        id: `doc-${uuidv4().slice(0, 8)}`,
-        name: file.name,
-        type: file.type,
-        category: 'Other',
-        upload_date: new Date().toISOString().split('T')[0],
-        file_size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-        url: '#',
-        uploaded_by: currentUser.name
-      };
-
-      addDocument(newDoc);
-      addAuditLog({
-        id: uuidv4(),
-        user_name: currentUser.name,
-        action: 'UPLOAD',
-        table_name: 'documents',
-        record_id: newDoc.id,
-        details: `Uploaded document: ${file.name}`,
-        timestamp: new Date().toISOString()
-      });
-      
+    try {
+      await uploadDocument(file, 'General');
+    } catch (err) {
+      console.error("Upload failed", err);
+    } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
-    }, 1500);
+    }
   };
 
   return (

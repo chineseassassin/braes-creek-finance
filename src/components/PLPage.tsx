@@ -231,13 +231,13 @@ All data derived from real-time operational records.
               </thead>
               <tbody>
                 {segmentPerformance.length === 0 ? (
-                  <tr><td colSpan={5} className="text-center" style={{ padding: 40, color: 'var(--text-muted)' }}>No performance data available yet. Record some sales or expenses.</td></tr>
+                  <tr><td colSpan={5} className="text-center" style={{ padding: 40, color: 'hsl(var(--text-muted))' }}>No performance data available yet. Record some sales or expenses.</td></tr>
                 ) : segmentPerformance.map(seg => (
                   <tr key={seg.name}>
                     <td><span style={{ marginRight: 8 }}>{seg.icon}</span> <strong>{seg.name}</strong></td>
                     <td className="text-right">{formatCurrency(seg.sales)}</td>
-                    <td className="text-right" style={{ color: 'var(--text-muted)' }}>{formatCurrency(seg.costs)}</td>
-                    <td className="text-right" style={{ fontWeight: 800, color: seg.profit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>{formatCurrency(seg.profit)}</td>
+                    <td className="text-right" style={{ color: 'hsl(var(--text-muted))' }}>{formatCurrency(seg.costs)}</td>
+                    <td className="text-right" style={{ fontWeight: 800, color: seg.profit >= 0 ? 'hsl(var(--accent-green))' : 'hsl(var(--accent-red))' }}>{formatCurrency(seg.profit)}</td>
                     <td className="text-right">
                        <span className={`badge ${seg.margin >= 0 ? 'badge-green' : 'badge-red'}`}>
                          {seg.margin.toFixed(1)}%

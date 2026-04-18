@@ -5,23 +5,27 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Braes Creek Estate | Farm & Business Finance Platform',
-  description: 'Enterprise-grade financial and operations management for mixed agriculture and business enterprise. Track loans, expenses, labor, livestock, and crops.',
+  description: 'Enterprise-grade financial and operations management for mixed agriculture and business enterprise.',
   icons: {
-    icon: [
-      { url: '/logo-transparent.png' },
-      { url: '/logo-transparent.png', sizes: '32x32', type: 'image/png' },
-    ],
-    shortcut: '/logo-transparent.png',
+    icon: '/logo-transparent.png',
     apple: '/logo-transparent.png',
-    other: [
-      {
-        rel: 'apple-touch-icon-precomposed',
-        url: '/logo-transparent.png',
-      },
-    ],
   },
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'BraesCreek',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 import { Suspense } from 'react';

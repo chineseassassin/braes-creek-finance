@@ -106,15 +106,15 @@ function LivestockCard({ unit, onDelete }: { unit: import('@/lib/data').Livestoc
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
         <div>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{unit.animal_type}</h3>
-          <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{unit.breed} · {unit.location}</p>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: 'hsl(var(--text-primary))' }}>{unit.animal_type}</h3>
+          <p style={{ fontSize: 12, color: 'hsl(var(--text-muted))' }}>{unit.breed} · {unit.location}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button 
             className="btn btn-ghost btn-sm btn-icon" 
             title="Delete Record" 
             onClick={() => window.confirm('Permanently delete this livestock record?') && onDelete(unit.id)}
-            style={{ color: 'var(--accent-red)', opacity: 0.6 }}
+            style={{ color: 'hsl(var(--accent-red))' }}
           >
             🗑
           </button>
@@ -129,18 +129,18 @@ function LivestockCard({ unit, onDelete }: { unit: import('@/lib/data').Livestoc
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 12 }}>
         {[
-          { label: 'Quantity', value: unit.quantity?.toLocaleString() || '0', color: 'var(--accent-blue)' },
-          { label: 'Mortality', value: unit.mortality_qty?.toLocaleString() || '0', color: (unit.mortality_qty || 0) > 0 ? 'var(--accent-red)' : 'var(--text-muted)' },
-          { label: 'Acq. Date', value: unit.acquisition_date || '—', color: 'var(--text-muted)' },
-          { label: 'Pur. Date', value: unit.purchase_date || '—', color: 'var(--text-muted)' },
-          { label: 'Acq. Cost', value: formatCurrency(unit.acquisition_cost || 0), color: 'var(--text-primary)' },
-          { label: 'Current Value', value: formatCurrency(unit.current_value || 0), color: roi >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' },
-          { label: 'Cost/Head', value: formatCurrency(costPerHead), color: 'var(--text-secondary)' },
-          { label: 'Value/Head', value: formatCurrency(valuePerHead), color: 'var(--text-secondary)' },
-          { label: 'Net Profit', value: formatCurrency(unit.net_profit || (unit.current_value - unit.acquisition_cost)), color: 'var(--accent-green)' },
+          { label: 'Quantity', value: unit.quantity?.toLocaleString() || '0', color: 'hsl(var(--accent-blue))' },
+          { label: 'Mortality', value: unit.mortality_qty?.toLocaleString() || '0', color: (unit.mortality_qty || 0) > 0 ? 'hsl(var(--accent-red))' : 'hsl(var(--text-muted))' },
+          { label: 'Acq. Date', value: unit.acquisition_date || '—', color: 'hsl(var(--text-muted))' },
+          { label: 'Pur. Date', value: unit.purchase_date || '—', color: 'hsl(var(--text-muted))' },
+          { label: 'Acq. Cost', value: formatCurrency(unit.acquisition_cost || 0), color: 'hsl(var(--text-primary))' },
+          { label: 'Current Value', value: formatCurrency(unit.current_value || 0), color: roi >= 0 ? 'hsl(var(--accent-green))' : 'hsl(var(--accent-red))' },
+          { label: 'Cost/Head', value: formatCurrency(costPerHead), color: 'hsl(var(--text-secondary))' },
+          { label: 'Value/Head', value: formatCurrency(valuePerHead), color: 'hsl(var(--text-secondary))' },
+          { label: 'Net Profit', value: formatCurrency(unit.net_profit || (unit.current_value - unit.acquisition_cost)), color: 'hsl(var(--accent-green))' },
         ].map(s => (
-          <div key={s.label} style={{ background: 'var(--bg-secondary)', borderRadius: 6, padding: '8px 12px' }}>
-            <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</div>
+          <div key={s.label} style={{ background: 'hsl(var(--bg-secondary) / 0.5)', borderRadius: 6, padding: '8px 12px', border: '1px solid hsl(var(--border) / 0.2)' }}>
+            <div style={{ fontSize: 9, color: 'hsl(var(--text-muted))', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.label}</div>
             <div style={{ fontSize: 13, fontWeight: 700, color: s.color }}>{s.value}</div>
           </div>
         ))}
@@ -148,8 +148,8 @@ function LivestockCard({ unit, onDelete }: { unit: import('@/lib/data').Livestoc
 
       {unit.slaughter_date && (
         <div style={{ background: 'rgba(239, 68, 68, 0.05)', borderRadius: 6, padding: '10px 12px', border: '1px solid rgba(239, 68, 68, 0.1)', marginBottom: 12 }}>
-          <div style={{ fontSize: 10, color: 'var(--accent-red)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>🪓 Slaughter Record</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-primary)' }}>
+          <div style={{ fontSize: 10, color: 'hsl(var(--accent-red))', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>🪓 Slaughter Record</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'hsl(var(--text-primary))' }}>
             <span><strong>Date:</strong> {unit.slaughter_date}</span>
             <span><strong>Qty:</strong> {unit.slaughter_qty}</span>
             <span><strong>Weight:</strong> {unit.slaughter_weight} lbs</span>
@@ -161,7 +161,7 @@ function LivestockCard({ unit, onDelete }: { unit: import('@/lib/data').Livestoc
         <span className={`badge ${roi >= 0 ? 'badge-green' : 'badge-red'}`}>
           ROI: {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
         </span>
-        {unit.notes && <span style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{unit.notes}</span>}
+        {unit.notes && <span style={{ fontSize: 11, color: 'hsl(var(--text-muted))', fontStyle: 'italic', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{unit.notes}</span>}
       </div>
     </div>
   );
@@ -267,14 +267,14 @@ export default function LivestockPage() {
             </thead>
             <tbody>
               {livestockExpenses.length === 0 ? (
-                <tr><td colSpan={5} className="text-center" style={{ padding: 40, color: 'var(--text-muted)' }}>No livestock expenses found.</td></tr>
+                <tr><td colSpan={5} className="text-center" style={{ padding: 40, color: 'hsl(var(--text-muted))' }}>No livestock expenses found.</td></tr>
               ) : livestockExpenses.sort((a, b) => b.date.localeCompare(a.date)).map(e => (
                 <tr key={e.id}>
-                  <td style={{ color: 'var(--text-muted)' }}>{e.date}</td>
+                  <td style={{ color: 'hsl(var(--text-muted))' }}>{e.date}</td>
                   <td>{e.description}</td>
                   <td><span className="badge badge-gray">{e.category_name}</span></td>
                   <td style={{ fontSize: 12 }}>{e.segment_name}</td>
-                  <td className="text-right font-bold" style={{ color: 'var(--accent-red)' }}>{formatCurrency(e.amount)}</td>
+                  <td className="text-right font-bold" style={{ color: 'hsl(var(--accent-red))' }}>{formatCurrency(e.amount)}</td>
                 </tr>
               ))}
             </tbody>

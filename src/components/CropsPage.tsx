@@ -182,15 +182,15 @@ export default function CropsPage() {
             <div className="card" key={crop.id}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <div>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>{crop.name}</h3>
-                  <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{crop.variety} · {crop.season}</p>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'hsl(var(--text-primary))', marginBottom: 2 }}>{crop.name}</h3>
+                  <p style={{ fontSize: 12, color: 'hsl(var(--text-muted))' }}>{crop.variety} · {crop.season}</p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <button 
                     className="btn btn-ghost btn-sm btn-icon" 
                     title="Delete Crop" 
                     onClick={() => window.confirm('Permanently delete this crop record?') && deleteCropType(crop.id)}
-                    style={{ color: 'var(--accent-red)', opacity: 0.6 }}
+                    style={{ color: 'hsl(var(--accent-red))', opacity: 0.6 }}
                   >
                     🗑
                   </button>
@@ -206,9 +206,9 @@ export default function CropsPage() {
                   { label: 'Expected Yield', value: `${crop.expected_yield.toLocaleString()} ${crop.unit}` },
                   ...(crop.actual_yield ? [{ label: 'Actual Yield', value: `${crop.actual_yield.toLocaleString()} ${crop.unit}` }] : []),
                 ].map(s => (
-                  <div key={s.label} style={{ background: 'var(--bg-secondary)', borderRadius: 6, padding: '8px 12px' }}>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>{s.label}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{s.value}</div>
+                  <div key={s.label} style={{ background: 'hsl(var(--bg-secondary))', borderRadius: 6, padding: '8px 12px' }}>
+                    <div style={{ fontSize: 10, color: 'hsl(var(--text-muted))', marginBottom: 2 }}>{s.label}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'hsl(var(--text-primary))' }}>{s.value}</div>
                   </div>
                 ))}
               </div>
@@ -216,8 +216,8 @@ export default function CropsPage() {
               {yieldPct !== null && (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Yield Achievement</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: yieldPct >= 100 ? 'var(--accent-green)' : 'var(--accent-amber)' }}>{yieldPct.toFixed(1)}%</span>
+                    <span style={{ fontSize: 11, color: 'hsl(var(--text-muted))' }}>Yield Achievement</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: yieldPct >= 100 ? 'hsl(var(--accent-green))' : 'hsl(var(--accent-amber))' }}>{yieldPct.toFixed(1)}%</span>
                   </div>
                   <div className="progress-bar">
                     <div className="progress-fill" style={{ width: `${Math.min(100, yieldPct)}%`, background: yieldPct >= 100 ? 'var(--accent-green)' : yieldPct >= 75 ? 'var(--accent-amber)' : 'var(--accent-red)' }} />
@@ -225,7 +225,7 @@ export default function CropsPage() {
                 </div>
               )}
 
-              {crop.notes && <p style={{ marginTop: 10, fontSize: 12, color: 'var(--text-muted)', fontStyle: 'italic' }}>{crop.notes}</p>}
+              {crop.notes && <p style={{ marginTop: 10, fontSize: 12, color: 'hsl(var(--text-muted))', fontStyle: 'italic' }}>{crop.notes}</p>}
             </div>
           );
         })}
@@ -247,11 +247,11 @@ export default function CropsPage() {
             <tbody>
               {cropExpenses.sort((a, b) => b.date.localeCompare(a.date)).map(e => (
                 <tr key={e.id}>
-                  <td style={{ color: 'var(--text-muted)' }}>{e.date}</td>
+                  <td style={{ color: 'hsl(var(--text-muted))' }}>{e.date}</td>
                   <td>{e.description}</td>
                   <td><span className="badge badge-green">{e.category_name}</span></td>
-                  <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{e.vendor_name}</td>
-                  <td className="text-right font-bold" style={{ color: 'var(--accent-red)' }}>{formatCurrency(e.amount)}</td>
+                  <td style={{ fontSize: 12, color: 'hsl(var(--text-muted))' }}>{e.vendor_name}</td>
+                  <td className="text-right font-bold" style={{ color: 'hsl(var(--accent-red))' }}>{formatCurrency(e.amount)}</td>
                 </tr>
               ))}
             </tbody>

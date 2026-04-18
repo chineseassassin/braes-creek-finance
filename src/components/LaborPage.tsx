@@ -114,8 +114,8 @@ function AddLaborModal({ onClose }: { onClose: () => void }) {
           {/* Computed summary */}
           {form.hourly_rate && (
             <div style={{ background: 'var(--bg-secondary)', borderRadius: 8, padding: '12px 16px', display: 'flex', gap: 24, marginTop: 8 }}>
-              <div><span style={{ color: 'var(--text-muted)', fontSize: 12 }}>Hours: </span><strong>{totalHours.toFixed(2)}</strong></div>
-              <div><span style={{ color: 'var(--text-muted)', fontSize: 12 }}>Cost: </span><strong style={{ color: 'var(--accent-green)' }}>{formatCurrency(totalCost)}</strong></div>
+              <div><span style={{ color: 'hsl(var(--text-muted))', fontSize: 12 }}>Hours: </span><strong>{totalHours.toFixed(2)}</strong></div>
+              <div><span style={{ color: 'hsl(var(--text-muted))', fontSize: 12 }}>Cost: </span><strong style={{ color: 'hsl(var(--accent-green))' }}>{formatCurrency(totalCost)}</strong></div>
             </div>
           )}
 
@@ -240,9 +240,9 @@ export default function LaborPage() {
             <div className="chart-container">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={workerData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" />
-                  <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11 }} />
-                  <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
                   <Tooltip formatter={(v: any) => formatCurrency(Number(v))} />
                   <Bar dataKey="cost" name="Labor Cost" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -254,9 +254,9 @@ export default function LaborPage() {
             <div className="chart-container">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={segData} layout="vertical" margin={{ top: 5, right: 10, left: 60, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" />
-                  <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
-                  <YAxis dataKey="name" type="category" tick={{ fill: '#64748b', fontSize: 11 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis type="number" tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                  <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--text-secondary))', fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip formatter={(v: any) => formatCurrency(Number(v))} />
                   <Bar dataKey="cost" name="Cost" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                 </BarChart>
@@ -305,22 +305,22 @@ export default function LaborPage() {
                 <tbody>
                   {filtered.map(entry => (
                     <tr key={entry.id}>
-                      <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{entry.date}</td>
-                      <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{entry.worker_name}</td>
+                      <td style={{ color: 'hsl(var(--text-muted))', whiteSpace: 'nowrap' }}>{entry.date}</td>
+                      <td style={{ fontWeight: 600, color: 'hsl(var(--text-primary))' }}>{entry.worker_name}</td>
                       <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.task}</td>
                       <td><span className="badge badge-blue" style={{ fontSize: 11 }}>{entry.department}</span></td>
-                      <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{entry.crop_type || entry.animal_type || '—'}</td>
+                      <td style={{ fontSize: 12, color: 'hsl(var(--text-muted))' }}>{entry.crop_type || entry.animal_type || '—'}</td>
                       <td>{entry.start_time}</td>
                       <td>{entry.end_time}</td>
                       <td style={{ fontWeight: 600 }}>{entry.total_hours.toFixed(1)}</td>
                       <td>{formatCurrency(entry.hourly_rate)}</td>
-                      <td className="text-right font-bold" style={{ color: 'var(--accent-purple)', whiteSpace: 'nowrap' }}>{formatCurrency(entry.total_cost)}</td>
+                      <td className="text-right font-bold" style={{ color: 'hsl(var(--accent-purple))', whiteSpace: 'nowrap' }}>{formatCurrency(entry.total_cost)}</td>
                       <td className="text-right">
                         <button 
                           className="btn btn-ghost btn-sm btn-icon" 
                           title="Delete Entry" 
                           onClick={() => window.confirm('Are you sure you want to delete this labor entry?') && deleteLaborEntry(entry.id)} 
-                          style={{ color: 'var(--accent-red)', background: 'hsl(var(--accent-red) / 0.1)' }}
+                          style={{ color: 'hsl(var(--accent-red))', background: 'hsl(var(--accent-red) / 0.1)' }}
                         >
                           🗑
                         </button>

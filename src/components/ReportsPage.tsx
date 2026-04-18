@@ -92,16 +92,16 @@ export default function ReportsPage() {
         <div className="card-title" style={{ fontSize: 18 }}>📊 Profit & Loss Summary (2025 YTD)</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
           {[
-            { label: 'Estimated Revenue', value: formatCurrency(revenue), color: 'var(--accent-green)', icon: '📈' },
-            { label: 'Total Expenses', value: `(${formatCurrency(totalExpenses)})`, color: 'var(--accent-red)', icon: '💸' },
-            { label: 'Total Payroll', value: `(${formatCurrency(totalPayroll)})`, color: 'var(--accent-amber)', icon: '💰' },
-            { label: 'Gross Profit', value: formatCurrency(grossProfit), color: grossProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)', icon: '🏦' },
-            { label: 'Loan Interest', value: `(${formatCurrency(loanInterest)})`, color: 'var(--accent-red)', icon: '📉' },
-            { label: 'Net Profit', value: formatCurrency(netProfit), color: netProfit >= 0 ? 'var(--accent-green)' : 'var(--accent-red)', icon: netProfit >= 0 ? '✅' : '⚠️' },
+            { label: 'Estimated Revenue', value: formatCurrency(revenue), color: 'hsl(var(--accent-green))', icon: '📈' },
+            { label: 'Total Expenses', value: `(${formatCurrency(totalExpenses)})`, color: 'hsl(var(--accent-red))', icon: '💸' },
+            { label: 'Total Payroll', value: `(${formatCurrency(totalPayroll)})`, color: 'hsl(var(--accent-amber))', icon: '💰' },
+            { label: 'Gross Profit', value: formatCurrency(grossProfit), color: grossProfit >= 0 ? 'hsl(var(--accent-green))' : 'hsl(var(--accent-red))', icon: '🏦' },
+            { label: 'Loan Interest', value: `(${formatCurrency(loanInterest)})`, color: 'hsl(var(--accent-red))', icon: '📉' },
+            { label: 'Net Profit', value: formatCurrency(netProfit), color: netProfit >= 0 ? 'hsl(var(--accent-green))' : 'hsl(var(--accent-red))', icon: netProfit >= 0 ? '✅' : '⚠️' },
           ].map(s => (
             <div key={s.label} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 10, padding: '16px' }}>
               <div style={{ fontSize: 20, marginBottom: 8 }}>{s.icon}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</div>
+              <div style={{ fontSize: 11, color: 'hsl(var(--text-muted))', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.label}</div>
               <div style={{ fontSize: 18, fontWeight: 800, color: s.color }}>{s.value}</div>
             </div>
           ))}
@@ -115,9 +115,9 @@ export default function ReportsPage() {
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" />
-                <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="month" tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v: any) => formatCurrency(Number(v))} />
                 <Bar dataKey="expenses" name="Operating" fill="#3b82f6" stackId="a" radius={[0, 0, 0, 0]} />
                 <Bar dataKey="payroll" name="Payroll" fill="#14b8a6" stackId="a" radius={[4, 4, 0, 0]} />
@@ -132,9 +132,9 @@ export default function ReportsPage() {
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={segData} layout="vertical" margin={{ top: 5, right: 10, left: 80, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" />
-                <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
-                <YAxis dataKey="name" type="category" tick={{ fill: '#64748b', fontSize: 11 }} width={80} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis type="number" tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--text-secondary))', fontSize: 11 }} width={80} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v: any) => formatCurrency(Number(v))} />
                 <Bar dataKey="amount" name="Expenses" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
               </BarChart>
@@ -149,8 +149,8 @@ export default function ReportsPage() {
           <div className="card-title">🏆 Top Expense Categories</div>
           {topCategories.map(([cat, amount], i) => (
             <div key={cat} className="stat-row">
-              <span className="stat-label"><span style={{ color: 'var(--text-muted)', fontSize: 12, width: 20, display: 'inline-block' }}>#{i + 1}</span>{cat}</span>
-              <span className="stat-value" style={{ color: 'var(--accent-red)' }}>{formatCurrency(amount)}</span>
+              <span className="stat-label"><span style={{ color: 'hsl(var(--text-muted))', fontSize: 12, width: 20, display: 'inline-block' }}>#{i + 1}</span>{cat}</span>
+              <span className="stat-value" style={{ color: 'hsl(var(--accent-red))' }}>{formatCurrency(amount)}</span>
             </div>
           ))}
         </div>
@@ -158,12 +158,12 @@ export default function ReportsPage() {
         <div className="card">
           <div className="card-title">📊 Cash Flow Summary</div>
           {[
-            { label: 'Estimated Revenue', value: formatCurrency(revenue), color: 'var(--accent-green)' },
-            { label: 'Operating Expenses', value: `-${formatCurrency(totalExpenses)}`, color: 'var(--accent-red)' },
-            { label: 'Payroll', value: `-${formatCurrency(totalPayroll)}`, color: 'var(--accent-amber)' },
-            { label: 'Labor (contract)', value: `-${formatCurrency(totalLabor)}`, color: 'var(--accent-amber)' },
-            { label: 'Loan Repayments', value: `-${formatCurrency(totalLoanRepaid)}`, color: 'var(--accent-red)' },
-            { label: 'Net Cash Flow', value: formatCurrency(revenue - totalExpenses - totalPayroll - totalLoanRepaid), color: 'var(--accent-blue)' },
+            { label: 'Estimated Revenue', value: formatCurrency(revenue), color: 'hsl(var(--accent-green))' },
+            { label: 'Operating Expenses', value: `-${formatCurrency(totalExpenses)}`, color: 'hsl(var(--accent-red))' },
+            { label: 'Payroll', value: `-${formatCurrency(totalPayroll)}`, color: 'hsl(var(--accent-amber))' },
+            { label: 'Labor (contract)', value: `-${formatCurrency(totalLabor)}`, color: 'hsl(var(--accent-amber))' },
+            { label: 'Loan Repayments', value: `-${formatCurrency(totalLoanRepaid)}`, color: 'hsl(var(--accent-red))' },
+            { label: 'Net Cash Flow', value: formatCurrency(revenue - totalExpenses - totalPayroll - totalLoanRepaid), color: 'hsl(var(--accent-blue))' },
           ].map(row => (
             <div key={row.label} className="stat-row">
               <span className="stat-label">{row.label}</span>
@@ -178,8 +178,8 @@ export default function ReportsPage() {
             <div key={loan.id} className="stat-row">
               <span className="stat-label" style={{ maxWidth: 180 }}>{loan.lender_name}</span>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 700, color: loan.status === 'overdue' ? 'var(--accent-red)' : 'var(--text-primary)', fontSize: 13 }}>{formatCurrency(loan.remaining_balance)}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>remaining</div>
+                <div style={{ fontWeight: 700, color: loan.status === 'overdue' ? 'hsl(var(--accent-red))' : 'hsl(var(--text-primary))', fontSize: 13 }}>{formatCurrency(loan.remaining_balance)}</div>
+                <div style={{ fontSize: 11, color: 'hsl(var(--text-muted))' }}>remaining</div>
               </div>
             </div>
           ))}

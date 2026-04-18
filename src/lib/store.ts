@@ -29,12 +29,23 @@ interface AppState {
   weatherIcon: string;
   currentUser: { name: string; email: string; role: string };
   sidebarOpen: boolean;
+  navSections: any[];
   notifications: import('./data').Notification[];
+  controlPanelOpen: boolean;
+  setControlPanelOpen: (open: boolean) => void;
+  selectedItem: any | null;
+  setSelectedItem: (item: any | null) => void;
+
+  // SYSTEM ACTIONS
+  clearAllData: () => Promise<void>;
 
   // Real DB Loading
   loadAllData: (userId: string) => Promise<void>;
 
   // Actions
+  renameNavItem: (id: string, newLabel: string) => void;
+  deleteNavItem: (id: string) => void;
+  resetNavigation: () => void;
   addExpense: (expense: Expense) => void;
   updateExpense: (id: string, updates: Partial<Expense>) => void;
   deleteExpense: (id: string) => void;
@@ -87,68 +98,168 @@ interface AppState {
   deleteDocument: (id: string) => void;
   addNotification: (notification: import('./data').Notification) => void;
   markNotificationAsRead: (id: string) => void;
+  deleteNotification: (id: string) => void;
   setSidebarOpen: (open: boolean) => void;
+  uploadDocument: (file: File, category: string) => Promise<void>;
 }
 
+const STORAGE_KEY = 'braes_creek_estate_data';
+
 export const useAppStore = create<AppState>((set, get) => ({
-  expenses: [],
-  loans: [],
-  loanPayments: [],
-  laborEntries: [],
-  payroll: [],
-  livestockUnits: [],
-  cropTypes: [],
-  vendors: [],
-  budgets: [],
-  maintenanceRecords: [],
-  auditLogs: [],
-  documents: [],
-  sales: [],
+  expenses: EXPENSES,
+  loans: LOANS,
+  loanPayments: LOAN_PAYMENTS,
+  laborEntries: LABOR_ENTRIES,
+  payroll: PAYROLL,
+  livestockUnits: LIVESTOCK_UNITS,
+  cropTypes: CROP_TYPES,
+  vendors: VENDORS,
+  budgets: BUDGETS,
+  maintenanceRecords: MAINTENANCE_RECORDS,
+  auditLogs: AUDIT_LOGS,
+  documents: DOCUMENTS,
+  sales: SALES,
   production: [],
   inventory: [],
-  farmLocation: '',
+  farmLocation: 'Jamaica',
   temperature: '88°F',
   weatherIcon: '☀️',
   currentUser: { name: 'Admin User', email: 'admin@braescreek.com', role: 'admin' },
   sidebarOpen: true,
+  navSections: [
+    {
+      label: 'Overview',
+      items: [
+        { id: 'dashboard', label: 'Dashboard', icon: '📊', color: 'blue' },
+        { id: 'alerts', label: 'Alerts Hub', icon: '🔔', color: 'red' },
+        { id: 'reports', label: 'Reports', icon: '📋', color: 'purple' },
+      ],
+    },
+    {
+      label: 'Finance',
+      items: [
+        { id: 'pl', label: 'P&L Intelligence', icon: '📈', color: 'green' },
+        { id: 'expenses', label: 'Expenses', icon: '💸', color: 'red' },
+        { id: 'loans', label: 'Loans', icon: '🏦', color: 'blue' },
+        { id: 'budgets', label: 'Budgets', icon: '🎯', color: 'amber' },
+        { id: 'payroll', label: 'Payroll', icon: '💰', color: 'green' },
+      ],
+    },
+    {
+      label: 'Operations',
+      items: [
+        { id: 'operations', label: 'Yield & Sales', icon: '🚜', color: 'teal' },
+        { id: 'labor', label: 'Labor', icon: '👷', color: 'amber' },
+        { id: 'livestock', label: 'Livestock', icon: '🐄', color: 'red' },
+        { id: 'crops', label: 'Crops', icon: '🌿', color: 'green' },
+        { id: 'maintenance', label: 'Maintenance', icon: '🔧', color: 'purple' },
+      ],
+    },
+    {
+      label: 'Business',
+      items: [
+        { id: 'vendors', label: 'Vendors', icon: '🏪', color: 'blue' },
+        { id: 'inventory', label: 'Inventory', icon: '📦', color: 'amber' },
+        { id: 'documents', label: 'Documents', icon: '📁', color: 'amber' },
+        { id: 'audit', label: 'Audit Trail', icon: '🔍', color: 'teal' },
+        { id: 'settings', label: 'Settings', icon: '⚙️', color: 'gray' },
+      ],
+    },
+  ],
   notifications: [],
+  controlPanelOpen: false,
+  setControlPanelOpen: (open) => set({ controlPanelOpen: open }),
+  selectedItem: null,
+  setSelectedItem: (item) => set({ selectedItem: item, controlPanelOpen: !!item }),
+
+  clearAllData: async () => {
+    localStorage.removeItem(STORAGE_KEY);
+    set({
+      expenses: EXPENSES,
+      loans: LOANS,
+      loanPayments: LOAN_PAYMENTS,
+      laborEntries: LABOR_ENTRIES,
+      payroll: PAYROLL,
+      livestockUnits: LIVESTOCK_UNITS,
+      cropTypes: CROP_TYPES,
+      vendors: VENDORS,
+      budgets: BUDGETS,
+      maintenanceRecords: MAINTENANCE_RECORDS,
+      auditLogs: AUDIT_LOGS,
+      documents: DOCUMENTS,
+      sales: SALES,
+      production: [],
+      inventory: [],
+      notifications: [],
+    });
+    // Ensure navigation is also reset to factory demo state
+    get().resetNavigation();
+  },
 
   loadAllData: async (userId: string) => {
-    // 1. Fetch Expenses
-    const { data: expData } = await supabase.from('expenses').select('*').eq('user_id', userId);
-    if (expData) set({ expenses: expData });
+    // Try LocalStorage First for instant hydration
+    const localData = localStorage.getItem(STORAGE_KEY);
+    if (localData) {
+      const parsed = JSON.parse(localData);
+      set(parsed);
+    }
 
-    // 2. Fetch Loans
-    const { data: loanData } = await supabase.from('loans').select('*').eq('user_id', userId);
-    if (loanData) set({ loans: loanData });
+    try {
+      const results = await Promise.all([
+        supabase.from('expenses').select('*').eq('user_id', userId),
+        supabase.from('loans').select('*').eq('user_id', userId),
+        supabase.from('labor').select('*').eq('user_id', userId),
+        supabase.from('payroll').select('*').eq('user_id', userId),
+        supabase.from('livestock').select('*').eq('user_id', userId),
+        supabase.from('maintenance').select('*').eq('user_id', userId),
+        supabase.from('sales').select('*').eq('user_id', userId),
+        supabase.from('production').select('*').eq('user_id', userId),
+        supabase.from('inventory').select('*').eq('user_id', userId),
+        supabase.from('notifications').select('*').eq('user_id', userId),
+      ]);
 
-    // 3. Fetch Labor
-    const { data: laborData } = await supabase.from('labor').select('*').eq('user_id', userId);
-    if (laborData) set({ laborEntries: laborData });
+      const [exp, loan, lab, pay, live, maint, sale, prod, inv, note] = results;
+      
+      const remoteData: Partial<AppState> = {};
+      if (exp.data) remoteData.expenses = exp.data;
+      if (loan.data) remoteData.loans = loan.data;
+      if (lab.data) remoteData.laborEntries = lab.data;
+      if (pay.data) remoteData.payroll = pay.data;
+      if (live.data) remoteData.livestockUnits = live.data;
+      if (maint.data) remoteData.maintenanceRecords = maint.data;
+      if (sale.data) remoteData.sales = sale.data;
+      if (prod.data) remoteData.production = prod.data;
+      if (inv.data) remoteData.inventory = inv.data;
+      if (note.data) remoteData.notifications = note.data;
 
-    // 4. Fetch Payroll
-    const { data: payrollData } = await supabase.from('payroll').select('*').eq('user_id', userId);
-    if (payrollData) set({ payroll: payrollData });
+      set(remoteData);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...get(), ...remoteData }));
+    } catch (e) {
+      console.warn("Supabase Sync Failed - Running in Autonomous Mode");
+    }
+  },
 
-    // 5. Fetch Livestock
-    const { data: livestockData } = await supabase.from('livestock').select('*').eq('user_id', userId);
-    if (livestockData) set({ livestockUnits: livestockData });
-
-    // 6. Fetch Maintenance
-    const { data: maintData } = await supabase.from('maintenance').select('*').eq('user_id', userId);
-    if (maintData) set({ maintenanceRecords: maintData });
-
-    // 7. Fetch Sales
-    const { data: salesData } = await supabase.from('sales').select('*').eq('user_id', userId);
-    if (salesData) set({ sales: salesData });
-
-    // 8. Fetch Production
-    const { data: prodData } = await supabase.from('production').select('*').eq('user_id', userId);
-    if (prodData) set({ production: prodData });
-
-    // 9. Fetch Inventory
-    const { data: invData } = await supabase.from('inventory').select('*').eq('user_id', userId);
-    if (invData) set({ inventory: invData });
+  _sync: () => {
+    const state = get();
+    const dataToSave = {
+      expenses: state.expenses,
+      loans: state.loans,
+      loanPayments: state.loanPayments,
+      laborEntries: state.laborEntries,
+      payroll: state.payroll,
+      livestockUnits: state.livestockUnits,
+      cropTypes: state.cropTypes,
+      vendors: state.vendors,
+      budgets: state.budgets,
+      maintenanceRecords: state.maintenanceRecords,
+      auditLogs: state.auditLogs,
+      documents: state.documents,
+      sales: state.sales,
+      production: state.production,
+      inventory: state.inventory,
+      notifications: state.notifications
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
   },
 
   addExpense: async (expense) => {
@@ -157,7 +268,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((s) => ({ expenses: [{ ...expense, id: localId }, ...s.expenses] }));
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return; // Silent return if not using real Supabase auth yet
+    get()._sync();
+    if (!user) {
+      console.warn("Saving locally (No Supabase detected)");
+      return; 
+    }
     
     // 2. Persist to DB if authenticated
     const dbPayload = {
@@ -208,6 +323,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((s) => ({ expenses: s.expenses.filter(e => e.id !== id) }));
 
     const { data: { user } } = await supabase.auth.getUser();
+    get()._sync();
     if (!user) return;
 
     // 2. Background DB cleanup
@@ -273,6 +389,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((s) => ({ laborEntries: [{ ...entry, id: localId }, ...s.laborEntries] }));
 
     const { data: { user } } = await supabase.auth.getUser();
+    get()._sync();
     if (!user) return;
 
     const { id, ...dbEntry } = entry as any;
@@ -352,13 +469,22 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   addLivestockUnit: async (unit) => {
     const localId = unit.id || `pending-${Date.now()}`;
-    set((s) => ({ livestockUnits: [{ ...unit, id: localId }, ...s.livestockUnits] }));
+    const newUnit = { ...unit, id: localId };
+    set((s) => ({ livestockUnits: [newUnit, ...s.livestockUnits] }));
+    get()._sync();
+
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { id, ...dbEntry } = unit as any;
+    if (!user) {
+      console.warn("Livestock saved locally only.");
+      return;
+    }
+    
+    // Remote Sync
+    const { id, ...dbEntry } = newUnit as any;
     const { data, error } = await supabase.from('livestock').insert([{ ...dbEntry, user_id: user.id }]).select();
     if (!error && data) {
       set((s) => ({ livestockUnits: s.livestockUnits.map(x => x.id === localId ? data[0] : x) }));
+      get()._sync();
     }
   },
   updateLivestockUnit: async (id, updates) => {
@@ -417,6 +543,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   deleteSalesRecord: async (id) => {
     set((s) => ({ sales: s.sales.filter(x => x.id !== id) }));
     const { data: { user } } = await supabase.auth.getUser();
+    get()._sync();
     if (!user) return;
     await supabase.from('sales').delete().eq('id', id);
   },
@@ -440,9 +567,45 @@ export const useAppStore = create<AppState>((set, get) => ({
     await supabase.from('production').delete().eq('id', id);
   },
 
-  addAuditLog: (log) => set((s) => ({ auditLogs: [log, ...s.auditLogs] })),
-  addNotification: (notification) => set((s) => ({ notifications: [notification, ...s.notifications] })),
-  markNotificationAsRead: (id) => set((s) => ({ notifications: s.notifications.map(n => n.id === id ? { ...n, read: true } : n) })),
+  addAuditLog: (log) => {
+    set((s) => ({ auditLogs: [log, ...s.auditLogs] }));
+    get()._sync();
+  },
+  addNotification: async (notification) => {
+    const localId = notification.id || `pending-${Date.now()}`;
+    set((s) => ({ notifications: [{ ...notification, id: localId, read: false }, ...s.notifications] }));
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { id, ...dbEntry } = notification as any;
+    const { data, error } = await supabase
+      .from('notifications')
+      .insert([{ ...dbEntry, user_id: user.id, read: false }])
+      .select();
+
+    if (!error && data) {
+      set((s) => ({ notifications: s.notifications.map(n => n.id === localId ? data[0] : n) }));
+    }
+  },
+
+  markNotificationAsRead: async (id) => {
+    // 1. Instant local update
+    set((s) => ({ notifications: s.notifications.map(n => n.id === id ? { ...n, read: true } : n) }));
+
+    // 2. Persist to DB
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', id);
+    
+    if (error) console.error("Notification mark read error:", error.message);
+  },
+
+  deleteNotification: async (id) => {
+    set((s) => ({ notifications: s.notifications.filter(n => n.id !== id) }));
+    await supabase.from('notifications').delete().eq('id', id);
+  },
   addDocument: (doc) => set((s) => ({ documents: [doc, ...s.documents] })),
   deleteDocument: async (id) => {
     // 1. Instant local removal
@@ -534,5 +697,100 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!error) set((s) => ({ budgets: s.budgets.filter(b => b.id !== id) }));
   },
 
+  renameNavItem: (id, newLabel) => set((s) => ({
+    navSections: s.navSections.map(section => ({
+      ...section,
+      items: section.items.map(item => item.id === id ? { ...item, label: newLabel } : item)
+    }))
+  })),
+
+  deleteNavItem: (id) => set((s) => ({
+    navSections: s.navSections.map(section => ({
+      ...section,
+      items: section.items.filter(item => item.id !== id)
+    })).filter(section => section.items.length > 0)
+  })),
+
+  resetNavigation: () => set({
+    navSections: [
+      {
+        label: 'Overview',
+        items: [
+          { id: 'dashboard', label: 'Dashboard', icon: '📊', color: 'blue' },
+          { id: 'alerts', label: 'Alerts Hub', icon: '🔔', color: 'red' },
+          { id: 'reports', label: 'Reports', icon: '📋', color: 'purple' },
+        ],
+      },
+      {
+        label: 'Finance',
+        items: [
+          { id: 'pl', label: 'P&L Intelligence', icon: '📈', color: 'green' },
+          { id: 'expenses', label: 'Expenses', icon: '💸', color: 'red' },
+          { id: 'loans', label: 'Loans', icon: '🏦', color: 'blue' },
+          { id: 'budgets', label: 'Budgets', icon: '🎯', color: 'amber' },
+          { id: 'payroll', label: 'Payroll', icon: '💰', color: 'green' },
+        ],
+      },
+      {
+        label: 'Operations',
+        items: [
+          { id: 'operations', label: 'Yield & Sales', icon: '🚜', color: 'teal' },
+          { id: 'labor', label: 'Labor', icon: '👷', color: 'amber' },
+          { id: 'livestock', label: 'Livestock', icon: '🐄', color: 'red' },
+          { id: 'crops', label: 'Crops', icon: '🌿', color: 'green' },
+          { id: 'maintenance', label: 'Maintenance', icon: '🔧', color: 'purple' },
+        ],
+      },
+      {
+        label: 'Business',
+        items: [
+          { id: 'vendors', label: 'Vendors', icon: '🏪', color: 'blue' },
+          { id: 'inventory', label: 'Inventory', icon: '📦', color: 'amber' },
+          { id: 'documents', label: 'Documents', icon: '📁', color: 'amber' },
+          { id: 'audit', label: 'Audit Trail', icon: '🔍', color: 'teal' },
+          { id: 'settings', label: 'Settings', icon: '⚙️', color: 'gray' },
+        ],
+      },
+    ]
+  }),
+
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
+
+  uploadDocument: async (file, category) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${user.id}/${fileName}`;
+
+    // 1. Upload to Storage
+    const { error: uploadError } = await supabase.storage
+      .from('documents')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error("Storage Error:", uploadError.message);
+      return;
+    }
+
+    // 2. Get Public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('documents')
+      .getPublicUrl(filePath);
+
+    // 3. Save Record to DB
+    const newDoc: Document = {
+      id: uuidv4(),
+      name: file.name,
+      type: file.type,
+      category,
+      upload_date: new Date().toISOString().split('T')[0],
+      file_size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+      url: publicUrl,
+      uploaded_by: get().currentUser.name
+    };
+
+    get().addDocument(newDoc);
+  },
 }));

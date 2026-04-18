@@ -162,7 +162,7 @@ function AddExpenseModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function ExpensesPage() {
-  const { expenses, deleteExpense } = useAppStore();
+  const { expenses, deleteExpense, setSelectedItem } = useAppStore();
   const [showAdd, setShowAdd] = useState(false);
   const [search, setSearch] = useState('');
   const [segFilter, setSegFilter] = useState('');
@@ -234,19 +234,19 @@ export default function ExpensesPage() {
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
         <div className="card" style={{ padding: '12px 20px', flex: 1, minWidth: 160 }}>
           <div className="kpi-label">Total (filtered)</div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--accent-red)' }}>{formatCurrency(total)}</div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: 'hsl(var(--accent-red))' }}>{formatCurrency(total)}</div>
         </div>
         <div className="card" style={{ padding: '12px 20px', flex: 1, minWidth: 160 }}>
           <div className="kpi-label">Transactions</div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>{filtered.length}</div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: 'hsl(var(--text-primary))' }}>{filtered.length}</div>
         </div>
         <div className="card" style={{ padding: '12px 20px', flex: 1, minWidth: 160 }}>
           <div className="kpi-label">Recurring</div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--accent-amber)' }}>{filtered.filter(e => e.recurring).length}</div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: 'hsl(var(--accent-amber))' }}>{filtered.filter(e => e.recurring).length}</div>
         </div>
         <div className="card" style={{ padding: '12px 20px', flex: 1, minWidth: 160 }}>
           <div className="kpi-label">Avg per Transaction</div>
-          <div style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>{filtered.length > 0 ? formatCurrency(total / filtered.length) : '$0'}</div>
+          <div style={{ fontSize: '22px', fontWeight: 800, color: 'hsl(var(--text-primary))' }}>{filtered.length > 0 ? formatCurrency(total / filtered.length) : '$0'}</div>
         </div>
       </div>
 
@@ -286,19 +286,19 @@ export default function ExpensesPage() {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No expenses found</td></tr>
+                <tr><td colSpan={9} style={{ textAlign: 'center', padding: '40px', color: 'hsl(var(--text-muted))' }}>No expenses found</td></tr>
               ) : filtered.map(exp => (
-                <tr key={exp.id}>
-                  <td style={{ whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>{exp.date}</td>
-                  <td style={{ maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-primary)' }} title={exp.description}>{exp.description}</td>
+                <tr key={exp.id} onClick={() => setSelectedItem(exp)} style={{ cursor: 'pointer', transition: 'all 0.2s' }}>
+                  <td style={{ whiteSpace: 'nowrap', color: 'hsl(var(--text-muted))' }}>{exp.date}</td>
+                  <td style={{ maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'hsl(var(--text-primary))' }} title={exp.description}>{exp.description}</td>
                   <td style={{ fontSize: '12px' }}>{exp.vendor_name}</td>
                   <td><span className="badge badge-gray" style={{ fontSize: '11px' }}>{exp.category_name}</span></td>
-                  <td style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{exp.segment_name}</td>
+                  <td style={{ fontSize: '11px', color: 'hsl(var(--text-muted))' }}>{exp.segment_name}</td>
                   <td style={{ fontSize: '11px' }}>{exp.payment_method}</td>
-                  <td>{exp.recurring ? <span className="badge badge-amber">🔄 {exp.recurrence_period}</span> : <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>—</span>}</td>
-                  <td className="text-right font-bold" style={{ color: 'var(--accent-red)', whiteSpace: 'nowrap' }}>{formatCurrency(exp.amount)}</td>
+                  <td>{exp.recurring ? <span className="badge badge-amber">🔄 {exp.recurrence_period}</span> : <span style={{ color: 'hsl(var(--text-muted))', fontSize: '12px' }}>—</span>}</td>
+                  <td className="text-right font-bold" style={{ color: 'hsl(var(--accent-red))', whiteSpace: 'nowrap' }}>{formatCurrency(exp.amount)}</td>
                   <td>
-                    <button className="btn btn-ghost btn-sm btn-icon" title="Delete" onClick={() => deleteExpense(exp.id)} style={{ color: 'var(--accent-red)' }}>🗑</button>
+                    <button className="btn btn-ghost btn-sm btn-icon" title="Delete" onClick={() => deleteExpense(exp.id)} style={{ color: 'hsl(var(--accent-red))' }}>🗑</button>
                   </td>
                 </tr>
               ))}
@@ -306,9 +306,9 @@ export default function ExpensesPage() {
             {filtered.length > 0 && (
               <tfoot>
                 <tr>
-                  <td colSpan={7} style={{ padding: '12px 14px', fontWeight: 700, color: 'var(--text-primary)', background: 'var(--bg-secondary)' }}>TOTAL</td>
-                  <td className="text-right font-bold" style={{ padding: '12px 14px', color: 'var(--accent-red)', fontSize: '15px', background: 'var(--bg-secondary)', whiteSpace: 'nowrap' }}>{formatCurrency(total)}</td>
-                  <td style={{ background: 'var(--bg-secondary)' }} />
+                  <td colSpan={7} style={{ padding: '12px 14px', fontWeight: 700, color: 'hsl(var(--text-primary))', background: 'hsl(var(--bg-secondary))' }}>TOTAL</td>
+                  <td className="text-right font-bold" style={{ padding: '12px 14px', color: 'hsl(var(--accent-red))', fontSize: '15px', background: 'hsl(var(--bg-secondary))', whiteSpace: 'nowrap' }}>{formatCurrency(total)}</td>
+                  <td style={{ background: 'hsl(var(--bg-secondary))' }} />
                 </tr>
               </tfoot>
             )}

@@ -144,7 +144,7 @@ export default function BudgetsPage() {
         <div className={`kpi-card ${totalVariance >= 0 ? 'green' : 'red'}`}>
           <div className="kpi-icon">{totalVariance >= 0 ? '✅' : '⚠️'}</div>
           <div className="kpi-label">Total Variance</div>
-          <div className="kpi-value" style={{ color: totalVariance >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+          <div className="kpi-value" style={{ color: totalVariance >= 0 ? 'hsl(var(--accent-green))' : 'hsl(var(--accent-red))' }}>
             {totalVariance >= 0 ? '+' : ''}{formatCurrency(totalVariance)}
           </div>
         </div>
@@ -165,33 +165,33 @@ export default function BudgetsPage() {
           </thead>
           <tbody>
             {budgetList.length === 0 ? (
-              <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No budgets established yet</td></tr>
+              <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'hsl(var(--text-muted))' }}>No budgets established yet</td></tr>
             ) : budgetList.map(b => {
               const pct = b.budgeted_amount > 0 ? (b.actual_amount / b.budgeted_amount * 100) : 0;
               const over = b.variance < 0;
               return (
                 <tr key={b.id}>
                   <td>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{b.category_name}</div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{b.segment_name}</div>
+                    <div style={{ fontWeight: 600, color: 'hsl(var(--text-primary))' }}>{b.category_name}</div>
+                    <div style={{ fontSize: 10, color: 'hsl(var(--text-muted))' }}>{b.segment_name}</div>
                   </td>
-                  <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{b.period}</td>
+                  <td style={{ fontSize: 12, color: 'hsl(var(--text-muted))' }}>{b.period}</td>
                   <td className="text-right">{formatCurrency(b.budgeted_amount)}</td>
-                  <td className="text-right" style={{ color: over ? 'var(--accent-red)' : 'var(--text-primary)' }}>{formatCurrency(b.actual_amount)}</td>
-                  <td className="text-right font-bold" style={{ color: over ? 'var(--accent-red)' : 'var(--accent-green)' }}>
+                  <td className="text-right" style={{ color: over ? 'hsl(var(--accent-red))' : 'hsl(var(--text-primary))' }}>{formatCurrency(b.actual_amount)}</td>
+                  <td className="text-right font-bold" style={{ color: over ? 'hsl(var(--accent-red))' : 'hsl(var(--accent-green))' }}>
                     {formatCurrency(Math.abs(b.variance))} {over ? 'OVER' : 'LEFT'}
                   </td>
                   <td style={{ minWidth: 140 }}>
                     <div className="progress-bar" style={{ height: 6 }}>
                       <div className="progress-fill" style={{
                         width: `${Math.min(100, pct)}%`,
-                        background: pct > 100 ? 'var(--accent-red)' : pct > 85 ? 'var(--accent-amber)' : 'var(--accent-green)',
+                        background: pct > 100 ? 'hsl(var(--accent-red))' : pct > 85 ? 'hsl(var(--accent-amber))' : 'hsl(var(--accent-green))',
                       }} />
                     </div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>{pct.toFixed(1)}% of limit</div>
+                    <div style={{ fontSize: 10, color: 'hsl(var(--text-muted))', marginTop: 4 }}>{pct.toFixed(1)}% of limit</div>
                   </td>
                   <td>
-                    <button className="btn btn-ghost btn-sm btn-icon" onClick={() => deleteBudget(b.id)} style={{ color: 'var(--accent-red)' }}>🗑</button>
+                    <button className="btn btn-ghost btn-sm btn-icon" onClick={() => deleteBudget(b.id)} style={{ color: 'hsl(var(--accent-red))' }}>🗑</button>
                   </td>
                 </tr>
               );

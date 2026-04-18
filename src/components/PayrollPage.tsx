@@ -90,7 +90,7 @@ function RunPayrollModal({ onClose }: { onClose: () => void }) {
           <div className="form-group">
             <label>Base Salary / Wages</label>
             <input type="number" className="form-input" required value={form.base_salary} onChange={e => setForm({...form, base_salary: parseFloat(e.target.value)})} />
-            <p style={{ fontSize: 10, color: 'var(--accent-blue)', marginTop: 4 }}>Auto-calculated from {laborEntries.filter(l => l.worker_name === form.worker_name).length} labor logs</p>
+            <p style={{ fontSize: 10, color: 'hsl(var(--accent-blue))', marginTop: 4 }}>Auto-calculated from {laborEntries.filter(l => l.worker_name === form.worker_name).length} labor logs</p>
           </div>
           <div className="form-group">
             <label>Deductions (NIS/NHT)</label>
@@ -100,8 +100,8 @@ function RunPayrollModal({ onClose }: { onClose: () => void }) {
           <div className="full-width" style={{ gridColumn: 'span 2', background: 'var(--bg-secondary)', padding: 16, borderRadius: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Net Amount Payable</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-teal)' }}>{formatCurrency(netPay)}</div>
+                <div style={{ fontSize: 12, color: 'hsl(var(--text-muted))' }}>Net Amount Payable</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: 'hsl(var(--accent-teal))' }}>{formatCurrency(netPay)}</div>
               </div>
               <button type="submit" className="btn btn-primary">Authorize & Generate Pay</button>
             </div>
@@ -207,9 +207,9 @@ export default function PayrollPage() {
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={workerSummary} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" />
-                <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="name" tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v: any) => formatCurrency(Number(v))} />
                 <Bar dataKey="total" name="Net Pay (YTD)" fill="#14b8a6" radius={[4, 4, 0, 0]} />
               </BarChart>
@@ -226,13 +226,13 @@ export default function PayrollPage() {
             return (
               <div key={w} style={{ marginBottom: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 500 }}>{w}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--accent-teal)' }}>{formatCurrency(net)}</span>
+                  <span style={{ fontSize: 13, color: 'hsl(var(--text-primary))', fontWeight: 500 }}>{w}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'hsl(var(--accent-teal))' }}>{formatCurrency(net)}</span>
                 </div>
                 <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${(net / maxNet) * 100}%`, background: 'var(--accent-teal)' }} />
+                  <div className="progress-fill" style={{ width: `${(net / maxNet) * 100}%`, background: 'hsl(var(--accent-teal))' }} />
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{wRecords[0]?.role} · {wRecords[0]?.department}</div>
+                <div style={{ fontSize: 11, color: 'hsl(var(--text-muted))', marginTop: 2 }}>{wRecords[0]?.role} · {wRecords[0]?.department}</div>
               </div>
             );
           })}
@@ -272,21 +272,21 @@ export default function PayrollPage() {
             <tbody>
               {filtered.map(p => (
                 <tr key={p.id}>
-                  <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p.worker_name}</td>
-                  <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{p.role} · {p.department}</td>
+                  <td style={{ fontWeight: 600, color: 'hsl(var(--text-primary))' }}>{p.worker_name}</td>
+                  <td style={{ fontSize: 12, color: 'hsl(var(--text-muted))' }}>{p.role} · {p.department}</td>
                   <td style={{ fontSize: 12 }}>{p.period_start} → {p.period_end}</td>
                   <td>{formatCurrency(p.base_salary)}</td>
-                  <td style={{ color: 'var(--accent-amber)' }}>{p.overtime_hours > 0 ? `${p.overtime_hours}h @ ${formatCurrency(p.overtime_rate)}` : '—'}</td>
-                  <td style={{ color: 'var(--accent-red)' }}>({formatCurrency(p.deductions)})</td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{p.payment_date || '—'}</td>
+                  <td style={{ color: 'hsl(var(--accent-amber))' }}>{p.overtime_hours > 0 ? `${p.overtime_hours}h @ ${formatCurrency(p.overtime_rate)}` : '—'}</td>
+                  <td style={{ color: 'hsl(var(--accent-red))' }}>({formatCurrency(p.deductions)})</td>
+                  <td style={{ color: 'hsl(var(--text-muted))', fontSize: 12 }}>{p.payment_date || '—'}</td>
                   <td>
                     <span className={`badge ${p.status === 'paid' ? 'badge-green' : p.status === 'pending' ? 'badge-amber' : 'badge-red'}`}>
                       {p.status}
                     </span>
                   </td>
-                  <td className="text-right font-bold" style={{ color: 'var(--accent-teal)', whiteSpace: 'nowrap' }}>{formatCurrency(p.net_pay)}</td>
+                  <td className="text-right font-bold" style={{ color: 'hsl(var(--accent-teal))', whiteSpace: 'nowrap' }}>{formatCurrency(p.net_pay)}</td>
                   <td>
-                    <button className="btn btn-ghost btn-sm btn-icon" title="Delete" onClick={() => deletePayroll(p.id)} style={{ color: 'var(--accent-red)' }}>🗑</button>
+                    <button className="btn btn-ghost btn-sm btn-icon" title="Delete" onClick={() => deletePayroll(p.id)} style={{ color: 'hsl(var(--accent-red))' }}>🗑</button>
                   </td>
                 </tr>
               ))}

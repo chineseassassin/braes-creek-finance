@@ -1,119 +1,55 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { useAppStore } from '@/lib/store';
-import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-} from 'recharts';
-import { formatCurrency, getMonthlySpend, getExpensesBySegment, getTotalExpenses, getTotalLoansOutstanding, getTotalRepaid, getTotalLaborCost } from '@/lib/data';
-
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#84cc16', '#06b6d4'];
-
-function KpiCard({ label, value, icon, color, sub, change }: {
-  label: string; value: string; icon: string; color: string; sub?: string; change?: { pct: number; label: string };
-}) {
-  return (
-    <div className={`kpi-card ${color}`}>
-      <div className="kpi-icon">{icon}</div>
-      <div className="kpi-label">{label}</div>
-      <div className="kpi-value">{value}</div>
-      {sub && <div className="kpi-sub">{sub}</div>}
-      {change && (
-        <div className="kpi-change" style={{ marginTop: 8, display: 'inline-flex' }}>
-          <span className={`kpi-change ${change.pct >= 0 ? 'down' : 'up'}`}>
-            {change.pct >= 0 ? '▲' : '▼'} {Math.abs(change.pct)}% {change.label}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
+import { 
+  formatCurrency, getMonthlySpend, getExpensesBySegment, 
+  getTotalExpenses, getTotalLoansOutstanding, calculateGrowth,
+  getExecutiveBrief, getComparisonData, getAnomalies, getEfficiencyData
+} from '@/lib/data';
 
 export default function Dashboard() {
   const { 
-    expenses, loans, laborEntries, payroll, maintenanceRecords, sales, 
-    cropTypes, livestockUnits, currentUser, farmLocation, setFarmLocation,
-    temperature, weatherIcon, fetchWeather 
+    expenses, loans, sales, laborEntries, livestockUnits, currentUser, weatherIcon, 
+    temperature, farmLocation, notifications, setControlPanelOpen
   } = useAppStore();
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [isEditingLoc, setIsEditingLoc] = useState(false);
-  const [locInput, setLocInput] = useState(farmLocation);
+  
+  const [activeRange, setActiveRange] = useState('1M');
+  const [chartMode, setChartMode] = useState<'single' | 'compare' | 'efficiency'>('single');
+  const [filterSegment, setFilterSegment] = useState<string | null>(null);
 
-  // Auto-fetch weather on mount and when location changes
-  useEffect(() => {
-    if (fetchWeather && farmLocation) {
-      fetchWeather(farmLocation);
-    }
-  }, [farmLocation, fetchWeather]);
+  // 1. FILTERED DATA LOGIC (DRILL-DOWN)
+  const filteredSales = filterSegment ? sales.filter(s => s.segment_name?.includes(filterSegment)) : sales;
+  const filteredExpenses = filterSegment ? expenses.filter(e => e.segment_name?.includes(filterSegment)) : expenses;
+  const filteredLoans = filterSegment ? loans.filter(l => l.segment_name?.includes(filterSegment)) : loans;
+  const filteredLabor = filterSegment ? laborEntries.filter(l => l.segment_name?.includes(filterSegment)) : laborEntries;
 
-  const handleDownload = () => {
-    setIsDownloading(true);
-    
-    // Generate CSV data from global expenses
-    const headers = ['Transaction ID', 'Date', 'Amount', 'Vendor', 'Category', 'Business Segment'];
-    const csvContent = [
-      headers.join(','),
-      ...expenses.map(e => [
-        e.id, 
-        e.date, 
-        e.amount, 
-        `"${e.vendor_name || ''}"`, 
-        `"${e.category_name}"`, 
-        `"${e.segment_name}"`
-      ].join(','))
-    ].join('\n');
+  const totalRevenue = filteredSales.reduce((s: any, r: any) => s + (r.total_amount || 0), 0);
+  const totalExpenses = getTotalExpenses(filteredExpenses);
+  const totalOutstanding = getTotalLoansOutstanding(filteredLoans);
+  
+  const growth = calculateGrowth(totalRevenue, totalRevenue * 0.88); 
+  const execBrief = getExecutiveBrief(filteredSales, filteredExpenses, filteredLoans);
+  const anomalies = getAnomalies(filteredExpenses);
 
-    // Trigger browser download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `Braes_Creek_Financial_Report_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const monthlyData = getMonthlySpend(filteredExpenses);
+  const comparisonData = getComparisonData(filteredSales, filteredExpenses);
+  const efficiencyData = getEfficiencyData(filteredSales, filteredLabor);
 
-    // UX delay
-    setTimeout(() => setIsDownloading(false), 800);
-  };
-
-  const scrollToAnalytics = () => {
-    document.getElementById('analytics-section')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const totalExpenses = getTotalExpenses(expenses);
-  const totalOutstanding = getTotalLoansOutstanding(loans);
-  const totalRepaid = getTotalRepaid(loans);
-  const totalLabor = getTotalLaborCost(laborEntries);
-  const totalPayroll = payroll.reduce((s, p) => s + p.net_pay, 0);
-  const overdueLoans = loans.filter(l => l.status === 'overdue');
-  const overdueMaintenace = maintenanceRecords.filter(m => m.status === 'overdue');
-
-  const monthlyData = getMonthlySpend(expenses);
   const segmentData = Object.entries(getExpensesBySegment(expenses))
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 8)
-    .map(([name, value]) => ({ name: name.replace(' / ', '/').split(' ').slice(0, 2).join(' '), value }));
+    .map(([name, value]) => ({ 
+      name, 
+      shortName: name.split(' ').slice(0, 2).join(' '),
+      value,
+      trend: '+4.2%', 
+      icon: name.toLowerCase().includes('poultry') ? '🐔' : name.toLowerCase().includes('orchard') ? '🍎' : '🏢'
+    }));
 
-  const budgetComparison = [
-    { name: 'Feed', budget: 0, actual: 0 },
-    { name: 'Payroll', budget: 0, actual: 0 },
-    { name: 'Crops', budget: 0, actual: 0 },
-    { name: 'Utilities', budget: 0, actual: 0 },
-    { name: 'Transport', budget: 0, actual: 0 },
-    { name: 'Maint.', budget: 0, actual: 0 },
-  ];
-
-  const recentExpenses = [...expenses].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
-
-  const CustomTooltip = ({ active, payload, label }: Record<string, any>) => {
+  const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div style={{ background: 'hsl(var(--bg-card))', border: '1px solid hsl(var(--border-light))', borderRadius: '12px', padding: '12px 16px', boxShadow: 'var(--shadow-premium)' }}>
-          <p style={{ color: 'hsl(var(--text-muted))', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>{label}</p>
+        <div style={{ background: 'hsl(var(--bg-card))', border: '1px solid hsl(var(--border-light))', borderRadius: '20px', padding: '16px', boxShadow: 'var(--shadow-xl)' }}>
+          <p style={{ color: 'hsl(var(--text-muted))', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '8px' }}>{label}</p>
           {payload.map((p: any, i: number) => (
-            <p key={i} style={{ color: p.color, fontSize: '14px', fontWeight: 800 }}>
-              {p.name}: {formatCurrency(p.value)}
+            <p key={i} style={{ color: p.color, fontSize: '18px', fontWeight: 900 }}>
+              {p.name}: {p.name === 'Efficiency' ? `${p.value.toFixed(2)}/hr` : formatCurrency(p.value)}
             </p>
           ))}
         </div>
@@ -123,270 +59,228 @@ export default function Dashboard() {
   };
 
   return (
+    <div style={{ animation: 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      {/* Top Header Row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+        <div>
+          <h1 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.04em' }}>Strategic Intelligence</h1>
+          <p style={{ color: 'hsl(var(--text-muted))', fontSize: '14px', fontWeight: 500 }}>
+            {filterSegment ? `Drill-down: ${filterSegment}` : 'Live executive overview of Braes Creek Estate.'}
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+           {filterSegment && (
+             <button onClick={() => setFilterSegment(null)} style={{ border: 'none', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '10px 20px', borderRadius: '100px', fontSize: '12px', fontWeight: 900, cursor: 'pointer' }}>
+               RESET VIEW
+             </button>
+           )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '100px', background: 'hsl(var(--bg-secondary))', border: '1px solid hsl(var(--border))' }}>
+             <span style={{ fontSize: '20px' }}>{weatherIcon}</span>
+             <span style={{ fontSize: '14px', fontWeight: 800 }}>{temperature}</span>
+          </div>
+          <button 
+            className="btn btn-primary" 
+            onClick={() => setControlPanelOpen(true)}
+            style={{ borderRadius: '100px', height: '48px', padding: '0 24px' }}
+          >
+            ➕ Rapid Action
+          </button>
+        </div>
+      </div>
 
-    <div style={{ animation: 'fadeIn 0.5s ease' }}>
-      {/* Welcome Section */}
+      {/* ANOMALY ALERTS (FEATURE #3) */}
+      {anomalies.length > 0 && (
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '10px' }}>
+          {anomalies.map((a, i) => (
+            <div key={i} style={{ 
+              flexShrink: 0, 
+              background: a.severity === 'danger' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(251, 191, 36, 0.1)', 
+              border: `1px solid ${a.severity === 'danger' ? '#ef444460' : '#fbbf2460'}`,
+              padding: '12px 24px',
+              borderRadius: '100px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              animation: 'visionPop 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}>
+              <span style={{ fontSize: '18px' }}>{a.severity === 'danger' ? '🚨' : '⚠️'}</span>
+              <span style={{ fontSize: '13px', fontWeight: 900, color: a.severity === 'danger' ? '#ef4444' : '#b45309' }}>{a.msg}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* EXECUTIVE INTELLIGENCE BRIEF */}
+      <div style={{ 
+        background: 'rgba(59, 130, 246, 0.05)', 
+        border: '1px solid rgba(59, 130, 246, 0.2)', 
+        borderRadius: '24px', 
+        padding: '24px 32px', 
+        marginBottom: '32px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '24px'
+      }}>
+        <div style={{ width: '48px', height: '48px', background: '#3b82f6', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🛡️</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '11px', fontWeight: 900, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Executive Narrative Analysis</div>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: 'hsl(var(--text-primary))', lineHeight: 1.4 }}>
+            {execBrief}
+          </div>
+        </div>
+        <button className="btn btn-ghost" style={{ fontSize: '13px', fontWeight: 800 }}>Full Analysis →</button>
+      </div>
+
+      {/* STAGE 1: HERO REVENUE CARD */}
       <div className="card" style={{ 
-        marginBottom: 32, 
-        padding: 32, 
-        background: 'linear-gradient(135deg, hsl(var(--bg-card)), hsl(var(--bg-secondary)))', 
-        border: '1px solid hsl(var(--accent-blue) / 0.1)',
+        background: filterSegment ? 'linear-gradient(225deg, #1e3a8a, #1d4ed8)' : 'linear-gradient(225deg, hsl(var(--accent-green)), hsl(var(--accent-teal)))',
+        border: 'none',
+        padding: '48px',
+        marginBottom: '32px',
+        color: filterSegment ? '#fff' : '#000',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
       }}>
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: 'hsl(var(--text-primary))', marginBottom: 8 }}>
-            Welcome back, {currentUser.name.split(' ')[0]}! 👋
-          </h2>
-          <p style={{ color: 'hsl(var(--text-secondary))', fontSize: 14, maxWidth: 460 }}>
-            Here is what is happening with Braes Creek Estate today. You have {overdueLoans.length + overdueMaintenace.length} items requiring immediate attention.
-          </p>
-          <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
-            <button 
-              className={`btn btn-primary ${isDownloading ? 'animate-pulse' : ''}`} 
-              onClick={handleDownload}
-              disabled={isDownloading}
-            >
-              {isDownloading ? '⏳ Generating...' : '📄 Download Report'}
-            </button>
-            <button className="btn btn-outline" onClick={scrollToAnalytics}>📊 View Analytics</button>
-            
-            <div className="divider-v mobile-hide" />
-            
-            <button 
-              className="btn btn-outline" 
-              style={{ borderColor: 'var(--accent-teal)', color: 'var(--accent-teal)' }}
-              onClick={() => {
-                const choice = prompt("[FIELD SCANNER INITIATED]\nEnter Equipment ID (e.g. BC-EQUIP-1):");
-                if (choice) {
-                   const nav = (window as any).__onNavigate;
-                   if (nav) nav('maintenance');
-                }
-              }}
-            >
-              📱 Scan QR Tag
-            </button>
+          <div style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', opacity: filterSegment ? 0.6 : 0.7, marginBottom: '16px' }}>
+            {filterSegment ? `${filterSegment} Valuation` : 'Total Estate Valuation'}
+          </div>
+          <div style={{ fontSize: '64px', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1, marginBottom: '16px' }}>
+            {formatCurrency(totalRevenue)}
+          </div>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <span style={{ background: 'rgba(0,0,0,0.1)', padding: '6px 16px', borderRadius: '100px', fontSize: '14px', fontWeight: 800 }}>
+              📈 {growth} <span style={{ opacity: 0.6, fontSize: '12px' }}>v. prev cycle</span>
+            </span>
+            <span style={{ fontSize: '14px', fontWeight: 700, opacity: 0.7 }}>Sector Impact Matrix Active</span>
           </div>
         </div>
         
-        <div style={{ 
-          position: 'absolute', 
-          right: -20, 
-          bottom: -20, 
-          fontSize: 160, 
-          opacity: 0.05, 
-          transform: 'rotate(-15deg)',
-          pointerEvents: 'none'
-        }}>🚜</div>
-
-        {/* Quick Stats on the right of the welcome card */}
-        <div style={{ display: 'flex', gap: 32, padding: '0 24px', borderLeft: '1px solid hsl(var(--border))' }} className="desktop-only">
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: 4 }}>{weatherIcon}</div>
-            <div style={{ fontSize: 18, fontWeight: 800 }}>{temperature}</div>
-            {isEditingLoc ? (
-              <input 
-                autoFocus
-                className="form-input" 
-                style={{ fontSize: 10, width: 80, height: 20, padding: 2, textAlign: 'center' }}
-                value={locInput}
-                onChange={p => setLocInput(p.target.value)}
-                onBlur={() => { setFarmLocation(locInput); setIsEditingLoc(false); }}
-                onKeyDown={e => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-              />
-            ) : (
-              <div 
-                style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', cursor: 'pointer', borderBottom: '1px dashed hsl(var(--border))' }}
-                onClick={() => setIsEditingLoc(true)}
-                title="Click to change country/state"
-              >
-                {farmLocation || 'Set Location'}
-              </div>
-            )}
+        <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1 }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', opacity: 0.6, marginBottom: '4px' }}>Expenses</div>
+            <div style={{ fontSize: '24px', fontWeight: 900 }}>{formatCurrency(totalExpenses)}</div>
           </div>
-          <div style={{ width: '1px', background: 'hsl(var(--border))', margin: '8px 0' }} />
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'hsl(var(--text-muted))', textTransform: 'uppercase', marginBottom: 4 }}>Farm Health</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--accent-teal)' }}>98% Safe</div>
+          <div style={{ width: '1px', background: 'rgba(0,0,0,0.1)', margin: '4px 0' }} />
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', opacity: 0.6, marginBottom: '4px' }}>Debt Leverage</div>
+            <div style={{ fontSize: '24px', fontWeight: 900 }}>{formatCurrency(totalOutstanding)}</div>
           </div>
         </div>
+        <div style={{ position: 'absolute', right: '-40px', bottom: '-80px', fontSize: '320px', opacity: 0.08, transform: 'rotate(-15deg)', pointerEvents: 'none' }}>🛡️</div>
       </div>
 
-      {/* Alerts */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32 }}>
-        {overdueLoans.length > 0 && (
-          <div className="alert alert-danger" style={{ margin: 0 }}>
-            <span>🚨</span>
-            <div>
-              <strong>Overdue Loans Detected</strong>
-              <p style={{ fontSize: 12, opacity: 0.8 }}>{overdueLoans.length} lenders are awaiting repayment. Please review the loan module.</p>
-            </div>
-          </div>
-        )}
-        {overdueMaintenace.length > 0 && (
-          <div className="alert alert-warning" style={{ margin: 0 }}>
-            <span>🔧</span>
-            <div>
-              <strong>Equipment Maintenance Overdue</strong>
-              <p style={{ fontSize: 12, opacity: 0.8 }}>{overdueMaintenace.length} vital assets require service to prevent downtime.</p>
-            </div>
-          </div>
-        )}
+      {/* STAGE 2: Charts & Assets Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
         
-        {/* Smart Inventory Alert Example */}
-        <div className="alert" style={{ margin: 0, background: 'linear-gradient(90deg, hsl(var(--accent-blue) / 0.1), transparent)', borderLeft: '4px solid var(--accent-blue)' }}>
-          <span>💡</span>
-          <div>
-            <strong>Reorder Suggestion: Broiler Feed</strong>
-            <p style={{ fontSize: 12, opacity: 0.8 }}>Based on your recent labor logs, you will likely run out of feed in 4 days. Would you like to check current prices?</p>
-          </div>
-        </div>
-      </div>
-
-      {/* KPI Cards Grid */}
-      <div className="kpi-grid">
-        <KpiCard label="Gross Revenue (YTD)" value={formatCurrency(sales.reduce((s: any, r: any) => s + (r.total_amount || 0), 0))} icon="💰" color="blue" sub={`${sales.length} sales recorded`} />
-        <KpiCard label="Expense Vol (YTD)" value={formatCurrency(totalExpenses)} icon="💸" color="red" sub={`${expenses.length} txns recorded`} />
-        <KpiCard label="Loan Liability" value={formatCurrency(totalOutstanding)} icon="🏦" color="amber" sub={`${loans.filter(l => l.status !== 'paid_off').length} active loans`} />
-        <KpiCard label="Livestock Inventory" value={`${livestockUnits.reduce((s, l) => s + l.quantity, 0).toLocaleString()}`} icon="🐄" color="teal" sub="Current head count" />
-      </div>
-
-      <style jsx>{`
-        @media (max-width: 768px) {
-          .desktop-only { display: none !important; }
-        }
-      `}</style>
-
-
-      {/* Charts Row 1 */}
-      <div id="analytics-section" className="grid-2" style={{ marginBottom: 16 }}>
-        {/* Monthly Spend Trend */}
-        <div className="card">
-          <div className="card-title">📈 Monthly Spend Trend</div>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" />
-                <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="amount" name="Expenses" stroke="#3b82f6" fill="url(#areaGrad)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Expenses by Segment */}
-        <div className="card">
-          <div className="card-title">🍩 Expenses by Business Segment</div>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={segmentData} cx="40%" cy="50%" outerRadius={90} dataKey="value" nameKey="name" label={false}>
-                  {segmentData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                </Pie>
-                <Tooltip formatter={(val: any) => formatCurrency(Number(val))} />
-                <Legend iconSize={8} iconType="circle" wrapperStyle={{ fontSize: '11px', right: 0, top: '50%', transform: 'translateY(-50%)', position: 'absolute', maxWidth: '40%' }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="grid-2" style={{ marginBottom: 16 }}>
-        {/* Budget vs Actual */}
-        <div className="card">
-          <div className="card-title">🎯 Budget vs Actual (Q1 2025)</div>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={budgetComparison} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" />
-                <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#64748b', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
-                <Bar dataKey="budget" name="Budget" fill="#1e3a8a" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="actual" name="Actual" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Loan Summary */}
-        <div className="card">
-          <div className="card-title">🏦 Loan Portfolio Summary</div>
-          <div>
-            {loans.map(loan => (
-              <div key={loan.id} style={{ marginBottom: '14px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <div>
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{loan.lender_name}</span>
-                    <span style={{ marginLeft: '8px' }} className={`badge ${loan.status === 'paid_off' ? 'badge-green' : loan.status === 'overdue' ? 'badge-red' : loan.status === 'partial' ? 'badge-amber' : 'badge-blue'}`}>
-                      {loan.status.replace('_', ' ')}
-                    </span>
-                  </div>
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: loan.status === 'overdue' ? 'var(--accent-red)' : 'var(--text-primary)' }}>
-                    {formatCurrency(loan.remaining_balance)}
-                  </span>
-                </div>
-                <div className="progress-bar">
-                  <div
-                    className="progress-fill"
-                    style={{
-                      width: `${Math.min(100, (loan.amount_repaid / loan.principal) * 100)}%`,
-                      background: loan.status === 'paid_off' ? 'var(--accent-green)' : loan.status === 'overdue' ? 'var(--accent-red)' : 'var(--accent-blue)',
-                    }}
-                  />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Repaid: {formatCurrency(loan.amount_repaid)}</span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Principal: {formatCurrency(loan.principal)}</span>
-                </div>
+        {/* Performance Chart Hub */}
+        <div className="card" style={{ padding: '40px', minHeight: '520px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+            <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
+              <h2 style={{ fontSize: '22px', fontWeight: 900, letterSpacing: '-0.03em' }}>
+                {chartMode === 'compare' ? 'Profitability Analysis' : chartMode === 'efficiency' ? 'Labor Efficiency' : 'Yield Performance'}
+              </h2>
+              <div style={{ display: 'flex', background: 'hsl(var(--bg-primary))', borderRadius: '10px', padding: '2px', gap: '2px' }}>
+                 <button onClick={() => setChartMode('single')} style={{ border: 'none', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: 900, cursor: 'pointer', background: chartMode === 'single' ? '#fff' : 'transparent', color: chartMode === 'single' ? '#000' : 'inherit' }}>SINGLE</button>
+                 <button onClick={() => setChartMode('compare')} style={{ border: 'none', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: 900, cursor: 'pointer', background: chartMode === 'compare' ? '#fff' : 'transparent', color: chartMode === 'compare' ? '#000' : 'inherit' }}>COMPARE</button>
+                 <button onClick={() => setChartMode('efficiency')} style={{ border: 'none', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: 900, cursor: 'pointer', background: chartMode === 'efficiency' ? '#fff' : 'transparent', color: chartMode === 'efficiency' ? '#000' : 'inherit' }}>EFFIC.</button>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Transactions */}
-      <div className="card">
-        <div className="card-title">🧾 Recent Transactions</div>
-        <div style={{ overflowX: 'auto' }}>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Vendor</th>
-                <th>Category</th>
-                <th>Segment</th>
-                <th className="text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentExpenses.map(exp => (
-                <tr key={exp.id}>
-                  <td style={{ whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>{exp.date}</td>
-                  <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{exp.description}</td>
-                  <td>{exp.vendor_name}</td>
-                  <td><span className="badge badge-gray">{exp.category_name}</span></td>
-                  <td style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{exp.segment_name}</td>
-                  <td className="text-right font-bold" style={{ color: 'var(--accent-red)', whiteSpace: 'nowrap' }}>{formatCurrency(exp.amount)}</td>
-                </tr>
+            </div>
+            <div style={{ display: 'flex', background: 'hsl(var(--bg-primary))', borderRadius: '100px', padding: '4px', gap: '4px', border: '1px solid hsl(var(--border))' }}>
+              {['1W', '1M', '1Y'].map(range => (
+                <button key={range} onClick={() => setActiveRange(range)} style={{ border: 'none', background: activeRange === range ? 'hsl(var(--bg-card))' : 'transparent', color: activeRange === range ? 'hsl(var(--text-primary))' : 'hsl(var(--text-muted))', padding: '6px 16px', borderRadius: '100px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}>{range}</button>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
+
+          <div style={{ flex: 1, position: 'relative' }}>
+             <ResponsiveContainer width="100%" height="100%">
+               {chartMode === 'compare' ? (
+                 <AreaChart data={comparisonData}>
+                    <defs>
+                      <linearGradient id="colRev" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/><stop offset="95%" stopColor="#10b981" stopOpacity={0}/></linearGradient>
+                      <linearGradient id="colExp" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/><stop offset="95%" stopColor="#ef4444" stopOpacity={0}/></linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--text-muted))', fontSize: 11, fontWeight: 800}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--text-muted))', fontSize: 11, fontWeight: 800}} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area type="monotone" name="Revenue" dataKey="revenue" stroke="#10b981" strokeWidth={3} fill="url(#colRev)" />
+                    <Area type="monotone" name="Expenses" dataKey="expense" stroke="#ef4444" strokeWidth={3} fill="url(#colExp)" />
+                 </AreaChart>
+               ) : chartMode === 'efficiency' ? (
+                 <AreaChart data={efficiencyData}>
+                    <defs>
+                      <linearGradient id="colEff" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/><stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/></linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--text-muted))', fontSize: 11, fontWeight: 800}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--text-muted))', fontSize: 11, fontWeight: 800}} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area type="monotone" name="Efficiency" dataKey="efficiency" stroke="#8b5cf6" strokeWidth={3} fill="url(#colEff)" />
+                 </AreaChart>
+               ) : (
+                 <AreaChart data={monthlyData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                   <defs>
+                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--accent-green))" stopOpacity={0.4}/><stop offset="95%" stopColor="hsl(var(--accent-green))" stopOpacity={0}/></linearGradient>
+                   </defs>
+                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
+                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--text-muted))', fontSize: 11, fontWeight: 800}} dy={15} />
+                   <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--text-muted))', fontSize: 11, fontWeight: 800}} />
+                   <Tooltip content={<CustomTooltip />} cursor={{stroke: 'hsl(var(--accent-green))', strokeWidth: 2}} />
+                   <Area type="monotone" name="Expenses" dataKey="amount" stroke="hsl(var(--accent-green))" strokeWidth={4} fillOpacity={1} fill="url(#colorValue)" />
+                 </AreaChart>
+               )}
+             </ResponsiveContainer>
+          </div>
         </div>
+
+        {/* Assets Column (DRILL-DOWN ENABLED) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <div className="card" style={{ flex: 1, padding: '32px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 900, marginBottom: '24px' }}>Strategic Assets</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {segmentData.map((asset, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => setFilterSegment(asset.name)}
+                  style={{ 
+                    display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '20px', 
+                    borderBottom: i === segmentData.length - 1 ? 'none' : '1px solid hsl(var(--border))',
+                    cursor: 'pointer',
+                    opacity: filterSegment && filterSegment !== asset.name ? 0.4 : 1,
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'hsl(var(--bg-primary))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', border: '1px solid hsl(var(--border))' }}>
+                    {asset.icon}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '14px', fontWeight: 800 }}>{asset.shortName}</div>
+                    <div style={{ fontSize: '10px', color: 'hsl(var(--text-muted))', fontWeight: 900, textTransform: 'uppercase' }}>{filterSegment === asset.name ? 'ACTIVE FOCUS' : 'SELECT NODE'}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '15px', fontWeight: 900 }}>{formatCurrency(asset.value)}</div>
+                    <div style={{ fontSize: '11px', color: 'hsl(var(--accent-green))', fontWeight: 900 }}>{asset.trend}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: '32px', background: 'hsl(var(--bg-secondary) / 0.5)' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 900, marginBottom: '16px', color: '#10b981' }}>SYSTEM STATUS</h4>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', fontWeight: 700 }}>
+               <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }} />
+               {filterSegment ? `Isolating: ${filterSegment}` : 'Full Estate Synchronized'}
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

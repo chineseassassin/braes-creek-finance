@@ -171,17 +171,17 @@ export default function MaintenancePage() {
             <tbody>
               {maintenanceRecords.map(m => (
                 <tr key={m.id}>
-                  <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{m.equipment_name}</td>
+                  <td style={{ fontWeight: 600, color: 'hsl(var(--text-primary))' }}>{m.equipment_name}</td>
                   <td><span className="badge badge-blue">{m.maintenance_type}</span></td>
-                  <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{m.date}</td>
+                  <td style={{ color: 'hsl(var(--text-muted))', fontSize: 12 }}>{m.date}</td>
                   <td style={{ fontSize: 12 }}>{m.vendor || '—'}</td>
-                  <td style={{ fontSize: 12, color: m.status === 'overdue' ? 'var(--accent-red)' : 'var(--text-muted)' }}>{m.next_due_date}</td>
+                  <td style={{ fontSize: 12, color: m.status === 'overdue' ? 'hsl(var(--accent-red))' : 'hsl(var(--text-muted))' }}>{m.next_due_date}</td>
                   <td>
                     <span className={`badge ${m.status === 'completed' ? 'badge-green' : m.status === 'overdue' ? 'badge-red' : 'badge-amber'}`}>
                       {m.status === 'completed' ? '✅' : m.status === 'overdue' ? '⚠️' : '📅'} {m.status}
                     </span>
                   </td>
-                  <td className="text-right" style={{ color: m.cost > 0 ? 'var(--accent-red)' : 'var(--text-muted)', fontWeight: m.cost > 0 ? 700 : 400 }}>{m.cost > 0 ? formatCurrency(m.cost) : '—'}</td>
+                  <td className="text-right" style={{ color: m.cost > 0 ? 'hsl(var(--accent-red))' : 'hsl(var(--text-muted))', fontWeight: m.cost > 0 ? 700 : 400 }}>{m.cost > 0 ? formatCurrency(m.cost) : '—'}</td>
                   <td>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button 
@@ -194,7 +194,7 @@ export default function MaintenancePage() {
                       >
                         📱
                       </button>
-                      <button className="btn btn-ghost btn-sm btn-icon" title="Delete" onClick={() => deleteMaintenanceRecord(m.id)} style={{ color: 'var(--accent-red)' }}>🗑</button>
+                      <button className="btn btn-ghost btn-sm btn-icon" title="Delete" onClick={() => deleteMaintenanceRecord(m.id)} style={{ color: 'hsl(var(--accent-red))' }}>🗑</button>
                     </div>
                   </td>
                 </tr>
@@ -208,13 +208,13 @@ export default function MaintenancePage() {
       <div className="card">
         <div className="card-title">🌾 Feed & Supply Purchases</div>
         <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-          <div style={{ background: 'var(--bg-secondary)', borderRadius: 8, padding: '10px 16px', flex: 1, minWidth: 150 }}>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Total Feed Cost</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--accent-amber)' }}>{formatCurrency(totalFeedCost)}</div>
+          <div style={{ background: 'hsl(var(--bg-secondary))', borderRadius: 8, padding: '10px 16px', flex: 1, minWidth: 150 }}>
+            <div style={{ fontSize: 11, color: 'hsl(var(--text-muted))', marginBottom: 4 }}>Total Feed Cost</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'hsl(var(--accent-amber))' }}>{formatCurrency(totalFeedCost)}</div>
           </div>
-          <div style={{ background: 'var(--bg-secondary)', borderRadius: 8, padding: '10px 16px', flex: 1, minWidth: 150 }}>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Feed Transactions</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{feedExpenses.length}</div>
+          <div style={{ background: 'hsl(var(--bg-secondary))', borderRadius: 8, padding: '10px 16px', flex: 1, minWidth: 150 }}>
+            <div style={{ fontSize: 11, color: 'hsl(var(--text-muted))', marginBottom: 4 }}>Feed Transactions</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: 'hsl(var(--text-primary))' }}>{feedExpenses.length}</div>
           </div>
         </div>
         <div style={{ overflowX: 'auto' }}>
@@ -231,11 +231,11 @@ export default function MaintenancePage() {
             <tbody>
               {feedExpenses.sort((a, b) => b.date.localeCompare(a.date)).map(e => (
                 <tr key={e.id}>
-                  <td style={{ color: 'var(--text-muted)' }}>{e.date}</td>
+                  <td style={{ color: 'hsl(var(--text-muted))' }}>{e.date}</td>
                   <td>{e.description}</td>
                   <td><span className="badge badge-amber">{e.category_name}</span></td>
                   <td style={{ fontSize: 12 }}>{e.vendor_name}</td>
-                  <td className="text-right font-bold" style={{ color: 'var(--accent-amber)' }}>{formatCurrency(e.amount)}</td>
+                  <td className="text-right font-bold" style={{ color: 'hsl(var(--accent-amber))' }}>{formatCurrency(e.amount)}</td>
                 </tr>
               ))}
             </tbody>

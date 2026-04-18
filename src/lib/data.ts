@@ -223,20 +223,19 @@ export interface Notification {
 // ============================================================
 
 export const BUSINESS_SEGMENTS: BusinessSegment[] = [
+  { id: 'seg-hq', name: 'Braes Creek HQ', code: 'HQ', color: '#6366f1', icon: '🏢' },
   { id: 'seg-001', name: 'Broilers / Meat Poultry', code: 'BROILER', color: '#f59e0b', icon: '🐔' },
   { id: 'seg-002', name: 'Layers / Egg Production', code: 'LAYERS', color: '#84cc16', icon: '🥚' },
   { id: 'seg-003', name: 'Goats', code: 'GOATS', color: '#8b5cf6', icon: '🐐' },
   { id: 'seg-004', name: 'Pigs / Swine', code: 'PIGS', color: '#ec4899', icon: '🐷' },
   { id: 'seg-005', name: 'Cattle', code: 'CATTLE', color: '#92400e', icon: '🐄' },
   { id: 'seg-006', name: 'Crops', code: 'CROPS', color: '#22c55e', icon: '🌿' },
-  { id: 'seg-007', name: 'General Operations', code: 'GENERAL', color: '#6366f1', icon: '🏢' },
+  { id: 'seg-007', name: 'General Operations', code: 'GENERAL', color: '#64748b', icon: '🏗️' },
   { id: 'seg-008', name: 'Utilities', code: 'UTILITIES', color: '#0ea5e9', icon: '⚡' },
   { id: 'seg-009', name: 'Payroll', code: 'PAYROLL', color: '#14b8a6', icon: '💰' },
   { id: 'seg-010', name: 'Transportation', code: 'TRANSPORT', color: '#f97316', icon: '🚛' },
-  { id: 'seg-011', name: 'Maintenance', code: 'MAINT', color: '#64748b', icon: '🔧' },
-  { id: 'seg-012', name: 'Feed & Supplies', code: 'FEED', color: '#a16207', icon: '🌾' },
-  { id: 'seg-013', name: 'Fertilizers & Chemicals', code: 'AGROCHEM', color: '#065f46', icon: '🧪' },
-  { id: 'seg-014', name: 'Loans', code: 'LOANS', color: '#dc2626', icon: '🏦' },
+  { id: 'seg-011', name: 'Maintenance', code: 'MAINT', color: '#475569', icon: '🔧' },
+  { id: 'seg-014', name: 'Loans & Capital', code: 'LOANS', color: '#dc2626', icon: '🏦' },
 ];
 
 export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
@@ -369,35 +368,35 @@ export const LOAN_PAYMENTS: LoanPayment[] = [
 ];
 
 export const EXPENSES: Expense[] = [
-  { id: 'exp-001', date: '2025-01-05', vendor_id: 'v-001', vendor_name: 'AgriPro Supplies Ltd', category_id: 'cat-006', category_name: 'Broiler Feed', segment_id: 'seg-001', segment_name: 'Broilers / Meat Poultry', amount: 45000, description: '500 bags broiler starter feed', payment_method: 'Bank Transfer', recurring: false, created_by: 'Admin User', created_at: '2025-01-05T08:00:00Z' },
-  { id: 'exp-002', date: '2025-01-08', vendor_id: 'v-004', vendor_name: 'JPS Electric', category_id: 'cat-002', category_name: 'Electricity / Light Bill', segment_id: 'seg-008', segment_name: 'Utilities', amount: 12500, description: 'January electricity bill', payment_method: 'Online Banking', recurring: true, recurrence_period: 'monthly', created_by: 'Admin User', created_at: '2025-01-08T10:00:00Z' },
-  { id: 'exp-003', date: '2025-01-10', vendor_id: 'v-002', vendor_name: 'Caribbean Vet Services', category_id: 'cat-011', category_name: 'Animal Medicines & Vitamins', segment_id: 'seg-003', segment_name: 'Goats', amount: 8750, description: 'Dewormers and vitamins for goat herd', payment_method: 'Cash', recurring: false, created_by: 'Manager User', created_at: '2025-01-10T11:00:00Z' },
-  { id: 'exp-004', date: '2025-01-12', vendor_id: 'v-003', vendor_name: 'Island Agrochem', category_id: 'cat-013', category_name: 'Fertilizers', segment_id: 'seg-006', segment_name: 'Crops', amount: 18000, description: 'NPK fertilizer for tomato and pepper beds', payment_method: 'Cheque', recurring: false, created_by: 'Admin User', created_at: '2025-01-12T09:00:00Z' },
-  { id: 'exp-005', date: '2025-01-15', vendor_id: 'v-007', vendor_name: 'FastTrack Logistics', category_id: 'cat-015', category_name: 'Transportation / Fuel', segment_id: 'seg-010', segment_name: 'Transportation', amount: 9500, description: 'Market delivery for eggs and broilers', payment_method: 'Cash', recurring: false, created_by: 'Manager User', created_at: '2025-01-15T14:00:00Z' },
-  { id: 'exp-006', date: '2025-01-18', vendor_id: 'v-001', vendor_name: 'AgriPro Supplies Ltd', category_id: 'cat-007', category_name: 'Layer Feed', segment_id: 'seg-002', segment_name: 'Layers / Egg Production', amount: 32000, description: '400 bags layer pellets', payment_method: 'Bank Transfer', recurring: true, recurrence_period: 'monthly', created_by: 'Admin User', created_at: '2025-01-18T08:00:00Z' },
-  { id: 'exp-007', date: '2025-01-20', vendor_id: 'v-006', vendor_name: 'TopBuild Materials', category_id: 'cat-014', category_name: 'Building Materials', segment_id: 'seg-007', segment_name: 'General Operations', amount: 55000, description: 'Zinc sheets and lumber for cattle shelter expansion', payment_method: 'Bank Transfer', recurring: false, created_by: 'Admin User', created_at: '2025-01-20T10:00:00Z' },
-  { id: 'exp-008', date: '2025-01-22', vendor_id: 'v-005', vendor_name: 'NWC Water Services', category_id: 'cat-003', category_name: 'Water Bill', segment_id: 'seg-008', segment_name: 'Utilities', amount: 4200, description: 'January water bill', payment_method: 'Online Banking', recurring: true, recurrence_period: 'monthly', created_by: 'Admin User', created_at: '2025-01-22T09:00:00Z' },
-  { id: 'exp-009', date: '2025-01-25', vendor_id: 'v-003', vendor_name: 'Island Agrochem', category_id: 'cat-012', category_name: 'Chemicals & Pesticides', segment_id: 'seg-013', segment_name: 'Fertilizers & Chemicals', amount: 11500, description: 'Herbicide and insecticide for cassava fields', payment_method: 'Cash', recurring: false, created_by: 'Manager User', created_at: '2025-01-25T11:00:00Z' },
-  { id: 'exp-010', date: '2025-01-28', vendor_id: 'v-001', vendor_name: 'AgriPro Supplies Ltd', category_id: 'cat-009', category_name: 'Pig Feed', segment_id: 'seg-004', segment_name: 'Pigs / Swine', amount: 22000, description: 'Pig grower pellets – 250 bags', payment_method: 'Cheque', recurring: false, created_by: 'Admin User', created_at: '2025-01-28T09:00:00Z' },
-  { id: 'exp-011', date: '2025-02-03', vendor_id: 'v-001', vendor_name: 'AgriPro Supplies Ltd', category_id: 'cat-006', category_name: 'Broiler Feed', segment_id: 'seg-001', segment_name: 'Broilers / Meat Poultry', amount: 47500, description: 'February broiler feed batch', payment_method: 'Bank Transfer', recurring: true, recurrence_period: 'monthly', created_by: 'Admin User', created_at: '2025-02-03T08:00:00Z' },
-  { id: 'exp-012', date: '2025-02-08', vendor_id: 'v-004', vendor_name: 'JPS Electric', category_id: 'cat-002', category_name: 'Electricity / Light Bill', segment_id: 'seg-008', segment_name: 'Utilities', amount: 13200, description: 'February electricity bill', payment_method: 'Online Banking', recurring: true, recurrence_period: 'monthly', created_by: 'Admin User', created_at: '2025-02-08T10:00:00Z' },
-  { id: 'exp-013', date: '2025-02-14', vendor_id: 'v-008', vendor_name: 'GreenField Seeds', category_id: 'cat-020', category_name: 'Tomato Costs', segment_id: 'seg-006', segment_name: 'Crops', amount: 6800, description: 'Hybrid tomato seeds and transplants', payment_method: 'Cash', recurring: false, created_by: 'Manager User', created_at: '2025-02-14T09:00:00Z' },
-  { id: 'exp-014', date: '2025-02-18', vendor_id: 'v-002', vendor_name: 'Caribbean Vet Services', category_id: 'cat-011', category_name: 'Animal Medicines & Vitamins', segment_id: 'seg-001', segment_name: 'Broilers / Meat Poultry', amount: 5500, description: 'Vaccination batch for broilers', payment_method: 'Cash', recurring: false, created_by: 'Manager User', created_at: '2025-02-18T11:00:00Z' },
-  { id: 'exp-015', date: '2025-02-22', vendor_id: 'v-001', vendor_name: 'AgriPro Supplies Ltd', category_id: 'cat-008', category_name: 'Goat Feed', segment_id: 'seg-003', segment_name: 'Goats', amount: 14000, description: 'Hay and goat mineral supplement', payment_method: 'Bank Transfer', recurring: false, created_by: 'Admin User', created_at: '2025-02-22T08:00:00Z' },
-  { id: 'exp-016', date: '2025-03-05', vendor_id: 'v-004', vendor_name: 'JPS Electric', category_id: 'cat-002', category_name: 'Electricity / Light Bill', segment_id: 'seg-008', segment_name: 'Utilities', amount: 14800, description: 'March electricity bill', payment_method: 'Online Banking', recurring: true, recurrence_period: 'monthly', created_by: 'Admin User', created_at: '2025-03-05T10:00:00Z' },
-  { id: 'exp-017', date: '2025-03-12', vendor_id: 'v-007', vendor_name: 'FastTrack Logistics', category_id: 'cat-015', category_name: 'Transportation / Fuel', segment_id: 'seg-010', segment_name: 'Transportation', amount: 11200, description: 'Farm-to-market transport March', payment_method: 'Cash', recurring: false, created_by: 'Manager User', created_at: '2025-03-12T14:00:00Z' },
-  { id: 'exp-018', date: '2025-03-18', vendor_id: 'v-003', vendor_name: 'Island Agrochem', category_id: 'cat-013', category_name: 'Fertilizers', segment_id: 'seg-006', segment_name: 'Crops', amount: 21000, description: 'Compost and liquid fertilizer for sweet potatoes', payment_method: 'Cheque', recurring: false, created_by: 'Admin User', created_at: '2025-03-18T09:00:00Z' },
-  { id: 'exp-019', date: '2025-03-25', vendor_id: 'v-006', vendor_name: 'TopBuild Materials', category_id: 'cat-017', category_name: 'Equipment Maintenance', segment_id: 'seg-011', segment_name: 'Maintenance', amount: 17500, description: 'Tractor servicing and repair', payment_method: 'Bank Transfer', recurring: false, created_by: 'Admin User', created_at: '2025-03-25T10:00:00Z' },
-  { id: 'exp-020', date: '2025-03-28', vendor_id: 'v-001', vendor_name: 'AgriPro Supplies Ltd', category_id: 'cat-010', category_name: 'Cattle Feed', segment_id: 'seg-005', segment_name: 'Cattle', amount: 28000, description: 'hay rolls and cattle concentrate – March', payment_method: 'Cheque', recurring: false, created_by: 'Admin User', created_at: '2025-03-28T09:00:00Z' },
+  // DECEMBER (Steady State)
+  { id: 'exp-dec-1', date: '2025-12-05', amount: 4500, category_id: 'cat-2', category_name: 'Feed', vendor_id: 'ven-1', vendor_name: 'MasterFeeds', segment_id: 'seg-1', segment_name: 'Poultry', notes: 'Monthly Bulk', description: 'Chicken Feed', payment_method: 'Wire', status: 'paid' },
+  { id: 'exp-dec-2', date: '2025-12-20', amount: 1200, category_id: 'cat-1', category_name: 'Repairs', vendor_id: 'ven-2', vendor_name: 'AgriMech', segment_id: 'seg-2', segment_name: 'Orchard', notes: 'Pump fix', description: 'Irrigation Pump', payment_method: 'Card', status: 'paid' },
+  
+  // JANUARY (The Spike / Anomaly)
+  { id: 'exp-jan-1', date: '2026-01-05', amount: 5200, category_id: 'cat-2', category_name: 'Feed', vendor_id: 'ven-1', vendor_name: 'MasterFeeds', segment_id: 'seg-1', segment_name: 'Poultry', notes: 'Bulk order', description: 'Feed 5-ton', payment_method: 'Wire', status: 'paid' },
+  { id: 'exp-jan-2', date: '2026-01-15', amount: 35000, category_id: 'cat-1', category_name: 'Equipment', vendor_id: 'ven-4', vendor_name: 'Deere Service', segment_id: 'seg-2', segment_name: 'Orchard', notes: 'CRITICAL', description: 'Tractor Engine Overhaul', payment_method: 'Wire', status: 'paid' },
+  
+  // FEBRUARY (Efficient Cycle)
+  { id: 'exp-feb-1', date: '2026-02-05', amount: 5000, category_id: 'cat-2', category_name: 'Feed', vendor_id: 'ven-1', vendor_name: 'MasterFeeds', segment_id: 'seg-1', segment_name: 'Poultry', notes: 'Bulk order', description: 'Feed 5-ton', payment_method: 'Wire', status: 'paid' },
+  { id: 'exp-feb-10', date: '2026-02-10', amount: 2500, category_id: 'cat-7', category_name: 'Vet', vendor_id: 'ven-5', vendor_name: 'VetConnect', segment_id: 'seg-1', segment_name: 'Poultry', notes: 'Annual check', description: 'Poultry Vaccinations', payment_method: 'Card', status: 'paid' },
+  
+  // MARCH (Current Month)
+  { id: 'exp-mar-1', date: '2026-03-05', amount: 18500, category_id: 'cat-2', category_name: 'Feed', vendor_id: 'ven-1', vendor_name: 'MasterFeeds', segment_id: 'seg-1', segment_name: 'Poultry', notes: 'SPIKE ALERT', description: 'Feed - Emergency Import', payment_method: 'Wire', status: 'paid' },
+];
+
+export const SALES: any[] = [
+  // DEC
+  { id: 'sale-1', date: '2025-12-28', customer: 'Island Groceries', product: 'Eggs', quantity: 1500, unit_price: 12, total_amount: 18000, segment_id: 'seg-1', segment_name: 'Poultry' },
+  // JAN (Loss month due to tractor)
+  { id: 'sale-2', date: '2026-01-28', customer: 'Hotel Chain', product: 'Eggs', quantity: 2000, unit_price: 12, total_amount: 24000, segment_id: 'seg-1', segment_name: 'Poultry' },
+  // FEB (Profitability win)
+  { id: 'sale-3', date: '2026-02-28', customer: 'Export Partners', product: 'Eggs', quantity: 4500, unit_price: 12, total_amount: 54000, segment_id: 'seg-1', segment_name: 'Poultry' },
+  { id: 'sale-4', date: '2026-02-20', customer: 'Local Market', product: 'Coffee Beans', quantity: 500, unit_price: 45, total_amount: 22500, segment_id: 'seg-2', segment_name: 'Orchard' },
+  // MAR
+  { id: 'sale-5', date: '2026-03-25', customer: 'Export Partners', product: 'Eggs', quantity: 5200, unit_price: 14, total_amount: 72800, segment_id: 'seg-1', segment_name: 'Poultry' },
 ];
 
 export const LABOR_ENTRIES: LaborEntry[] = [
-  { id: 'lab-001', worker_name: 'Anthony Brown', task: 'Feeding & watering broilers', date: '2025-01-06', start_time: '06:00', end_time: '10:00', total_hours: 4, hourly_rate: 800, total_cost: 3200, department: 'Poultry', segment_id: 'seg-001', segment_name: 'Broilers / Meat Poultry', notes: '', created_by: 'Manager User', created_at: '2025-01-06T10:30:00Z' },
-  { id: 'lab-002', worker_name: 'Maria Gordon', task: 'Egg collection and grading', date: '2025-01-06', start_time: '07:00', end_time: '11:00', total_hours: 4, hourly_rate: 750, total_cost: 3000, department: 'Poultry Layers', segment_id: 'seg-002', segment_name: 'Layers / Egg Production', notes: '', created_by: 'Manager User', created_at: '2025-01-06T11:30:00Z' },
-  { id: 'lab-003', worker_name: 'Devon Campbell', task: 'Weeding cassava field', date: '2025-01-07', start_time: '07:00', end_time: '15:00', total_hours: 8, hourly_rate: 850, total_cost: 6800, department: 'Crops', segment_id: 'seg-006', segment_name: 'Crops', crop_type: 'Cassava', notes: '', created_by: 'Manager User', created_at: '2025-01-07T15:30:00Z' },
-  { id: 'lab-004', worker_name: 'Sandra Reid', task: 'Goat health check and feeding', date: '2025-01-08', start_time: '07:00', end_time: '12:00', total_hours: 5, hourly_rate: 800, total_cost: 4000, department: 'Livestock', segment_id: 'seg-003', segment_name: 'Goats', animal_type: 'Goat', notes: '', created_by: 'Manager User', created_at: '2025-01-08T12:30:00Z' },
-  { id: 'lab-005', worker_name: 'Trevor Williams', task: 'Pig pen cleaning and feeding', date: '2025-01-09', start_time: '06:30', end_time: '12:30', total_hours: 6, hourly_rate: 800, total_cost: 4800, department: 'Swine', segment_id: 'seg-004', segment_name: 'Pigs / Swine', animal_type: 'Pig', notes: '', created_by: 'Manager User', created_at: '2025-01-09T13:00:00Z' },
-  { id: 'lab-006', worker_name: 'Anthony Brown', task: 'Broiler house cleaning', date: '2025-01-10', start_time: '06:00', end_time: '14:00', total_hours: 8, hourly_rate: 800, total_cost: 6400, department: 'Poultry', segment_id: 'seg-001', segment_name: 'Broilers / Meat Poultry', notes: '', created_by: 'Manager User', created_at: '2025-01-10T14:30:00Z' },
   { id: 'lab-007', worker_name: 'Devon Campbell', task: 'Tomato staking and tying', date: '2025-01-14', start_time: '07:00', end_time: '16:00', total_hours: 9, hourly_rate: 850, total_cost: 7650, department: 'Crops', segment_id: 'seg-006', segment_name: 'Crops', crop_type: 'Tomato', notes: '', created_by: 'Manager User', created_at: '2025-01-14T16:30:00Z' },
   { id: 'lab-008', worker_name: 'Grace Thompson', task: 'Scotch bonnet harvesting', date: '2025-01-20', start_time: '07:00', end_time: '13:00', total_hours: 6, hourly_rate: 800, total_cost: 4800, department: 'Crops', segment_id: 'seg-006', segment_name: 'Crops', crop_type: 'Scotch Bonnet', notes: '', created_by: 'Manager User', created_at: '2025-01-20T13:30:00Z' },
 ];
@@ -502,8 +501,104 @@ export function getOverdueLoans(loans: Loan[]): Loan[] {
   return loans.filter(l => l.status === 'overdue');
 }
 
+export function calculateGrowth(current: number, previous: number): string {
+  if (previous === 0) return '+100%';
+  const growth = ((current - previous) / previous) * 100;
+  return `${growth >= 0 ? '+' : ''}${growth.toFixed(1)}%`;
+}
+
+export function getExecutiveBrief(sales: any[], expenses: any[], loans: any[]): string {
+  const currentMonth = new Date().toISOString().substring(0, 7);
+  const totalSales = sales.reduce((sum, s) => sum + (s.total_amount || 0), 0);
+  const totalExp = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const profit = totalSales - totalExp;
+  
+  const topSegment = Object.entries(getExpensesBySegment(expenses))
+    .sort((a, b) => b[1] - a[1])[0];
+  
+  const overdueCount = loans.filter(l => l.status === 'overdue').length;
+
+  let brief = `Performance is ${profit >= 0 ? 'strong' : 'tight'} with ${formatCurrency(profit)} net yield. `;
+  if (topSegment) brief += `Heavy investment noted in ${topSegment[0]}. `;
+  if (overdueCount > 0) brief += `Warning: ${overdueCount} capital nodes require immediate attention.`;
+  else brief += "Capital structure remains stable.";
+  
+  return brief;
+}
+
+export function getComparisonData(sales: any[], expenses: any[]): { month: string; revenue: number; expense: number }[] {
+  const data: Record<string, { revenue: number; expense: number }> = {};
+  
+  sales.forEach(s => {
+    const m = (s.date || '').substring(0, 7);
+    if (!m) return;
+    if (!data[m]) data[m] = { revenue: 0, expense: 0 };
+    data[m].revenue += (s.total_amount || 0);
+  });
+  
+  expenses.forEach(e => {
+    const m = e.date.substring(0, 7);
+    if (!data[m]) data[m] = { revenue: 0, expense: 0 };
+    data[m].expense += e.amount;
+  });
+
+  return Object.entries(data).sort().map(([month, vals]) => ({
+    month,
+    revenue: vals.revenue,
+    expense: vals.expense
+  }));
+}
+
 export const DOCUMENTS: Document[] = [
   { id: 'doc-001', name: 'Land Title - Sector A.pdf', type: 'application/pdf', category: 'Legal', upload_date: '2024-01-15', file_size: '2.4 MB', url: '#', uploaded_by: 'Admin User' },
   { id: 'doc-002', name: 'Chicken Feed Invoice #4402.pdf', type: 'application/pdf', category: 'Invoice', upload_date: '2024-12-05', file_size: '1.1 MB', url: '#', uploaded_by: 'Admin User' },
   { id: 'doc-003', name: 'Equipment Lease Agreement.docx', type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', category: 'Contract', upload_date: '2024-03-20', file_size: '850 KB', url: '#', uploaded_by: 'Admin User' },
 ];
+
+export function getAnomalies(expenses: Expense[]): { id: string; msg: string; severity: 'warning' | 'danger' }[] {
+  const categories: Record<string, number[]> = {};
+  expenses.forEach(e => {
+    if (!categories[e.category_name]) categories[e.category_name] = [];
+    categories[e.category_name].push(e.amount);
+  });
+
+  const anomalies: { id: string; msg: string; severity: 'warning' | 'danger' }[] = [];
+  
+  Object.entries(categories).forEach(([name, amounts]) => {
+    if (amounts.length < 3) return;
+    const avg = amounts.reduce((a, b) => a + b, 0) / amounts.length;
+    const last = amounts[amounts.length - 1];
+    
+    if (last > avg * 1.5) {
+      anomalies.push({ 
+        id: name, 
+        msg: `${name} Spike: Current cost is 50%+ above average.`, 
+        severity: last > avg * 2 ? 'danger' : 'warning' 
+      });
+    }
+  });
+
+  return anomalies;
+}
+
+export function getEfficiencyData(sales: any[], labor: LaborEntry[]): { month: string; efficiency: number }[] {
+  const data: Record<string, { rev: number; hours: number }> = {};
+  
+  sales.forEach(s => {
+    const m = (s.date || '').substring(0, 7);
+    if (!m) return;
+    if (!data[m]) data[m] = { rev: 0, hours: 0 };
+    data[m].rev += (s.total_amount || 0);
+  });
+  
+  labor.forEach(l => {
+    const m = l.date.substring(0, 7);
+    if (!data[m]) data[m] = { rev: 0, hours: 0 };
+    data[m].hours += l.total_hours;
+  });
+
+  return Object.entries(data).sort().map(([month, vals]) => ({
+    month,
+    efficiency: vals.hours > 0 ? vals.rev / vals.hours : 0
+  }));
+}

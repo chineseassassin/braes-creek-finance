@@ -52,88 +52,133 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarProps) {
-  const { currentUser, sidebarOpen, setSidebarOpen } = useAppStore();
+  const { currentUser, sidebarOpen, setSidebarOpen, navSections, renameNavItem, deleteNavItem, resetNavigation } = useAppStore();
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleRename = (e: React.MouseEvent, id: string, currentLabel: string) => {
+    e.stopPropagation();
+    const newName = prompt(`Rename "${currentLabel}" to:`, currentLabel);
+    if (newName && newName.trim() !== '' && newName !== currentLabel) {
+      renameNavItem(id, newName.trim());
+    }
+  };
+
+  const handleDelete = (e: React.MouseEvent, id: string, label: string) => {
+    e.stopPropagation();
+    if (window.confirm(`Are you sure you want to remove "${label}" from the sidebar?`)) {
+      deleteNavItem(id);
+    }
+  };
 
   return (
     <>
-      {/* Mobile Overlay */}
       <div 
         className={`modal-overlay ${sidebarOpen ? 'mobile-show' : 'mobile-hide'}`}
         style={{ zIndex: 45, display: 'none' }}
         onClick={() => setSidebarOpen(false)}
       />
 
-      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-        {/* Logo Section */}
-        <div className="sidebar-logo">
-          <div className="sidebar-logo-icon" style={{ background: 'transparent', width: 40, height: 40 }}>
-            <Image
-              src="/logo-transparent.png"
-              alt="Braes Creek Estate"
-              width={40}
-              height={40}
-              style={{ objectFit: 'contain' }}
-            />
-          </div>
-          <div className="sidebar-logo-text">
-            <h1>Braes Creek Estate <span style={{ color: 'hsl(var(--text-muted))', fontWeight: 400, fontSize: '0.9em' }}>/ Platform</span></h1>
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`} style={{ background: 'hsl(var(--sidebar-bg))', borderRight: '1px solid hsl(var(--border))' }}>
+        <div className="sidebar-logo" style={{ height: '80px', padding: '0 24px', borderBottom: '1px solid hsl(var(--border))' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '40px', height: '40px', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Image
+                src="/logo-transparent.png"
+                alt="Braes Creek Estate"
+                width={36}
+                height={36}
+                style={{ objectFit: 'contain' }}
+              />
+            </div>
+            <div style={{ overflow: 'hidden' }}>
+              <h1 style={{ fontSize: '13px', fontWeight: 900, letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
+                BRAES CREEK <span style={{ color: 'hsl(var(--accent-green))' }}>HQ</span>
+              </h1>
+              <p style={{ fontSize: '10px', fontWeight: 700, color: 'hsl(var(--text-muted))', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Est. 2026 / OS
+              </p>
+            </div>
           </div>
           
-          {/* Mobile Close Button */}
           <button 
-            className="mobile-only btn btn-ghost btn-icon" 
+            className="mobile-only btn btn-ghost" 
             onClick={() => setSidebarOpen(false)}
-            style={{ marginLeft: 'auto' }}
+            style={{ marginLeft: 'auto', padding: '8px' }}
           >✕</button>
         </div>
 
-        {/* Navigation */}
-        <nav className="sidebar-nav">
-          {NAV_SECTIONS.map(section => (
-            <div key={section.label} style={{ marginBottom: '2px' }}>
-              <div className="sidebar-section-label">{section.label}</div>
-              {section.items.map(item => (
-                <div
-                  key={item.id}
-                  className={`nav-item ${activePage === item.id ? 'active' : ''}`}
-                  onClick={() => {
-                    onNavigate(item.id);
-                    if (window.innerWidth <= 1024) setSidebarOpen(false);
-                  }}
-                >
-                  <span className={`nav-item-icon color-${item.color}`}>{item.icon}</span>
-                  <span className="nav-item-label">{item.label}</span>
-
-                </div>
-              ))}
+        <nav className="sidebar-nav" style={{ padding: '24px 16px' }}>
+          {navSections.map(section => (
+            <div key={section.label} style={{ marginBottom: '32px' }}>
+              <div style={{ padding: '0 12px', fontSize: '10px', fontWeight: 900, color: 'hsl(var(--text-muted))', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '16px' }}>
+                {section.label}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {section.items.map(item => (
+                  <div
+                    key={item.id}
+                    className={`nav-item ${activePage === item.id ? 'active' : ''}`}
+                    onClick={() => {
+                      if (!isEditing) {
+                        onNavigate(item.id);
+                        if (window.innerWidth <= 1024) setSidebarOpen(false);
+                      }
+                    }}
+                    style={{ 
+                      padding: '10px 12px',
+                      borderRadius: '12px',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                      color: activePage === item.id ? 'hsl(var(--accent-blue))' : 'hsl(var(--text-secondary))',
+                      background: activePage === item.id ? 'hsl(var(--accent-blue) / 0.1)' : 'transparent',
+                      border: activePage === item.id ? '1px solid hsl(var(--accent-blue) / 0.2)' : '1px solid transparent'
+                    }}
+                  >
+                    <span style={{ fontSize: '18px', filter: activePage === item.id ? 'grayscale(0)' : 'grayscale(1) opacity(0.6)' }}>{item.icon}</span>
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    
+                    {isEditing && (
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button className="btn-xs" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }} onClick={(e) => handleRename(e, item.id, item.label)}>✏️</button>
+                        <button className="btn-xs" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'hsl(var(--accent-red))' }} onClick={(e) => handleDelete(e, item.id, item.label)}>✕</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
+          
+          <button 
+            className="btn btn-ghost"
+            onClick={() => setIsEditing(!isEditing)}
+            style={{ width: '100%', fontSize: '11px', fontWeight: 800, marginTop: '24px', background: isEditing ? 'hsl(var(--bg-primary))' : 'transparent', border: '1px solid hsl(var(--border))' }}
+          >
+            {isEditing ? 'SAVING CONFIG...' : '⚙️ CONFIGURE HUB'}
+          </button>
         </nav>
 
-        {/* User Profile */}
-        <div className="sidebar-user">
-          <div className="user-avatar" title={currentUser.name}>
-            {currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-          </div>
-          <div style={{ flex: 1, overflow: 'hidden' }}>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--text-primary))', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-              {currentUser.name}
+        <div className="sidebar-user" style={{ padding: '24px', borderTop: '1px solid hsl(var(--border))', marginTop: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+            <div className="user-avatar" style={{ width: '40px', height: '40px', borderRadius: '12px', fontSize: '14px', fontWeight: 900 }}>
+              {currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
             </div>
-            <div style={{ fontSize: '11px', color: 'hsl(var(--text-muted))', textTransform: 'capitalize' }}>
-              {currentUser.role}
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <div style={{ fontSize: '14px', fontWeight: 800, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{currentUser.name}</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'hsl(var(--text-muted))', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{currentUser.role}</div>
             </div>
+            <button onClick={onLogout} className="btn-icon" style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '8px' }}>🚪</button>
           </div>
-          <button
-            onClick={onLogout}
-            className="btn btn-ghost btn-icon"
-            title="Sign out"
-            style={{ fontSize: '16px' }}
-          >🚪</button>
         </div>
       </aside>
 
       <style jsx>{`
         .mobile-only { display: none; }
+        .btn-xs { padding: 4px; min-width: 24px; min-height: 24px; font-size: 10px; }
         @media (max-width: 1024px) {
           .mobile-only { display: flex; }
           .mobile-show { display: flex !important; }

@@ -25,6 +25,7 @@ import SettingsPage from '@/components/SettingsPage';
 import AlertsPage from '@/components/AlertsPage';
 import PLPage from '@/components/PLPage';
 import ThemeToggle from '@/components/ThemeToggle';
+import ControlPanel from '@/components/ControlPanel';
 
 const PAGE_TITLES: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -51,11 +52,21 @@ export default function PlatformShell() {
   const [authenticated, setAuthenticated] = useState(false);
   const [loadingSession, setLoadingSession] = useState(true);
   const [activePage, setActivePage] = useState('dashboard');
-  const { sidebarOpen, setSidebarOpen, loadAllData } = useAppStore();
+  const { sidebarOpen, setSidebarOpen, loadAllData, controlPanelOpen, setControlPanelOpen } = useAppStore();
 
   useEffect(() => {
     (window as any).__onNavigate = setActivePage;
-  }, []);
+    
+    // Global Command Hotkey (Cmd/Ctrl + K)
+    const handleKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setControlPanelOpen(!controlPanelOpen);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [controlPanelOpen, setControlPanelOpen]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -74,6 +85,22 @@ export default function PlatformShell() {
     });
 
     return () => subscription.unsubscribe();
+  }, [loadAllData]);
+
+  useEffect(() => {
+    // FORCE SYNC for the new Intelligence Upgrade
+    const HAS_MIGRATED = 'braes_creek_migrated_v4';
+    if (typeof window !== 'undefined' && !localStorage.getItem(HAS_MIGRATED)) {
+      console.log("Intelligence Upgrade: Synchronizing data modules...");
+      loadAllData('admin').then(() => {
+         localStorage.setItem(HAS_MIGRATED, 'true');
+         // We force a clear once to ensure the new STRATEGIC constants in store.ts take over
+         const { clearAllData } = (useAppStore as any).getState();
+         clearAllData().then(() => {
+            window.location.reload();
+         });
+      });
+    }
   }, [loadAllData]);
 
   useEffect(() => {
@@ -113,6 +140,53 @@ export default function PlatformShell() {
     }
   }
 
+  // --- Smart Alerts Engine ---
+  const { loans, sales, expenses, livestockUnits, notifications, addNotification } = useAppStore();
+  useEffect(() => {
+    if (!authenticated) return;
+
+    const checkHealth = () => {
+      const today = new Date().toISOString().split('T')[0];
+
+      // 1. Overdue Loans
+      loans.forEach(loan => {
+        if (loan.status !== 'paid_off' && loan.due_date && loan.due_date < today) {
+          const alertId = `overdue-${loan.id}`;
+          if (!notifications.find(n => n.id === alertId)) {
+            addNotification({
+              id: alertId,
+              title: 'Critical: Overdue Loan',
+              message: `Loan from ${loan.lender_name} was due on ${loan.due_date}.`,
+              type: 'alert',
+              category: 'Finance',
+              timestamp: new Date().toISOString()
+            });
+          }
+        }
+      });
+
+      // 2. Low Cash (Simple liquidity check)
+      const totalRev = sales.reduce((s, r) => s + (r.total_amount || 0), 0);
+      const totalExp = expenses.reduce((s, e) => s + e.amount, 0);
+      if (totalRev > 0 && (totalRev - totalExp) < (totalExp * 0.1)) { // Warning if cash < 10% of monthly burn
+        const alertId = 'low-liquidity';
+        if (!notifications.find(n => n.id === alertId)) {
+          addNotification({
+            id: alertId,
+            title: 'Financial Warning: Low Liquidity',
+            message: 'Net operational cash flow is dropping below 10% safety margin.',
+            type: 'alert',
+            category: 'Finance',
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+    };
+
+    const timer = setTimeout(checkHealth, 3000); // Check 3s after load
+    return () => clearTimeout(timer);
+  }, [authenticated, loans, sales, expenses, notifications, addNotification]);
+
   return (
     <div className="app-layout">
       <Sidebar
@@ -139,6 +213,13 @@ export default function PlatformShell() {
             </div>
           </div>
           <div className="header-actions">
+            <button 
+              className="btn btn-primary btn-sm desktop-only" 
+              onClick={() => setControlPanelOpen(true)}
+              style={{ borderRadius: '100px', fontSize: '11px', padding: '0 20px', height: '36px' }}
+            >
+              COMMAND [K]
+            </button>
             <ThemeToggle />
             <NotificationCenter />
             <span className="header-date">
@@ -146,6 +227,8 @@ export default function PlatformShell() {
             </span>
           </div>
         </header>
+
+        <ControlPanel isOpen={controlPanelOpen} onClose={() => setControlPanelOpen(false)} />
 
         <div className="mobile-only" style={{ padding: '0 16px 12px 16px', borderBottom: '1px solid hsl(var(--border) / 0.5)' }}>
           <GlobalSearch onNavigate={setActivePage} />
