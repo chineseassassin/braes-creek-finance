@@ -105,14 +105,12 @@ export default function LoginPage({ onLogin }: LoginProps) {
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <img
-              src="/BRAES-CREEK-FINAL-MASTER.png"
+              src="/logo-transparent.png"
               alt="Braes Creek Estate"
               width={340}
               height={340}
               style={{ 
                 objectFit: 'contain', 
-                mixBlendMode: 'screen',
-                filter: 'drop-shadow(0 0 30px rgba(255, 255, 255, 0.1))',
                 transform: `translate(${mousePos.x * 0.2}px, ${mousePos.y * 0.2}px)`,
                 transition: 'transform 0.2s ease-out'
               }}
