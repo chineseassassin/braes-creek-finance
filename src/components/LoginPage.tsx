@@ -159,9 +159,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
           </form>
 
           <div className="divider">
-            <div className="line" />
             <span>OR</span>
-            <div className="line" />
           </div>
 
           <button 
