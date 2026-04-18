@@ -53,7 +53,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'radial-gradient(circle at 10% 10%, hsla(200, 60%, 15%, 1) 0%, transparent 50%), radial-gradient(circle at 50% 120%, hsla(200, 40%, 95%, 1) 0%, hsla(200, 40%, 80%, 0.8) 40%, transparent 80%), #05070a',
+      background: 'radial-gradient(circle at 10% 10%, hsla(160, 100%, 10%, 1) 0%, transparent 50%), radial-gradient(circle at 50% 120%, hsla(160, 100%, 15%, 1) 0%, hsla(160, 100%, 5%, 0.8) 40%, transparent 80%), #020406',
       backgroundAttachment: 'fixed',
       display: 'flex',
       alignItems: 'center',
@@ -63,45 +63,41 @@ export default function LoginPage({ onLogin }: LoginProps) {
       fontFamily: "'Plus Jakarta Sans', sans-serif"
     }}>
       {/* ATMOSPHERIC SPACE */}
-      <div style={{ position: 'fixed', top: '10%', right: '10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%)', filter: 'blur(100px)', pointerEvents: 'none' }} />
-      <div style={{ position: 'fixed', bottom: '-20%', left: '50%', transform: 'translateX(-50%)', width: '130vw', height: '600px', background: 'radial-gradient(circle, rgba(255,255,255,0.6) 0%, transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'fixed', top: '10%', right: '10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)', filter: 'blur(100px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'fixed', bottom: '-20%', left: '50%', transform: 'translateX(-50%)', width: '130vw', height: '600px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
 
-      <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 1 }}>
+      <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 1, animation: 'visionPop 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '32px', animation: 'visionPop 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{ margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
             <Image
               src="/logo-transparent.png"
               alt="Braes Creek Estate"
-              width={220}
-              height={220}
-              style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 30px rgba(255,255,255,0.2))' }}
+              width={240}
+              height={240}
+              style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 40px rgba(16, 185, 129, 0.2))' }}
             />
           </div>
-          <p style={{ color: '#fff', fontSize: '12px', fontWeight: 900, letterSpacing: '0.3em', marginTop: '-12px', opacity: 0.4 }}>SECURE ACCESS LAYER</p>
+          <p style={{ color: '#fff', fontSize: '11px', fontWeight: 900, border: '1px solid rgba(16, 185, 129, 0.3)', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '12px', opacity: 0.6 }}>SYSTEM OS 2026</p>
         </div>
 
-        {/* Luminous Login Card (Hyper-Transparent) */}
+        {/* Luminous Login Card (Obsidian Glass) */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.03)',
-          backdropFilter: 'blur(50px) saturate(200%) brightness(1.1)',
-          WebkitBackdropFilter: 'blur(50px) saturate(200%) brightness(1.1)',
-          border: '1px solid rgba(255, 255, 255, 0.4)',
-          borderRadius: '48px',
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(40px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(40px) saturate(150%)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '40px',
           padding: '48px',
-          boxShadow: `
-            0 140px 280px -100px rgba(0,0,0,0.6),
-            0 1px 1px rgba(255,255,255,0.5) inset
-          `,
-          animation: 'visionPop 1s cubic-bezier(0.16, 1, 0.3, 1)',
+          boxShadow: '0 80px 160px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05) inset',
           position: 'relative',
           overflow: 'hidden'
         }}>
-           {/* Shimmer Reflection */}
-           <div style={{ position: 'absolute', top: 0, left: '-100%', width: '50%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)', transform: 'skewX(-45deg)', animation: 'visionSweep 12s infinite linear', pointerEvents: 'none' }} />
+           {/* Subtle Scanning Line */}
+           <div style={{ position: 'absolute', top: 0, left: '-100%', width: '100%', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.5), transparent)', animation: 'visionSweep 4s infinite linear', pointerEvents: 'none' }} />
 
-          <h2 style={{ fontSize: '28px', fontWeight: 900, color: '#fff', marginBottom: '8px', textAlign: 'center', letterSpacing: '-0.04em' }}>Welcome</h2>
-          <p style={{ color: '#fff', fontSize: '14px', fontWeight: 800, marginBottom: '40px', textAlign: 'center', opacity: 0.4 }}>Enterprise System OS</p>
+          <h2 style={{ fontSize: '32px', fontWeight: 900, color: '#fff', marginBottom: '8px', textAlign: 'center', letterSpacing: '-0.04em' }}>Welcome</h2>
+          <p style={{ color: '#fff', fontSize: '14px', fontWeight: 800, marginBottom: '44px', textAlign: 'center', opacity: 0.3 }}>Enterprise Intelligence Access</p>
 
           <form onSubmit={handleLogin}>
             <div style={{ marginBottom: '24px' }}>
@@ -184,72 +180,80 @@ export default function LoginPage({ onLogin }: LoginProps) {
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: '24px', textAlign: 'center', animation: 'visionPop 1.2s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-           <p style={{ fontSize: '11px', color: '#fff', fontWeight: 900, opacity: 0.3 }}>© 2026 Braes Creek Estate · Secure Node</p>
+        <div style={{ marginTop: '24px', textAlign: 'center' }}>
+           <p style={{ fontSize: '11px', color: '#fff', fontWeight: 900, opacity: 0.2 }}>© 2026 Braes Creek Estate · Secure Node · V.7.2</p>
         </div>
       </div>
 
       <style jsx>{`
         .vision-input {
           width: 100%;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 18px;
-          padding: 14px 20px;
+          padding: 16px 20px;
           color: #fff;
           font-size: 15px;
-          font-weight: 600;
+          font-weight: 700;
           outline: none;
           font-family: inherit;
           transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .vision-input:focus {
-          background: rgba(255, 255, 255, 0.1);
-          border-color: #2563eb;
-          box-shadow: 0 8px 32px rgba(37,99,235,0.15);
+          background: rgba(255, 255, 255, 0.08);
+          border-color: #10b981;
+          box-shadow: 0 0 20px rgba(16,185,129,0.15);
+        }
+        .vision-input::placeholder {
+          color: rgba(255,255,255,0.2);
         }
         .vision-btn-primary {
           width: 100%;
-          padding: 18px;
+          padding: 20px;
           font-size: 16px;
           font-weight: 900;
           color: white;
-          background: linear-gradient(135deg, #2563eb, #7c3aed);
+          background: linear-gradient(135deg, #10b981, #059669);
           border: none;
           border-radius: 20px;
           cursor: pointer;
           transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 12px 32px rgba(37,99,235,0.3);
+          box-shadow: 0 16px 32px rgba(16,185,129,0.3);
+          letter-spacing: 0.1em;
+        }
+        .vision-btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 20px 40px rgba(16,185,129,0.4);
+          filter: brightness(1.1);
         }
         .vision-btn-google {
           width: 100%;
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(255, 255, 255, 0.04);
           color: #fff;
-          border: 1px solid rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 18px;
           padding: 14px;
           font-size: 14px;
           font-weight: 900;
           cursor: pointer;
           display: flex;
-          alignItems: center;
-          justifyContent: center;
+          align-items: center;
+          justify-content: center;
           gap: 12px;
           transition: all 0.3s;
+          opacity: 0.5;
         }
         .vision-btn-google:hover {
-          background: rgba(255, 255, 255, 0.1);
-          transform: translateY(-2px);
+          background: rgba(255, 255, 255, 0.08);
+          opacity: 1;
         }
         @keyframes visionPop {
-          from { opacity: 0; transform: translateY(120px) scale(0.9) rotateX(20deg); filter: blur(40px); }
-          to { opacity: 1; transform: translateY(0) scale(1) rotateX(0); filter: blur(0); }
+          from { opacity: 0; transform: translateY(80px) scale(0.95); filter: blur(30px); }
+          to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
         @keyframes visionSweep {
-          0% { left: -100%; opacity: 0; }
-          20% { opacity: 1; }
-          80% { opacity: 1; }
-          100% { left: 100%; opacity: 0; }
+          0% { left: -100%; }
+          100% { left: 100%; }
         }
       `}</style>
     </div>
