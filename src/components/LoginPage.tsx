@@ -126,6 +126,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
               height={340}
               style={{ 
                 objectFit: 'contain', 
+                mixBlendMode: 'screen',
                 filter: 'drop-shadow(0 0 30px rgba(255, 255, 255, 0.1))',
                 transform: `translate(${mousePos.x * 0.2}px, ${mousePos.y * 0.2}px)`,
                 transition: 'transform 0.2s ease-out'
@@ -135,12 +136,14 @@ export default function LoginPage({ onLogin }: LoginProps) {
           <p style={{ color: 'hsl(var(--text-muted))', fontSize: '11px', fontWeight: 900, border: 'none', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '4px', opacity: 0.6 }}>SYSTEM OS 2026</p>
         </div>
 
-        <div className="vision-card" style={{
+        <div style={{
           background: 'transparent',
           padding: '48px',
           position: 'relative',
           transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-          transform: `translateZ(40px)`
+          transform: `translateZ(40px)`,
+          border: 'none',
+          boxShadow: 'none'
         }}>
            {isScanning && (
              <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.03)', zIndex: 10 }} />
