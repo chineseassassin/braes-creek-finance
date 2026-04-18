@@ -13,15 +13,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [activeField, setActiveField] = useState<string | null>(null);
-  const [isScanning, setIsScanning] = useState(false);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const x = (e.clientX / window.innerWidth - 0.5) * 20;
-    const y = (e.clientY / window.innerHeight - 0.5) * 20;
-    setMousePos({ x, y });
-  };
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -30,12 +22,10 @@ export default function LoginPage({ onLogin }: LoginProps) {
     
     // Executive Bypass Protocol
     if (email === 'admin' && password === 'admin') {
-      setIsScanning(true);
       setTimeout(() => {
         onLogin('admin');
-        setIsScanning(false);
         setLoading(false);
-      }, 1500);
+      }, 1000);
       return;
     }
 
@@ -48,12 +38,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
       if (error) throw error;
 
       if (data.user) {
-        setIsScanning(true);
-        setTimeout(() => {
-          onLogin('admin');
-          setIsScanning(false);
-          setLoading(false);
-        }, 1500);
+        onLogin('admin');
       }
     } catch (err: any) {
       setError(err.message || 'Identity verification failed. Protocol mismatch.');
@@ -79,104 +64,60 @@ export default function LoginPage({ onLogin }: LoginProps) {
   }
 
   return (
-    <div 
-      onMouseMove={handleMouseMove}
-      className="vision-bg-shift"
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        overflow: 'hidden',
-        fontFamily: "'Plus Jakarta Sans', sans-serif",
-        position: 'relative'
-      }}
-    >
-
-      <div style={{ 
-        width: '100%', 
-        maxWidth: '440px', 
-        position: 'relative', 
-        zIndex: 1, 
-        animation: 'visionPop 1s cubic-bezier(0.16, 1, 0.3, 1)',
-        transform: `perspective(1000px) rotateX(${mousePos.y * -0.05}deg) rotateY(${mousePos.x * 0.05}deg) translateZ(20px)`
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <img
-              src="/logo-transparent.png"
-              alt="Braes Creek Estate"
-              width={340}
-              height={340}
-              style={{ 
-                objectFit: 'contain', 
-                transform: `translate(${mousePos.x * 0.2}px, ${mousePos.y * 0.2}px)`,
-                transition: 'transform 0.2s ease-out'
-              }}
-            />
+    <div className="login-container">
+      {/* Subtle Star Background */}
+      <div className="stars-overlay" />
+      
+      <div className="login-content">
+        {/* Branding Header */}
+        <div className="branding-section">
+          <img
+            src="/logo-transparent-v2.png"
+            alt="Braes Creek Estate"
+            className="main-logo"
+          />
+          <div className="system-pill">
+            SYSTEM OS 2026
           </div>
-          <p style={{ color: 'hsl(var(--text-muted))', fontSize: '11px', fontWeight: 900, border: 'none', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '4px', opacity: 0.6 }}>SYSTEM OS 2026</p>
         </div>
 
-        <div style={{
-          background: 'none !important',
-          padding: '48px',
-          position: 'relative',
-          transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
-          transform: `translateZ(40px)`,
-          border: 'none !important',
-          boxShadow: 'none !important'
-        }}>
-           {isScanning && (
-             <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.03)', zIndex: 10 }} />
-           )}
+        {/* Main Login Card */}
+        <div className="login-card">
+          <h2 className="welcome-text">Welcome</h2>
+          <p className="sub-text">Sign in to the Intelligence Hub</p>
 
-          <h2 style={{ fontSize: '32px', fontWeight: 900, color: '#fff', marginBottom: '8px', textAlign: 'center', letterSpacing: '-0.04em' }}>Welcome</h2>
-          <p style={{ color: '#94A3B8', fontSize: '14px', fontWeight: 800, marginBottom: '44px', textAlign: 'center' }}>Sign in to the Intelligence Hub</p>
-
-          <form onSubmit={handleLogin}>
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: activeField === 'email' ? '#fff' : '#94A3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>ID ACCESS</label>
+          <form onSubmit={handleLogin} className="login-form">
+            <div className="input-group">
+              <label className={activeField === 'email' ? 'active' : ''}>ID ACCESS</label>
               <input
                 type="text"
                 value={email}
-                disabled={isScanning}
                 onFocus={() => setActiveField('email')}
                 onBlur={() => setActiveField(null)}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="admin@braescreek.com"
                 required
-                className="vision-input"
+                className="custom-input"
               />
             </div>
-            <div style={{ marginBottom: '32px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: activeField === 'pass' ? '#fff' : '#94A3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>SECURITY PASS</label>
-              <div style={{ position: 'relative' }}>
+
+            <div className="input-group">
+              <label className={activeField === 'pass' ? 'active' : ''}>SECURITY PASS</label>
+              <div className="password-wrapper">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  disabled={isScanning}
                   onFocus={() => setActiveField('pass')}
                   onBlur={() => setActiveField(null)}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="vision-input"
-                  style={{ paddingRight: '48px' }}
+                  className="custom-input"
                 />
                 <button
                   type="button"
-                  disabled={isScanning}
                   onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '16px', top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none', border: 'none',
-                    color: activeField === 'pass' ? '#fff' : '#94A3B8',
-                    cursor: 'pointer', display: 'flex'
-                  }}
+                  className="eye-toggle"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -184,59 +125,297 @@ export default function LoginPage({ onLogin }: LoginProps) {
             </div>
 
             {error && (
-              <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', borderRadius: '16px', padding: '14px 20px', marginBottom: '24px', color: '#fca5a5', fontSize: '13px', fontWeight: 900 }}>
+              <div className="error-alert">
                 {error}
               </div>
             )}
 
             <button 
               type="submit" 
-              disabled={loading || isScanning} 
-              className="btn btn-primary"
-              style={{ width: '100%', padding: '20px', borderRadius: '20px', fontSize: '16px', fontWeight: 900 }}
+              disabled={loading} 
+              className="initialize-btn"
             >
-              {(loading || isScanning) ? 'Authenticating...' : 'Initialize Access'}
+              {loading ? 'AUTHENTICATING...' : 'INITIALIZE ACCESS'}
             </button>
           </form>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '32px 0' }}>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
-            <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 900, opacity: 0.3 }}>OR</span>
-            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
+          <div className="divider">
+            <div className="line" />
+            <span>OR</span>
+            <div className="line" />
           </div>
 
           <button 
             type="button" 
             onClick={handleGoogleLogin}
-            disabled={loading || isScanning}
-            className="vision-btn-google"
+            disabled={loading}
+            className="google-btn"
           >
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" width="18" height="18" />
             Continue with Google
           </button>
         </div>
 
-        <div style={{ marginTop: '24px', textAlign: 'center' }}>
-           <p style={{ fontSize: '11px', color: '#FFFFFF', fontWeight: 900, opacity: 0.8 }}>© 2026 Braes Creek Estate · Secure Node · V.7.2</p>
+        {/* Footer Metadata */}
+        <div className="footer-metadata">
+          © 2026 Braes Creek Estate · Secure Node · V.7.2
         </div>
       </div>
 
       <style jsx>{`
-        .vision-bg-shift { background: #000000 !important; }
-        .vision-input {
-          width: 100%; background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px;
-          padding: 16px 20px; color: #fff; font-size: 15px; font-weight: 700; outline: none; transition: 0.3s;
+        .login-container {
+          min-height: 100vh;
+          background: #000000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          position: relative;
+          overflow: hidden;
+          font-family: 'Inter', sans-serif;
         }
-        .vision-input:focus { background: rgba(255, 255, 255, 0.08); border-color: #fff; }
-        .vision-btn-google {
-          width: 100%; background: rgba(255, 255, 255, 0.04); color: #fff;
-          border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px; padding: 14px;
-          font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.3s; opacity: 0.6;
+
+        .stars-overlay {
+          position: absolute;
+          inset: 0;
+          background-image: 
+            radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)),
+            radial-gradient(1.5px 1.5px at 100px 150px, #7c7c7c, rgba(0,0,0,0)),
+            radial-gradient(1px 1px at 400px 250px, #fff, rgba(0,0,0,0)),
+            radial-gradient(2px 2px at 600px 400px, #5c5c5c, rgba(0,0,0,0)),
+            radial-gradient(1.5px 1.5px at 800px 100px, #fff, rgba(0,0,0,0));
+          background-repeat: repeat;
+          background-size: 800px 600px;
+          opacity: 0.2;
+          pointer-events: none;
         }
-        .vision-btn-google:hover { background: rgba(255, 255, 255, 0.08); opacity: 1; }
-        @keyframes visionPop {
-          from { opacity: 0; transform: translateY(40px); }
-          to { opacity: 1; transform: translateY(0); }
+
+        .login-content {
+          width: 100%;
+          maxWidth: 440px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+          z-index: 10;
+        }
+
+        .branding-section {
+          text-align: center;
+          margin-bottom: 32px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+        }
+
+        .main-logo {
+          width: 320px;
+          height: auto;
+          margin-bottom: 24px;
+          position: relative;
+          z-index: 2;
+          /* Subtle Gold Bloom enhancement */
+          filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.1));
+        }
+
+        .branding-section::before {
+          content: "";
+          position: absolute;
+          top: 40px;
+          width: 200px;
+          height: 200px;
+          background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, rgba(0,0,0,0) 70%);
+          pointer-events: none;
+          z-index: 1;
+        }
+
+        .system-pill {
+          background: rgba(0, 229, 255, 0.05);
+          border: 1px solid rgba(0, 229, 255, 0.2);
+          color: #00e5ff;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.3em;
+          padding: 6px 16px;
+          border-radius: 100px;
+          margin-top: -10px;
+          text-transform: uppercase;
+        }
+
+        .login-card {
+          background: #161b22;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 2.5rem;
+          padding: 48px 40px;
+          width: 100%;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .welcome-text {
+          font-size: 32px;
+          font-weight: 700;
+          color: #ffffff;
+          margin-bottom: 8px;
+          text-align: center;
+          letter-spacing: -0.02em;
+        }
+
+        .sub-text {
+          color: #8b949e;
+          font-size: 14px;
+          text-align: center;
+          margin-bottom: 40px;
+        }
+
+        .input-group {
+          margin-bottom: 24px;
+        }
+
+        .input-group label {
+          display: block;
+          font-size: 10px;
+          font-weight: 800;
+          color: #8b949e;
+          letter-spacing: 0.1em;
+          margin-bottom: 10px;
+          transition: color 0.2s;
+        }
+
+        .input-group label.active {
+          color: #00e5ff;
+        }
+
+        .custom-input {
+          width: 100%;
+          background: #0d1117;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 12px;
+          padding: 16px 20px;
+          color: #ffffff;
+          font-size: 14px;
+          outline: none;
+          transition: all 0.2s;
+        }
+
+        .custom-input:focus {
+          border-color: rgba(0, 229, 255, 0.4);
+          background: #0d1117;
+          box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.1);
+        }
+
+        .password-wrapper {
+          position: relative;
+        }
+
+        .eye-toggle {
+          position: absolute;
+          right: 16px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          color: #484f58;
+          cursor: pointer;
+          display: flex;
+          padding: 4px;
+          transition: color 0.2s;
+        }
+
+        .eye-toggle:hover {
+          color: #ffffff;
+        }
+
+        .error-alert {
+          background: rgba(248, 81, 73, 0.1);
+          border: 1px solid rgba(248, 81, 73, 0.2);
+          border-radius: 12px;
+          padding: 12px 16px;
+          color: #f85149;
+          font-size: 13px;
+          margin-bottom: 24px;
+          text-align: center;
+        }
+
+        .initialize-btn {
+          width: 100%;
+          background: #00e5ff;
+          color: #000000;
+          border: none;
+          border-radius: 12px;
+          padding: 18px;
+          font-size: 14px;
+          font-weight: 800;
+          letter-spacing: 0.05em;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 4px 20px rgba(0, 229, 255, 0.3);
+        }
+
+        .initialize-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 30px rgba(0, 229, 255, 0.4);
+          filter: brightness(1.1);
+        }
+
+        .initialize-btn:active:not(:disabled) {
+          transform: translateY(0);
+        }
+
+        .initialize-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .divider {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          margin: 32px 0;
+        }
+
+        .divider .line {
+          flex: 1;
+          height: 1px;
+          background: rgba(255, 255, 255, 0.06);
+        }
+
+        .divider span {
+          color: #484f58;
+          font-size: 10px;
+          font-weight: 800;
+        }
+
+        .google-btn {
+          width: 100%;
+          background: transparent;
+          color: #ffffff;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          padding: 14px;
+          font-size: 13px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .google-btn:hover:not(:disabled) {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .footer-metadata {
+          margin-top: 40px;
+          color: #484f58;
+          font-size: 11px;
+          font-weight: 500;
+          text-align: center;
+          opacity: 0.8;
+          letter-spacing: 0.02em;
         }
       `}</style>
     </div>
