@@ -248,7 +248,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
           background: conic-gradient(from 0deg, transparent 70%, rgba(255,255,255,0.1), rgba(255,255,255,0.2), rgba(255,255,255,0.1));
           -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
           -webkit-mask-composite: xor; mask-composite: exclude;
-          animation: orbitRotate 4s linear infinite; opacity: 0.1;
+          animation: orbitRotate 4s linear infinite; opacity: 0.1; pointer-events: none;
         }
         @keyframes orbitRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .vision-input {
