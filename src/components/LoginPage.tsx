@@ -72,7 +72,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
         {/* Branding Header */}
         <div className="branding-section">
           <img
-            src="/logo-transparent-v2.png"
+            src="/logo-transparent-v3.png"
             alt="Braes Creek Estate"
             className="main-logo"
           />
