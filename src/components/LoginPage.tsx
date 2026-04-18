@@ -277,6 +277,17 @@ export default function LoginPage({ onLogin }: LoginProps) {
           position: relative;
           z-index: 10;
           overflow: hidden;
+          transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+          transform-origin: center;
+          will-change: transform, box-shadow;
+        }
+
+        .login-card:hover {
+          transform: translateY(-8px) scale(1.01);
+          box-shadow: 
+            0 40px 80px rgba(0, 0, 0, 0.8),
+            0 0 60px rgba(20, 184, 166, 0.12);
+          border-color: rgba(255, 255, 255, 0.1);
         }
 
         .login-card::before {
