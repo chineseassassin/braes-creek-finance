@@ -61,9 +61,9 @@ export default function LoginPage({ onLogin }: LoginProps) {
   return (
     <div 
       onMouseMove={handleMouseMove}
+      className="vision-bg-shift"
       style={{
         minHeight: '100vh',
-        background: '#0B0E14',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -74,8 +74,8 @@ export default function LoginPage({ onLogin }: LoginProps) {
       }}
     >
       {/* GENERATIVE NEURAL BACKGROUND */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.2, pointerEvents: 'none' }}>
-        {[...Array(15)].map((_, i) => (
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.15, pointerEvents: 'none' }}>
+        {[...Array(20)].map((_, i) => (
           <div key={i} style={{
             position: 'absolute',
             top: `${Math.random() * 100}%`,
@@ -87,7 +87,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
             borderRadius: '50%',
             opacity: 0.5,
             transform: `translate(${mousePos.x * (i%4)}px, ${mousePos.y * (i%4)}px)`,
-            transition: 'transform 0.2s ease-out'
+            transition: 'transform 0.4s ease-out'
           }} />
         ))}
       </div>
@@ -99,7 +99,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
         right: '10%', 
         width: '600px', 
         height: '600px', 
-        background: 'radial-gradient(circle, rgba(0, 245, 255, 0.05) 0%, transparent 70%)', 
+        background: 'radial-gradient(circle, rgba(0, 245, 255, 0.04) 0%, transparent 70%)', 
         transform: `translate(${mousePos.x * -0.5}px, ${mousePos.y * -0.5}px)`,
         filter: 'blur(100px)', 
         pointerEvents: 'none' 
@@ -133,7 +133,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
 
         {/* Luminous Login Card (Hynex Obsidian) */}
         <div style={{
-          background: 'rgba(20, 24, 33, 0.7)',
+          background: 'rgba(20, 24, 33, 0.75)',
           backdropFilter: 'blur(60px) saturate(160%)',
           WebkitBackdropFilter: 'blur(60px) saturate(160%)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -148,7 +148,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
            <div style={{ position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.02), transparent)', animation: 'visionSweep 6s infinite linear', pointerEvents: 'none' }} />
 
           <h2 style={{ fontSize: '32px', fontWeight: 900, color: '#fff', marginBottom: '8px', textAlign: 'center', letterSpacing: '-0.04em' }}>Welcome</h2>
-          <p style={{ color: '#94A3B8', fontSize: '14px', fontWeight: 800, marginBottom: '44px', textAlign: 'center' }}>Portal Priority: {activeField ? 'ACTIVE ENTRY' : 'STBY'}</p>
+          <p style={{ color: '#94A3B8', fontSize: '14px', fontWeight: 800, marginBottom: '44px', textAlign: 'center' }}>Portal Status: {activeField ? 'ACTIVE ENTRY' : 'STBY'}</p>
 
           <form onSubmit={handleLogin}>
             <div style={{ marginBottom: '24px' }}>
@@ -230,7 +230,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            {loading ? 'Authenticating...' : 'Corporate Login'}
+            {loading ? 'Authenticating...' : 'Continue with Google'}
           </button>
         </div>
 
@@ -241,6 +241,17 @@ export default function LoginPage({ onLogin }: LoginProps) {
       </div>
 
       <style jsx>{`
+        .vision-bg-shift {
+          background: #0B0E14;
+          animation: chromaShift 24s infinite linear;
+        }
+
+        @keyframes chromaShift {
+          0%, 100% { background-color: #0B0E14; }
+          33% { background-color: #080D1A; }
+          66% { background-color: #091612; }
+        }
+
         .vision-input {
           width: 100%;
           background: rgba(255, 255, 255, 0.03);
