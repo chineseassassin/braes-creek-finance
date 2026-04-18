@@ -412,6 +412,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
         .divider {
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 16px;
           margin: 32px 0;
         }
