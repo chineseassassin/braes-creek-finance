@@ -189,22 +189,26 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
 
         <div className="sidebar-user" style={{ padding: '24px', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 'auto', background: 'linear-gradient(0deg, rgba(0,0,0,0.4), transparent)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
-            <div className="user-avatar" style={{ 
-              width: '44px', height: '44px', 
-              borderRadius: '14px', 
-              fontSize: '14px', 
-              fontWeight: 900,
-              background: 'linear-gradient(135deg, #1e293b, #334155)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              boxShadow: '0 8px 20px rgba(0,0,0,0.5)'
-            }}>
-              {currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-            </div>
-            <div style={{ flex: 1, overflow: 'hidden' }}>
-              <div style={{ fontSize: '14px', fontWeight: 900, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', color: '#fff' }}>{currentUser.name}</div>
-              <div style={{ fontSize: '10px', fontWeight: 900, color: 'hsl(var(--text-muted))', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{currentUser.role}</div>
-            </div>
-            <button onClick={onLogout} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '8px', borderRadius: '10px', color: '#fff' }}>🚪</button>
+            {currentUser && (
+              <>
+                <div className="user-avatar" style={{ 
+                  width: '44px', height: '44px', 
+                  borderRadius: '14px', 
+                  fontSize: '14px', 
+                  fontWeight: 900,
+                  background: 'linear-gradient(135deg, #1e293b, #334155)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.5)'
+                }}>
+                  {currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                </div>
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                  <div style={{ fontSize: '14px', fontWeight: 900, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', color: '#fff' }}>{currentUser.name}</div>
+                  <div style={{ fontSize: '10px', fontWeight: 900, color: 'hsl(var(--text-muted))', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{currentUser.role}</div>
+                </div>
+              </>
+            )}
+            <button onClick={onLogout} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '8px', borderRadius: '100px', color: '#fff' }}>🚪</button>
           </div>
         </div>
       </aside>

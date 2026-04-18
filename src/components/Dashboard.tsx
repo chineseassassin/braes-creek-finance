@@ -6,7 +6,7 @@ import {
 import { 
   formatCurrency, getMonthlySpend, getExpensesBySegment, 
   getTotalExpenses, getTotalLoansOutstanding, calculateGrowth,
-  getExecutiveBrief, getAnomalies, getEfficiencyData
+  getExecutiveBrief, getAnomalies, getEfficiencyData, getComparisonData
 } from '@/lib/data';
 import RapidAction from './RapidAction';
 
@@ -46,6 +46,11 @@ export default function Dashboard() {
     : `Operating variance detected. Expenditure in ${filterSegment || 'production'} has narrowed the profitability window. Correction required.`;
 
   const anomalies = totalExpenses > 500000 ? [{ msg: "High expenditure detected in operational nodes", severity: "danger" as const }] : [];
+
+  // 3. ANALYTICAL DATA ENGINE (CHART DATA)
+  const monthlyData = getMonthlySpend(filteredExpenses);
+  const efficiencyData = getEfficiencyData(filteredSales, filteredLabor);
+  const comparisonData = getComparisonData(filteredSales, filteredExpenses);
 
   const segmentData = [
     { name: 'Poultry Operations', value: filteredExpenses.filter((e: any) => e.segment_name === 'Poultry').reduce((acc: number, e: any) => acc + e.amount, 0), icon: '🐔' },
