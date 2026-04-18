@@ -214,7 +214,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '32px 0' }}>
             <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
-            <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 900 }}>SECURE NODE</span>
+            <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 900, opacity: 0.3 }}>OR</span>
             <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
           </div>
 
