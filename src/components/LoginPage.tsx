@@ -72,7 +72,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
         {/* Branding Header */}
         <div className="branding-section">
           <img
-            src="/logo-transparent-v3.png"
+            src="/bc-logo-final-v72.png"
             alt="Braes Creek Estate"
             className="main-logo"
           />
@@ -215,7 +215,8 @@ export default function LoginPage({ onLogin }: LoginProps) {
           margin-bottom: 24px;
           position: relative;
           z-index: 2;
-          /* Subtle Gold Bloom enhancement */
+          /* Dual-layer transparency safety */
+          mix-blend-mode: screen; 
           filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.1));
         }
 
