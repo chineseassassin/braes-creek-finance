@@ -261,7 +261,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
 
         {/* Footer */}
         <div style={{ marginTop: '24px', textAlign: 'center' }}>
-           <p style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 900, opacity: 0.6 }}>© 2026 Braes Creek Estate · Secure Node · V.7.2</p>
+           <p style={{ fontSize: '11px', color: '#FFFFFF', fontWeight: 900, opacity: 0.8 }}>© 2026 Braes Creek Estate · Secure Node · V.7.2</p>
         </div>
       </div>
 
