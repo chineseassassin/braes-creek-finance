@@ -16,6 +16,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [activeField, setActiveField] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
 
   // 3D Parallax Tracking
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -35,7 +36,11 @@ export default function LoginPage({ onLogin }: LoginProps) {
     const user = USERS.find(u => u.email === normalizedEmail && u.password === password);
     
     if (user) {
-      onLogin(user.role);
+      setIsScanning(true);
+      // Cinematic Scan Delay
+      setTimeout(() => {
+        onLogin(user.role);
+      }, 1200);
     } else {
       setError('Invalid credentials. Tip: Use "admin" as the email!');
     }
@@ -142,8 +147,23 @@ export default function LoginPage({ onLogin }: LoginProps) {
           boxShadow: activeField ? '0 80px 160px rgba(0, 245, 255, 0.1), 0 0 0 1px rgba(255,255,255,0.05) inset' : '0 80px 160px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset',
           position: 'relative',
           overflow: 'hidden',
-          transition: 'box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+          transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
         }}>
+           {/* BIOMETRIC SCAN LINE */}
+           {isScanning && (
+             <div className="biometric-sweep" style={{
+               position: 'absolute',
+               top: 0,
+               left: 0,
+               width: '4px',
+               height: '100%',
+               background: '#00F5FF',
+               boxShadow: '0 0 30px #00F5FF, 0 0 60px rgba(0,245,255,0.5)',
+               zIndex: 10,
+               pointerEvents: 'none'
+             }} />
+           )}
+
            {/* Subtle Scanning Beam */}
            <div style={{ position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.02), transparent)', animation: 'visionSweep 6s infinite linear', pointerEvents: 'none' }} />
 
@@ -156,6 +176,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
               <input
                 type="text"
                 value={email}
+                disabled={isScanning}
                 onFocus={() => setActiveField('email')}
                 onBlur={() => setActiveField(null)}
                 onChange={e => setEmail(e.target.value)}
@@ -170,6 +191,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
+                  disabled={isScanning}
                   onFocus={() => setActiveField('pass')}
                   onBlur={() => setActiveField(null)}
                   onChange={e => setPassword(e.target.value)}
@@ -180,6 +202,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
                 />
                 <button
                   type="button"
+                  disabled={isScanning}
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
                     position: 'absolute',
@@ -207,8 +230,8 @@ export default function LoginPage({ onLogin }: LoginProps) {
               </div>
             )}
 
-            <button type="submit" className="vision-btn-primary">
-              Initialize Access
+            <button type="submit" disabled={isScanning} className="vision-btn-primary">
+              {isScanning ? 'Verifying Identity...' : 'Initialize Access'}
             </button>
           </form>
 
@@ -221,7 +244,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
           <button 
             type="button" 
             onClick={handleGoogleLogin}
-            disabled={loading}
+            disabled={loading || isScanning}
             className="vision-btn-google"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -250,6 +273,17 @@ export default function LoginPage({ onLogin }: LoginProps) {
           0%, 100% { background-color: #0B0E14; }
           33% { background-color: #080D1A; }
           66% { background-color: #091612; }
+        }
+
+        .biometric-sweep {
+          animation: biosweep 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes biosweep {
+          0% { left: -10%; opacity: 0; }
+          20% { opacity: 1; }
+          80% { opacity: 1; }
+          100% { left: 110%; opacity: 0; }
         }
 
         .vision-input {
