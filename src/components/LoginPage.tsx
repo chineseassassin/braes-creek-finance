@@ -266,14 +266,33 @@ export default function LoginPage({ onLogin }: LoginProps) {
         }
 
         .login-card {
-          background: #161b22;
+          background: linear-gradient(145deg, #0f172a, #111827);
+          background: rgba(15, 23, 42, 0.85);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
           border: 1px solid rgba(255, 255, 255, 0.05);
           border-radius: 40px;
           padding: 56px;
           width: 100%;
-          box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+          box-shadow: 
+            0 20px 60px rgba(0, 0, 0, 0.6),
+            0 0 40px rgba(20, 184, 166, 0.08);
           position: relative;
           z-index: 10;
+          overflow: hidden;
+        }
+
+        .login-card::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 200px;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.4), transparent);
+          box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+          z-index: 1;
         }
 
         .welcome-text {
