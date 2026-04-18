@@ -1,3 +1,8 @@
+import { useState } from 'react';
+import { useAppStore } from '@/lib/store';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+} from 'recharts';
 import { 
   formatCurrency, getMonthlySpend, getExpensesBySegment, 
   getTotalExpenses, getTotalLoansOutstanding, calculateGrowth,

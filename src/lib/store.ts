@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { supabase } from './supabase';
 import {
-  EXPENSES, LOANS, LOAN_PAYMENTS, LABOR_ENTRIES, PAYROLL,
+  EXPENSES, LOANS, LOAN_PAYMENTS, LABOR_ENTRIES, PAYROLL, SALES,
   LIVESTOCK_UNITS, CROP_TYPES, VENDORS, BUDGETS, MAINTENANCE_RECORDS, AUDIT_LOGS, DOCUMENTS,
   Expense, Loan, LoanPayment, LaborEntry, PayrollEntry,
   LivestockUnit, CropType, Vendor, Budget, MaintenanceRecord, AuditLog, Document,
