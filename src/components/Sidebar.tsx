@@ -85,7 +85,11 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '20px 0 60px rgba(0,0,0,0.5)'
+          boxShadow: '20px 0 60px rgba(0,0,0,0.5)',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          position: 'fixed'
         }}
       >
         <div className="sidebar-logo" style={{ height: '100px', padding: '0 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center' }}>
@@ -119,7 +123,7 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
           >✕</button>
         </div>
 
-        <nav className="sidebar-nav" style={{ padding: '32px 16px' }}>
+        <nav className="sidebar-nav custom-scrollbar" style={{ padding: '32px 16px', flex: 1, overflowY: 'auto' }}>
           {navSections.map(section => (
             <div key={section.label} style={{ marginBottom: '32px' }}>
               <div style={{ padding: '0 12px', fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '20px' }}>
@@ -216,9 +220,26 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
       <style jsx>{`
         .mobile-only { display: none; }
         .btn-xs { padding: 4px; min-width: 24px; min-height: 24px; font-size: 10px; }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+
         @media (max-width: 1024px) {
           .mobile-only { display: flex; }
           .mobile-show { display: flex !important; }
+          .sidebar { width: 280px; transform: translateX(-100%); transition: transform 0.3s ease; }
+          .sidebar.open { transform: translateX(0); }
         }
       `}</style>
     </>
