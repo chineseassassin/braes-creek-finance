@@ -49,10 +49,14 @@ const PAGE_TITLES: Record<string, string> = {
 };
 
 export default function PlatformShell() {
+  const { 
+    sidebarOpen, setSidebarOpen, loadAllData, controlPanelOpen, setControlPanelOpen,
+    loans, sales, expenses, livestockUnits, notifications, addNotification, clearAllData
+  } = useAppStore();
+
   const [authenticated, setAuthenticated] = useState(false);
   const [loadingSession, setLoadingSession] = useState(true);
   const [activePage, setActivePage] = useState('dashboard');
-  const { sidebarOpen, setSidebarOpen, loadAllData, controlPanelOpen, setControlPanelOpen } = useAppStore();
 
   useEffect(() => {
     (window as any).__onNavigate = setActivePage;
@@ -106,6 +110,52 @@ export default function PlatformShell() {
     document.title = `${PAGE_TITLES[activePage] || 'Dashboard'} | Braes Creek Estate`;
   }, [activePage]);
 
+  // --- Smart Alerts Engine ---
+  useEffect(() => {
+    if (!authenticated) return;
+
+    const checkHealth = () => {
+      const today = new Date().toISOString().split('T')[0];
+
+      // 1. Overdue Loans
+      (loans || []).forEach(loan => {
+        if (loan.status !== 'paid_off' && loan.due_date && loan.due_date < today) {
+          const alertId = `overdue-${loan.id}`;
+          if (!notifications.find(n => n.id === alertId)) {
+            addNotification({
+              id: alertId,
+              title: 'Critical: Overdue Loan',
+              message: `Loan from ${loan.lender_name} was due on ${loan.due_date}.`,
+              type: 'alert',
+              category: 'Finance',
+              timestamp: new Date().toISOString()
+            });
+          }
+        }
+      });
+
+      // 2. Low Cash (Simple liquidity check)
+      const totalRev = (sales || []).reduce((s, r) => s + (r.total_amount || 0), 0);
+      const totalExp = (expenses || []).reduce((s, e) => s + e.amount, 0);
+      if (totalRev > 0 && (totalRev - totalExp) < (totalExp * 0.1)) { // Warning if cash < 10% of monthly burn
+        const alertId = 'low-liquidity';
+        if (!notifications.find(n => n.id === alertId)) {
+          addNotification({
+            id: alertId,
+            title: 'Financial Warning: Low Liquidity',
+            message: 'Net operational cash flow is dropping below 10% safety margin.',
+            type: 'alert',
+            category: 'Finance',
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+    };
+
+    const timer = setTimeout(checkHealth, 3000); // Check 3s after load
+    return () => clearTimeout(timer);
+  }, [authenticated, loans, sales, expenses, notifications, addNotification]);
+
   if (loadingSession) {
     return <div style={{ height: '100vh', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="loader"></div></div>;
   }
@@ -138,53 +188,6 @@ export default function PlatformShell() {
       default: return <Dashboard />;
     }
   }
-
-  // --- Smart Alerts Engine ---
-  const { loans, sales, expenses, livestockUnits, notifications, addNotification } = useAppStore();
-  useEffect(() => {
-    if (!authenticated) return;
-
-    const checkHealth = () => {
-      const today = new Date().toISOString().split('T')[0];
-
-      // 1. Overdue Loans
-      loans.forEach(loan => {
-        if (loan.status !== 'paid_off' && loan.due_date && loan.due_date < today) {
-          const alertId = `overdue-${loan.id}`;
-          if (!notifications.find(n => n.id === alertId)) {
-            addNotification({
-              id: alertId,
-              title: 'Critical: Overdue Loan',
-              message: `Loan from ${loan.lender_name} was due on ${loan.due_date}.`,
-              type: 'alert',
-              category: 'Finance',
-              timestamp: new Date().toISOString()
-            });
-          }
-        }
-      });
-
-      // 2. Low Cash (Simple liquidity check)
-      const totalRev = sales.reduce((s, r) => s + (r.total_amount || 0), 0);
-      const totalExp = expenses.reduce((s, e) => s + e.amount, 0);
-      if (totalRev > 0 && (totalRev - totalExp) < (totalExp * 0.1)) { // Warning if cash < 10% of monthly burn
-        const alertId = 'low-liquidity';
-        if (!notifications.find(n => n.id === alertId)) {
-          addNotification({
-            id: alertId,
-            title: 'Financial Warning: Low Liquidity',
-            message: 'Net operational cash flow is dropping below 10% safety margin.',
-            type: 'alert',
-            category: 'Finance',
-            timestamp: new Date().toISOString()
-          });
-        }
-      }
-    };
-
-    const timer = setTimeout(checkHealth, 3000); // Check 3s after load
-    return () => clearTimeout(timer);
-  }, [authenticated, loans, sales, expenses, notifications, addNotification]);
 
   return (
     <div className="app-layout">
