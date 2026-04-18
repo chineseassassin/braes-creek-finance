@@ -101,6 +101,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
 
         {/* Main Login Card */}
         <div className="login-card">
+          {loading && <div className="scanner-line" />}
           <h2 className="welcome-text">Welcome</h2>
           <p className="sub-text">Sign in to the Intelligence Hub</p>
 
@@ -459,6 +460,26 @@ export default function LoginPage({ onLogin }: LoginProps) {
           text-align: center;
           opacity: 0.8;
           letter-spacing: 0.02em;
+        }
+
+        .scanner-line {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 2px;
+          background: linear-gradient(90deg, transparent, #00e5ff, transparent);
+          box-shadow: 0 0 15px #00e5ff, 0 0 30px rgba(0, 229, 255, 0.5);
+          z-index: 100;
+          animation: biometricScan 2s ease-in-out infinite;
+          pointer-events: none;
+        }
+
+        @keyframes biometricScan {
+          0% { top: 0%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 100%; opacity: 0; }
         }
       `}</style>
     </div>
