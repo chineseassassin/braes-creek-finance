@@ -136,49 +136,71 @@ export default function Dashboard() {
         <button className="btn btn-ghost" style={{ fontSize: '13px', fontWeight: 800 }}>Full Analysis →</button>
       </div>
 
-      {/* STAGE 1: HYNEX HERO REVENUE CARD */}
+      {/* HYNEX HERO REVENUE CARD (ORBITAL COMMAND NODE) */}
       <div className="card" style={{ 
-        background: 'linear-gradient(135deg, rgba(0, 245, 255, 0.05), rgba(0,0,0,0))',
-        border: '1px solid rgba(0, 245, 255, 0.15)',
-        padding: '32px 48px',
+        background: 'rgba(15, 25, 40, 0.6)',
+        padding: '40px 48px',
         marginBottom: '32px',
-        color: '#fff',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         position: 'relative',
         overflow: 'hidden',
-        boxShadow: '0 0 40px rgba(0, 245, 255, 0.05)'
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        boxShadow: '0 0 60px rgba(0, 245, 255, 0.1), 0 20px 80px rgba(0,0,0,0.8)'
       }}>
+        {/* ORBITAL LIGHT BEAM - DASHBOARD EDITION */}
+        <div style={{
+          position: 'absolute',
+          inset: '-2px',
+          borderRadius: '40px',
+          padding: '2px',
+          background: 'conic-gradient(from 0deg, transparent 80%, #00F5FF, #FFD700, #00F5FF)',
+          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+          WebkitMaskComposite: 'xor',
+          maskComposite: 'exclude',
+          animation: 'orbitRotate 6s linear infinite',
+          opacity: 0.4,
+          pointerEvents: 'none'
+        }} />
+
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#00F5FF', marginBottom: '16px', opacity: 0.8 }}>
-            {filterSegment ? `${filterSegment} VALUATION` : 'TOTAL ESTATE VALUATION'}
+          <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#00F5FF', marginBottom: '20px', opacity: 0.8 }}>
+            {filterSegment ? `STRATEGIC NODE: ${filterSegment}` : 'TOTAL ESTATE VALUATION'}
           </div>
-          <div style={{ fontSize: '56px', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1, marginBottom: '16px' }}>
+          <div style={{ fontSize: '64px', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1, marginBottom: '20px', color: '#fff' }}>
             {formatCurrency(totalRevenue)}
           </div>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <span style={{ color: '#00F5FF', fontSize: '14px', fontWeight: 800 }}>
-              📈 {growth} <span style={{ opacity: 0.4, fontSize: '11px', marginLeft: '6px' }}>v. prev cycle</span>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+            <span style={{ 
+              background: 'rgba(0, 245, 255, 0.1)', 
+              color: '#00F5FF', 
+              padding: '6px 14px', 
+              borderRadius: '100px', 
+              fontSize: '12px', 
+              fontWeight: 900,
+              border: '1px solid rgba(0, 245, 255, 0.2)'
+            }}>
+              📈 {growth} 
             </span>
-            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
-            <span style={{ fontSize: '12px', fontWeight: 700, opacity: 0.4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Real-time Intelligence Active</span>
+            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
+            <span style={{ fontSize: '11px', fontWeight: 800, opacity: 0.5, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Telemetry Active</span>
           </div>
         </div>
         
-        <div style={{ display: 'flex', gap: '48px', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', gap: '60px', position: 'relative', zIndex: 1 }}>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', color: '#94A3B8', marginBottom: '8px', letterSpacing: '0.05em' }}>Gross Expenses</div>
-            <div style={{ fontSize: '22px', fontWeight: 900, color: '#fff' }}>{formatCurrency(totalExpenses)}</div>
+            <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', color: '#94A3B8', marginBottom: '8px', letterSpacing: '0.1em' }}>GROSS EXPENDITURE</div>
+            <div style={{ fontSize: '24px', fontWeight: 900, color: '#fff' }}>{formatCurrency(totalExpenses)}</div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', color: '#94A3B8', marginBottom: '8px', letterSpacing: '0.05em' }}>Leverage Ratio</div>
-            <div style={{ fontSize: '22px', fontWeight: 900, color: '#00F5FF' }}>{formatCurrency(totalOutstanding)}</div>
+            <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', color: '#94A3B8', marginBottom: '8px', letterSpacing: '0.1em' }}>ACTIVE LEVERAGE</div>
+            <div style={{ fontSize: '24px', fontWeight: 900, color: '#FFD700' }}>{formatCurrency(totalOutstanding)}</div>
           </div>
         </div>
         
-        {/* Hynex Background Trace */}
-        <div style={{ position: 'absolute', right: '-80px', bottom: '-80px', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(0, 245, 255, 0.03) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        {/* Atmospheric Gradient Flare */}
+        <div style={{ position: 'absolute', right: '-120px', bottom: '-120px', width: '440px', height: '440px', background: 'radial-gradient(circle, rgba(0, 245, 255, 0.05) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }} />
       </div>
 
       {/* STAGE 2: Charts & Assets Grid */}

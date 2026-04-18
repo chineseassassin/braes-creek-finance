@@ -1,34 +1,37 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Hynex Precision Palette - Medical Tech Aesthetic */
-  --bg-primary: 225 30% 6%;           /* Deep Charcoal Wall (#0B0E14) */
-  --bg-secondary: 225 30% 4%;         /* Darker Workspace (#080A0E) */
-  --bg-card: 225 25% 10%;              /* Dark Obsidian Card Surface */
-  --bg-card-hover: 225 25% 12%;        /* Card Hover */
-  --sidebar-bg: 225 30% 4%;            /* Sidebar Deep Charcoal */
-  --border: 225 20% 12%;               /* Micro Border */
-  --border-light: 225 20% 15%;         /* Section Divider */
+  /* Hynex Precision Palette - Liquid Obsidian System */
+  --bg-primary: 0 0% 0%;             /* PURE BLACK - APPROVED */
+  --bg-secondary: 225 30% 2%;        /* Deep Void Charcoal */
+  --bg-card: 225 25% 6%;             /* Dark Obsidian Base */
+  --bg-card-hover: 225 25% 10%;       /* Subtle Lift */
+  --sidebar-bg: 0 0% 0%;             /* Unified Black Sidebar */
+  --border: 0 0% 10%;               /* Micro Border */
+  --border-light: 0 0% 15%;         /* Section Divider */
   
   --text-primary: 0 0% 100%;          /* High Luminosity White */
-  --text-secondary: 215 15% 65%;      /* Slate Gray (#94A3B8) */
-  --text-muted: 215 10% 45%;          /* Muted Tech Gray */
+  --text-secondary: 215 15% 75%;      /* Slate Gray (#CBD5E1) */
+  --text-muted: 215 10% 55%;          /* Muted Tech Gray */
   
   --accent-blue: 182 100% 50%;         /* Electric Cyan (#00F5FF) */
-  --accent-green: 82 100% 50%;         /* Vitality Lime (#A3FF00) */
+  --accent-green: 182 100% 50%;        /* Defaulting to Cyan for Unity */
   --accent-purple: 270 91% 75%;       /* Tech Lavender */
   --accent-teal: 182 100% 50%;        /* Hynex Teal Glow */
   --accent-red: 0 84% 65%;          /* Emergency Red */
-  --accent-amber: 45 100% 50%;       /* Safety Gold */
+  --accent-amber: 45 100% 55%;       /* Strategic Gold (#FFD700) */
 
-  --glass-bg: rgba(20, 24, 33, 0.6);   /* HYNEX FROSTED OBSIDIAN */
-  --glass-border: rgba(255, 255, 255, 0.08); /* MICRO BORDER 0.08 */
+  --glass-bg: rgba(15, 25, 40, 0.6);   /* PREMIUM GLASS CORE - APPROVED */
+  --glass-border: rgba(255, 255, 255, 0.08); 
   
-  --radius: 24px;                      /* HYNEX LARGE ROUNDING */
+  --radius: 40px;                      /* PRECISION ROUNDING - APPROVED */
   --radius-sm: 12px;
-  --radius-lg: 32px;
+  --radius-lg: 48px;
   
-  --shadow-premium: 0 40px 100px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset;
+  --shadow-premium: 
+    0 0 40px rgba(0, 245, 255, 0.04),
+    0 20px 60px rgba(0, 0, 0, 0.7),
+    0 0 100px rgba(255, 215, 0, 0.02);
 
   --sidebar-width: 280px;
   --header-height: 80px;
