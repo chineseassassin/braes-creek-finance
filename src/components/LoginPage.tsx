@@ -14,6 +14,17 @@ export default function LoginPage({ onLogin }: LoginProps) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [activeField, setActiveField] = useState<string | null>(null);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const { clientX, clientY } = e;
+    const { innerWidth, innerHeight } = window;
+    const x = (clientX - innerWidth / 2) / (innerWidth / 2);
+    const y = (clientY - innerHeight / 2) / (innerHeight / 2);
+    setTilt({ x: x * 15, y: -y * 15 });
+  };
+
+  const resetTilt = () => setTilt({ x: 0, y: 0 });
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -64,7 +75,11 @@ export default function LoginPage({ onLogin }: LoginProps) {
   }
 
   return (
-    <div className="login-container">
+    <div 
+      className="login-container"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={resetTilt}
+    >
       {/* Subtle Star Background */}
       <div className="stars-overlay" />
       
@@ -75,6 +90,9 @@ export default function LoginPage({ onLogin }: LoginProps) {
             src="/bc-logo-final-v72.png"
             alt="Braes Creek Estate"
             className="main-logo"
+            style={{ 
+              transform: `perspective(1000px) rotateY(${tilt.x}deg) rotateX(${tilt.y}deg)`,
+            }}
           />
           <div className="system-pill">
             SYSTEM OS 2026
@@ -215,6 +233,9 @@ export default function LoginPage({ onLogin }: LoginProps) {
           margin-bottom: 24px;
           position: relative;
           z-index: 2;
+          transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          transform-style: preserve-3d;
+          will-change: transform;
           /* Dual-layer transparency safety */
           mix-blend-mode: screen; 
           filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.1));
