@@ -192,7 +192,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
 
         .login-content {
           width: 100%;
-          maxWidth: 440px;
+          max-width: 440px;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -247,19 +247,21 @@ export default function LoginPage({ onLogin }: LoginProps) {
         .login-card {
           background: #161b22;
           border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 2.5rem;
-          padding: 48px 40px;
+          border-radius: 40px;
+          padding: 56px;
           width: 100%;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+          position: relative;
+          z-index: 10;
         }
 
         .welcome-text {
-          font-size: 32px;
-          font-weight: 700;
+          font-size: 38px;
+          font-weight: 900;
           color: #ffffff;
           margin-bottom: 8px;
           text-align: center;
-          letter-spacing: -0.02em;
+          letter-spacing: -0.04em;
         }
 
         .sub-text {
