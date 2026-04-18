@@ -128,7 +128,8 @@ export default function LoginPage({ onLogin }: LoginProps) {
               height={280}
               style={{ 
                 objectFit: 'contain', 
-                filter: 'drop-shadow(0 0 40px rgba(0, 245, 255, 0.15))',
+                mixBlendMode: 'screen',
+                filter: 'drop-shadow(0 0 30px rgba(0, 245, 255, 0.1))',
                 transform: `translate(${mousePos.x * 0.1}px, ${mousePos.y * 0.1}px)`
               }}
             />
