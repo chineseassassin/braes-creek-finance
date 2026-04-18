@@ -431,7 +431,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
 
         .divider span {
           color: #484f58;
-          font-size: 10px;
+          font-size: 13px;
           font-weight: 800;
         }
 
