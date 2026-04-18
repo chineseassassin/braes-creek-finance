@@ -93,21 +93,6 @@ export default function LoginPage({ onLogin }: LoginProps) {
         position: 'relative'
       }}
     >
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.1, pointerEvents: 'none' }}>
-        {[...Array(20)].map((_, i) => (
-          <div key={i} style={{
-            position: 'absolute',
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
-            width: '2px',
-            height: '2px',
-            background: 'rgba(255,255,255,0.2)',
-            borderRadius: '50%',
-            transform: `translate(${mousePos.x * (i%4)}px, ${mousePos.y * (i%4)}px)`,
-            transition: 'transform 0.4s ease-out'
-          }} />
-        ))}
-      </div>
 
       <div style={{ 
         width: '100%', 
@@ -137,13 +122,13 @@ export default function LoginPage({ onLogin }: LoginProps) {
         </div>
 
         <div style={{
-          background: 'transparent',
+          background: 'none !important',
           padding: '48px',
           position: 'relative',
           transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
           transform: `translateZ(40px)`,
-          border: 'none',
-          boxShadow: 'none'
+          border: 'none !important',
+          boxShadow: 'none !important'
         }}>
            {isScanning && (
              <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.03)', zIndex: 10 }} />
@@ -238,30 +223,22 @@ export default function LoginPage({ onLogin }: LoginProps) {
       </div>
 
       <style jsx>{`
-        .vision-bg-shift { background: #000000; }
-        .orbital-beam {
-          position: absolute; inset: -2px; border-radius: 40px; padding: 2px;
-          background: conic-gradient(from 0deg, transparent 70%, rgba(255,255,255,0.1), rgba(255,255,255,0.2), rgba(255,255,255,0.1));
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor; mask-composite: exclude;
-          animation: orbitRotate 4s linear infinite; opacity: 0.1; pointer-events: none;
-        }
-        @keyframes orbitRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .vision-bg-shift { background: #000000 !important; }
         .vision-input {
-          width: 100%; background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px;
+          width: 100%; background: rgba(255, 255, 255, 0.04);
+          border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px;
           padding: 16px 20px; color: #fff; font-size: 15px; font-weight: 700; outline: none; transition: 0.3s;
         }
-        .vision-input:focus { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.3); }
+        .vision-input:focus { background: rgba(255, 255, 255, 0.08); border-color: #fff; }
         .vision-btn-google {
-          width: 100%; background: rgba(255, 255, 255, 0.03); color: #fff;
+          width: 100%; background: rgba(255, 255, 255, 0.04); color: #fff;
           border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px; padding: 14px;
           font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.3s; opacity: 0.6;
         }
         .vision-btn-google:hover { background: rgba(255, 255, 255, 0.08); opacity: 1; }
         @keyframes visionPop {
-          from { opacity: 0; transform: translateY(80px); filter: blur(30px); }
-          to { opacity: 1; transform: translateY(0); filter: blur(0); }
+          from { opacity: 0; transform: translateY(40px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>
