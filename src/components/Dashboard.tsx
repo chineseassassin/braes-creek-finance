@@ -136,21 +136,48 @@ export default function Dashboard() {
         <button className="btn btn-ghost" style={{ fontSize: '13px', fontWeight: 800 }}>Full Analysis →</button>
       </div>
 
-      {/* HYNEX HERO REVENUE CARD (ORBITAL COMMAND NODE) */}
-      <div className="card" style={{ 
-        background: 'rgba(15, 25, 40, 0.6)',
-        padding: '40px 48px',
-        marginBottom: '32px',
+      {/* ELITE URGENT ALERT - RED SWEEP */}
+      <div className="alert-urgent" style={{ 
+        background: 'rgba(239, 68, 68, 0.1)', 
+        border: '1px solid rgba(239, 68, 68, 0.2)', 
+        borderRadius: '20px', 
+        padding: '16px 24px', 
+        marginBottom: '32px', 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '16px',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{ 
+          position: 'absolute', 
+          top: 0, left: '-100%', 
+          width: '50%', height: '100%', 
+          background: 'linear-gradient(90deg, transparent, rgba(239,68,68,0.1), transparent)',
+          animation: 'visionSweep 4s infinite linear'
+        }} />
+        <span style={{ fontSize: '20px', animation: 'blink 1.5s infinite' }}>⚠️</span>
+        <div>
+          <strong style={{ color: '#ef4444', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '12px' }}>Security Protocol Alpha:</strong>
+          <span style={{ color: '#fca5a5', marginLeft: '12px', fontSize: '13px', fontWeight: 600 }}>Unexpected variance detected in High-Yield Crop segment. Review liquidity immediately.</span>
+        </div>
+      </div>
+
+      {/* HYNEX HERO HUB (THE HEARTBEAT) */}
+      <div className="card shimmer-surface" style={{ 
+        padding: '56px',
+        marginBottom: '40px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         position: 'relative',
-        overflow: 'hidden',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        boxShadow: '0 0 60px rgba(0, 245, 255, 0.1), 0 20px 80px rgba(0,0,0,0.8)'
+        transform: 'scale(1.02)',
+        transformOrigin: 'top center',
+        border: '1px solid rgba(0, 245, 255, 0.2)',
+        boxShadow: '0 40px 100px rgba(0,0,0,0.9), 0 0 80px rgba(0, 245, 255, 0.1)'
       }}>
-        {/* ORBITAL LIGHT BEAM - DASHBOARD EDITION */}
-        <div style={{
+         {/* ORBITAL LIGHT BEAM - DASHBOARD EDITION */}
+         <div style={{
           position: 'absolute',
           inset: '-2px',
           borderRadius: '40px',
@@ -159,62 +186,52 @@ export default function Dashboard() {
           WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
           WebkitMaskComposite: 'xor',
           maskComposite: 'exclude',
-          animation: 'orbitRotate 6s linear infinite',
-          opacity: 0.4,
+          animation: 'orbitRotate 8s linear infinite',
+          opacity: 0.5,
           pointerEvents: 'none'
         }} />
 
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#00F5FF', marginBottom: '20px', opacity: 0.8 }}>
-            {filterSegment ? `STRATEGIC NODE: ${filterSegment}` : 'TOTAL ESTATE VALUATION'}
+          <div style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.3em', color: '#00F5FF', marginBottom: '24px', opacity: 0.9 }}>
+             {filterSegment ? `NODE ANALYTICS: ${filterSegment}` : 'ESTATE AGGREGATE VALUATION'}
+             <span className="status-light" style={{ marginLeft: '12px', verticalAlign: 'middle' }} />
           </div>
-          <div style={{ fontSize: '64px', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1, marginBottom: '20px', color: '#fff' }}>
+          <div style={{ fontSize: '72px', fontWeight: 900, letterSpacing: '-0.06em', lineHeight: 0.9, marginBottom: '24px', color: '#fff', textShadow: '0 0 30px rgba(255,255,255,0.2)' }}>
             {formatCurrency(totalRevenue)}
           </div>
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
             <span style={{ 
-              background: 'rgba(0, 245, 255, 0.1)', 
+              background: 'rgba(0, 245, 255, 0.15)', 
               color: '#00F5FF', 
-              padding: '6px 14px', 
+              padding: '8px 20px', 
               borderRadius: '100px', 
-              fontSize: '12px', 
+              fontSize: '13px', 
               fontWeight: 900,
-              border: '1px solid rgba(0, 245, 255, 0.2)'
+              border: '1px solid rgba(0, 245, 255, 0.3)',
+              boxShadow: '0 0 20px rgba(0, 245, 255, 0.2)'
             }}>
-              📈 {growth} 
+              🚀 {growth} GROWTH
             </span>
-            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
-            <span style={{ fontSize: '11px', fontWeight: 800, opacity: 0.5, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Telemetry Active</span>
+            <span style={{ fontSize: '11px', fontWeight: 900, opacity: 0.5, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Node 0024 Active</span>
           </div>
         </div>
         
-        <div style={{ display: 'flex', gap: '60px', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', gap: '80px', position: 'relative', zIndex: 1 }}>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', color: '#94A3B8', marginBottom: '8px', letterSpacing: '0.1em' }}>GROSS EXPENDITURE</div>
-            <div style={{ fontSize: '24px', fontWeight: 900, color: '#fff' }}>{formatCurrency(totalExpenses)}</div>
+            <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', color: '#94A3B8', marginBottom: '10px', letterSpacing: '0.2em' }}>OUTFLOW</div>
+            <div style={{ fontSize: '28px', fontWeight: 900, color: '#fff' }}>{formatCurrency(totalExpenses)}</div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', color: '#94A3B8', marginBottom: '8px', letterSpacing: '0.1em' }}>ACTIVE LEVERAGE</div>
-            <div style={{ fontSize: '24px', fontWeight: 900, color: '#FFD700' }}>{formatCurrency(totalOutstanding)}</div>
+            <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', color: '#94A3B8', marginBottom: '10px', letterSpacing: '0.2em' }}>LEVERAGE</div>
+            <div style={{ fontSize: '28px', fontWeight: 900, color: '#FFD700' }}>{formatCurrency(totalOutstanding)}</div>
           </div>
         </div>
-        
-        {/* Atmospheric Gradient Flare */}
-        <div style={{ position: 'absolute', right: '-120px', bottom: '-120px', width: '440px', height: '440px', background: 'radial-gradient(circle, rgba(0, 245, 255, 0.05) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }} />
       </div>
 
       {/* STAGE 2: Charts & Assets Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '32px' }}>
-        
-        {/* Performance Chart Hub */}
-        <div className="card" style={{ padding: '40px', minHeight: '520px', display: 'flex', flexDirection: 'column' }}>
+      <div className="grid-2" style={{ marginBottom: '40px' }}>
+        <div className="card" style={{ height: '440px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-            <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-              <h2 style={{ fontSize: '22px', fontWeight: 900, letterSpacing: '-0.03em' }}>
-                {chartMode === 'compare' ? 'Profitability Analysis' : chartMode === 'efficiency' ? 'Labor Efficiency' : 'Yield Performance'}
-              </h2>
-              <div style={{ display: 'flex', background: 'hsl(var(--bg-primary))', borderRadius: '10px', padding: '2px', gap: '2px' }}>
-                 <button onClick={() => setChartMode('single')} style={{ border: 'none', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: 900, cursor: 'pointer', background: chartMode === 'single' ? '#fff' : 'transparent', color: chartMode === 'single' ? '#000' : 'inherit' }}>SINGLE</button>
                  <button onClick={() => setChartMode('compare')} style={{ border: 'none', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: 900, cursor: 'pointer', background: chartMode === 'compare' ? '#fff' : 'transparent', color: chartMode === 'compare' ? '#000' : 'inherit' }}>COMPARE</button>
                  <button onClick={() => setChartMode('efficiency')} style={{ border: 'none', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: 900, cursor: 'pointer', background: chartMode === 'efficiency' ? '#fff' : 'transparent', color: chartMode === 'efficiency' ? '#000' : 'inherit' }}>EFFIC.</button>
               </div>
