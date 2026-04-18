@@ -64,7 +64,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
     }}>
       {/* ATMOSPHERIC SPACE */}
       <div style={{ position: 'fixed', top: '10%', right: '10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)', filter: 'blur(100px)', pointerEvents: 'none' }} />
-      <div style={{ position: 'fixed', bottom: '-20%', left: '50%', transform: 'translateX(-50%)', width: '130vw', height: '600px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'fixed', top: '0', left: '50%', transform: 'translateX(-50%)', width: '800px', height: '400px', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
 
       <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 1, animation: 'visionPop 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         {/* Logo */}
@@ -73,12 +73,12 @@ export default function LoginPage({ onLogin }: LoginProps) {
             <Image
               src="/logo-transparent.png"
               alt="Braes Creek Estate"
-              width={240}
-              height={240}
-              style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 40px rgba(16, 185, 129, 0.2))' }}
+              width={260}
+              height={260}
+              style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 25px rgba(16, 185, 129, 0.3)) brightness(1.1)' }}
             />
           </div>
-          <p style={{ color: '#fff', fontSize: '11px', fontWeight: 900, border: '1px solid rgba(16, 185, 129, 0.3)', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '12px', opacity: 0.6 }}>SYSTEM OS 2026</p>
+          <p style={{ color: '#fff', fontSize: '11px', fontWeight: 900, border: '1px solid rgba(16, 185, 129, 0.3)', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '4px', opacity: 0.6 }}>SYSTEM OS 2026</p>
         </div>
 
         {/* Luminous Login Card (Obsidian Glass) */}
