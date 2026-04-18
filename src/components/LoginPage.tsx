@@ -266,14 +266,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
 
       <style jsx>{`
         .vision-bg-shift {
-          background: #0B0E14;
-          animation: chromaShift 15s infinite linear;
-        }
-
-        @keyframes chromaShift {
-          0%, 100% { background-color: #0B0E14; }
-          33% { background-color: #1A1D23; }
-          66% { background-color: #0F172A; }
+          background: #000000;
         }
 
         .biometric-sweep {
