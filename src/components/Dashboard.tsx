@@ -261,8 +261,7 @@ export default function Dashboard() {
                 <button key={range} onClick={() => setActiveRange(range)} style={{ border: 'none', background: activeRange === range ? 'hsl(var(--bg-card))' : 'transparent', color: activeRange === range ? 'hsl(var(--text-primary))' : 'hsl(var(--text-muted))', padding: '6px 16px', borderRadius: '100px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}>{range}</button>
               ))}
             </div>
-          </div>
-
+          
           <div style={{ flex: 1, position: 'relative' }}>
              <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartMode === 'compare' ? comparisonData : chartMode === 'efficiency' ? efficiencyData : monthlyData}>
