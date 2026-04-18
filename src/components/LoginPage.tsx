@@ -122,7 +122,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{ margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
             <img
-              src="/LOG-IN-PAGE.png"
+              src="/BRAES-CREEK-FINAL-MASTER.png"
               alt="Braes Creek Estate"
               width={340}
               height={340}
