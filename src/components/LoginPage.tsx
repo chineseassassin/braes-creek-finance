@@ -264,7 +264,6 @@ export default function LoginPage({ onLogin }: LoginProps) {
         }
 
         .login-card {
-          background: linear-gradient(145deg, #0f172a, #111827);
           background: rgba(15, 23, 42, 0.85);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
