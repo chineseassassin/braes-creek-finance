@@ -14,6 +14,15 @@ export default function LoginPage({ onLogin }: LoginProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [activeField, setActiveField] = useState<string | null>(null);
+
+  // 3D Parallax Tracking
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const x = (e.clientX / window.innerWidth - 0.5) * 20;
+    const y = (e.clientY / window.innerHeight - 0.5) * 20;
+    setMousePos({ x, y });
+  };
 
   const USERS = [
     { email: 'admin@braescreek.com', password: 'admin123', role: 'admin' as const, name: 'Admin User' },
@@ -50,22 +59,60 @@ export default function LoginPage({ onLogin }: LoginProps) {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'radial-gradient(circle at 10% 10%, hsla(225, 30%, 15%, 1) 0%, transparent 40%), radial-gradient(circle at 50% 120%, hsla(225, 30%, 8%, 1) 0%, transparent 70%), #0B0E14',
-      backgroundAttachment: 'fixed',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '24px',
-      overflow: 'hidden',
-      fontFamily: "'Plus Jakarta Sans', sans-serif"
-    }}>
-      {/* ATMOSPHERIC SPACE */}
-      <div style={{ position: 'fixed', top: '10%', right: '10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(0, 245, 255, 0.05) 0%, transparent 70%)', filter: 'blur(100px)', pointerEvents: 'none' }} />
-      <div style={{ position: 'fixed', top: '0', left: '50%', transform: 'translateX(-50%)', width: '800px', height: '400px', background: 'radial-gradient(circle, rgba(0, 245, 255, 0.03) 0%, transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
+    <div 
+      onMouseMove={handleMouseMove}
+      style={{
+        minHeight: '100vh',
+        background: '#0B0E14',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        overflow: 'hidden',
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+        position: 'relative'
+      }}
+    >
+      {/* GENERATIVE NEURAL BACKGROUND */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.2, pointerEvents: 'none' }}>
+        {[...Array(15)].map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+            width: '2px',
+            height: '2px',
+            background: '#00F5FF',
+            boxShadow: '0 0 15px #00F5FF',
+            borderRadius: '50%',
+            opacity: 0.5,
+            transform: `translate(${mousePos.x * (i%4)}px, ${mousePos.y * (i%4)}px)`,
+            transition: 'transform 0.2s ease-out'
+          }} />
+        ))}
+      </div>
 
-      <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 1, animation: 'visionPop 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+      {/* ATMOSPHERIC SPACE */}
+      <div style={{ 
+        position: 'fixed', 
+        top: '10%', 
+        right: '10%', 
+        width: '600px', 
+        height: '600px', 
+        background: 'radial-gradient(circle, rgba(0, 245, 255, 0.05) 0%, transparent 70%)', 
+        transform: `translate(${mousePos.x * -0.5}px, ${mousePos.y * -0.5}px)`,
+        filter: 'blur(100px)', 
+        pointerEvents: 'none' 
+      }} />
+
+      <div style={{ 
+        width: '100%', 
+        maxWidth: '440px', 
+        position: 'relative', 
+        zIndex: 1, 
+        animation: 'visionPop 1s cubic-bezier(0.16, 1, 0.3, 1)',
+        transform: `perspective(1000px) rotateX(${mousePos.y * -0.05}deg) rotateY(${mousePos.x * 0.05}deg) translateZ(20px)`
+      }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{ margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
@@ -74,7 +121,11 @@ export default function LoginPage({ onLogin }: LoginProps) {
               alt="Braes Creek Estate"
               width={260}
               height={260}
-              style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 40px rgba(0, 245, 255, 0.15))' }}
+              style={{ 
+                objectFit: 'contain', 
+                filter: 'drop-shadow(0 0 40px rgba(0, 245, 255, 0.15))',
+                transform: `translate(${mousePos.x * 0.1}px, ${mousePos.y * 0.1}px)`
+              }}
             />
           </div>
           <p style={{ color: '#00F5FF', fontSize: '11px', fontWeight: 900, border: '1px solid rgba(0, 245, 255, 0.2)', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '4px', opacity: 0.6 }}>SYSTEM OS 2026</p>
@@ -82,28 +133,31 @@ export default function LoginPage({ onLogin }: LoginProps) {
 
         {/* Luminous Login Card (Hynex Obsidian) */}
         <div style={{
-          background: 'rgba(20, 24, 33, 0.6)',
-          backdropFilter: 'blur(40px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(150%)',
+          background: 'rgba(20, 24, 33, 0.7)',
+          backdropFilter: 'blur(60px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(60px) saturate(160%)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '40px',
           padding: '48px',
-          boxShadow: '0 80px 160px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset',
+          boxShadow: activeField ? '0 80px 160px rgba(0, 245, 255, 0.1), 0 0 0 1px rgba(255,255,255,0.05) inset' : '0 80px 160px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          transition: 'box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
         }}>
            {/* Subtle Scanning Beam */}
-           <div style={{ position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.03), transparent)', animation: 'visionSweep 6s infinite linear', pointerEvents: 'none' }} />
+           <div style={{ position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.02), transparent)', animation: 'visionSweep 6s infinite linear', pointerEvents: 'none' }} />
 
           <h2 style={{ fontSize: '32px', fontWeight: 900, color: '#fff', marginBottom: '8px', textAlign: 'center', letterSpacing: '-0.04em' }}>Welcome</h2>
-          <p style={{ color: '#94A3B8', fontSize: '14px', fontWeight: 800, marginBottom: '44px', textAlign: 'center' }}>Precision Intelligence Login</p>
+          <p style={{ color: '#94A3B8', fontSize: '14px', fontWeight: 800, marginBottom: '44px', textAlign: 'center' }}>Portal Priority: {activeField ? 'ACTIVE ENTRY' : 'STBY'}</p>
 
           <form onSubmit={handleLogin}>
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: '#94A3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>ID ACCESS</label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: activeField === 'email' ? '#00F5FF' : '#94A3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em', transition: '0.3s' }}>ID ACCESS</label>
               <input
                 type="text"
                 value={email}
+                onFocus={() => setActiveField('email')}
+                onBlur={() => setActiveField(null)}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="admin@braescreek.com"
                 required
@@ -111,11 +165,13 @@ export default function LoginPage({ onLogin }: LoginProps) {
               />
             </div>
             <div style={{ marginBottom: '32px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: '#94A3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>SECURITY PASS</label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: activeField === 'pass' ? '#00F5FF' : '#94A3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em', transition: '0.3s' }}>SECURITY PASS</label>
               <div style={{ position: 'relative' }}>
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
+                  onFocus={() => setActiveField('pass')}
+                  onBlur={() => setActiveField(null)}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
@@ -132,11 +188,12 @@ export default function LoginPage({ onLogin }: LoginProps) {
                     transform: 'translateY(-50%)',
                     background: 'none',
                     border: 'none',
-                    color: '#94A3B8',
+                    color: activeField === 'pass' ? '#00F5FF' : '#94A3B8',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    transition: '0.3s'
                   }}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -198,9 +255,9 @@ export default function LoginPage({ onLogin }: LoginProps) {
           transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .vision-input:focus {
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(0, 245, 255, 0.05);
           border-color: #00F5FF;
-          box-shadow: 0 0 20px rgba(0, 245, 255, 0.15);
+          box-shadow: 0 0 30px rgba(0, 245, 255, 0.2);
         }
         .vision-input::placeholder {
           color: rgba(255,255,255,0.1);
@@ -221,7 +278,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
           text-transform: uppercase;
         }
         .vision-btn-primary:hover {
-          transform: translateY(-2px);
+          transform: translateY(-2px) scale(1.01);
           box-shadow: 0 20px 40px rgba(0, 245, 255, 0.3);
           filter: brightness(1.1);
         }
