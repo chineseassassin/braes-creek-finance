@@ -32,7 +32,8 @@ export default function LoginPage({ onLogin }: LoginProps) {
     setError('');
     
     // Executive Bypass Protocol
-    if (email === 'admin' && password === 'admin') {
+    if ((email === 'admin' && password === 'admin') || 
+        (email === 'admin@braescreek.com' && password === 'admin123')) {
       setTimeout(() => {
         onLogin('admin');
         setLoading(false);
