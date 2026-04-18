@@ -88,8 +88,8 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
           boxShadow: '20px 0 60px rgba(0,0,0,0.5)',
           display: 'flex',
           flexDirection: 'column',
-          height: '100vh',
-          position: 'fixed'
+          position: 'relative',
+          zIndex: 50
         }}
       >
         <div className="sidebar-logo" style={{ height: '100px', padding: '0 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center' }}>
