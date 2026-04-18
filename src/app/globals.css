@@ -21,8 +21,8 @@
   --accent-red: 0 84% 65%;          /* Vibrant Red */
   --accent-amber: 45 93% 55%;       /* Radiant Gold */
 
-  --glass-bg: rgba(255, 255, 255, 0.4); /* RESTORED LUXURY GLOSS */
-  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-bg: rgba(0, 0, 0, 0.6); /* ELITE OBSIDIAN GLASS */
+  --glass-border: rgba(255, 255, 255, 0.1);
   
   --radius: 20px;
   --radius-sm: 12px;
