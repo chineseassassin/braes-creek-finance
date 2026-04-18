@@ -106,17 +106,27 @@ export default function LoginPage({ onLogin }: LoginProps) {
         transform: `perspective(1000px) rotateX(${mousePos.y * -0.05}deg) rotateY(${mousePos.x * 0.05}deg) translateZ(20px)`
       }}>
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div style={{ margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px', cursor: 'default' }}>
+          <div style={{ 
+            margin: '0 auto', 
+            display: 'flex', 
+            justifyContent: 'center',
+            transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}>
             <img
               src="/BRAES-CREEK-FINAL-MASTER.png"
               alt="Braes Creek Estate"
               width={340}
               height={340}
+              className="vision-logo-interactive"
               style={{ 
                 objectFit: 'contain', 
                 mixBlendMode: 'screen',
-                transform: `translate(${mousePos.x * 0.1}px, ${mousePos.y * 0.1}px)`
+                transform: `
+                  translate(${mousePos.x * 0.2}px, ${mousePos.y * 0.2}px) 
+                  scale(${Math.abs(mousePos.x) > 0.01 || Math.abs(mousePos.y) > 0.01 ? 1.02 : 1})
+                `,
+                transition: 'transform 0.2s ease-out, filter 0.3s ease'
               }}
             />
           </div>
