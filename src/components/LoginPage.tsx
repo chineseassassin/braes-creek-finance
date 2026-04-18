@@ -122,10 +122,10 @@ export default function LoginPage({ onLogin }: LoginProps) {
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{ margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
             <img
-              src="/logo-transparent.png"
+              src="/LOG-IN-PAGE.png"
               alt="Braes Creek Estate"
-              width={260}
-              height={260}
+              width={280}
+              height={280}
               style={{ 
                 objectFit: 'contain', 
                 filter: 'drop-shadow(0 0 40px rgba(0, 245, 255, 0.15))',
@@ -266,13 +266,13 @@ export default function LoginPage({ onLogin }: LoginProps) {
       <style jsx>{`
         .vision-bg-shift {
           background: #0B0E14;
-          animation: chromaShift 24s infinite linear;
+          animation: chromaShift 15s infinite linear;
         }
 
         @keyframes chromaShift {
           0%, 100% { background-color: #0B0E14; }
-          33% { background-color: #080D1A; }
-          66% { background-color: #091612; }
+          33% { background-color: #1A1D23; }
+          66% { background-color: #0F172A; }
         }
 
         .biometric-sweep {
