@@ -4,7 +4,7 @@ import { formatCurrency, BUSINESS_SEGMENTS } from '@/lib/data';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { useState, useEffect } from 'react';
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#84cc16', '#06b6d4'];
+const COLORS = ['#475569', '#334155', '#1e293b', '#64748b', '#94a3b8', '#cbd5e1', '#0f172a', '#3f3f46', '#27272a', '#18181b'];
 
 export default function PLPage() {
   const { expenses, sales, laborEntries, payroll, loans, addAuditLog, currentUser } = useAppStore();
@@ -145,20 +145,20 @@ All data derived from real-time operational records.
       </div>
 
       <div className="grid-3" style={{ marginBottom: 24 }}>
-        <div className="card" style={{ background: 'linear-gradient(135deg, hsl(var(--bg-card)), #064e3b)' }}>
-          <div className="card-title" style={{ color: '#ecfdf5' }}>Total Net Revenue</div>
-          <div style={{ fontSize: 32, fontWeight: 900, color: '#10b981' }}>{formatCurrency(revenue)}</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 8 }}>Cash & accrual basis incoming</div>
+        <div className="card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="card-title" style={{ color: 'hsl(var(--text-muted))' }}>Total Net Revenue</div>
+          <div style={{ fontSize: 32, fontWeight: 900, color: '#fff' }}>{formatCurrency(revenue)}</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 8 }}>Cash & accrual basis incoming</div>
         </div>
-        <div className="card" style={{ background: 'linear-gradient(135deg, hsl(var(--bg-card)), #450a0a)' }}>
-          <div className="card-title" style={{ color: '#fef2f2' }}>Combined COGS & Expenses</div>
-          <div style={{ fontSize: 32, fontWeight: 900, color: '#ef4444' }}>{formatCurrency(combinedCosts)}</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 8 }}>Inclusive of Labor & Payroll</div>
+        <div className="card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="card-title" style={{ color: 'hsl(var(--text-muted))' }}>Combined COGS & Expenses</div>
+          <div style={{ fontSize: 32, fontWeight: 900, color: '#fff' }}>{formatCurrency(combinedCosts)}</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 8 }}>Inclusive of Labor & Payroll</div>
         </div>
-        <div className="card" style={{ background: 'linear-gradient(135deg, hsl(var(--bg-card)), #1e1b4b)' }}>
-          <div className="card-title" style={{ color: '#eef2ff' }}>Operational Net Profit</div>
-          <div style={{ fontSize: 32, fontWeight: 900, color: netProfit >= 0 ? '#3b82f6' : '#ef4444' }}>{formatCurrency(netProfit)}</div>
-          <div style={{ fontSize: 13, fontWeight: 800, marginTop: 4, color: '#818cf8' }}>{netMargin.toFixed(1)}% Total Margin</div>
+        <div className="card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="card-title" style={{ color: 'hsl(var(--text-muted))' }}>Operational Net Profit</div>
+          <div style={{ fontSize: 32, fontWeight: 900, color: '#fff' }}>{formatCurrency(netProfit)}</div>
+          <div style={{ fontSize: 13, fontWeight: 800, marginTop: 4, color: 'hsl(var(--text-muted))' }}>{netMargin.toFixed(1)}% Total Margin</div>
         </div>
       </div>
 
@@ -182,8 +182,8 @@ All data derived from real-time operational records.
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'hsl(var(--text-muted))' }} />
                 <YAxis hide />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
-                <Area type="monotone" dataKey="costs" name="Costs" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorCost)" />
+                <Area type="monotone" dataKey="revenue" name="Revenue" stroke="rgba(255,255,255,0.4)" strokeWidth={3} fillOpacity={1} fill="rgba(255,255,255,0.05)" />
+                <Area type="monotone" dataKey="costs" name="Costs" stroke="rgba(255,255,255,0.2)" strokeWidth={3} fillOpacity={1} fill="rgba(255,255,255,0.02)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

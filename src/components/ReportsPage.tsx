@@ -119,8 +119,8 @@ export default function ReportsPage() {
                 <XAxis dataKey="month" tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v: any) => formatCurrency(Number(v))} />
-                <Bar dataKey="expenses" name="Operating" fill="#3b82f6" stackId="a" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="payroll" name="Payroll" fill="#14b8a6" stackId="a" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="expenses" name="Operating" fill="rgba(255,255,255,0.2)" stackId="a" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="payroll" name="Payroll" fill="rgba(255,255,255,0.1)" stackId="a" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -136,7 +136,7 @@ export default function ReportsPage() {
                 <XAxis type="number" tick={{ fill: 'hsl(var(--text-muted))', fontSize: 11 }} tickFormatter={v => `$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
                 <YAxis dataKey="name" type="category" tick={{ fill: 'hsl(var(--text-secondary))', fontSize: 11 }} width={80} axisLine={false} tickLine={false} />
                 <Tooltip formatter={(v: any) => formatCurrency(Number(v))} />
-                <Bar dataKey="amount" name="Expenses" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="amount" name="Expenses" fill="rgba(255,255,255,0.15)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

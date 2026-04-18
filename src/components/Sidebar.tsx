@@ -90,7 +90,7 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
       >
         <div className="sidebar-logo" style={{ height: '100px', padding: '0 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ padding: '4px', border: '1px solid rgba(0, 245, 255, 0.2)', borderRadius: '12px', background: 'rgba(0, 245, 255, 0.05)' }}>
+            <div style={{ padding: '4px', border: '1px solid hsl(var(--border))', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.03)' }}>
               <Image
                 src="/logo-transparent.png"
                 alt="Braes Creek Estate"
@@ -101,7 +101,7 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
             </div>
             <div style={{ overflow: 'hidden' }}>
               <h1 style={{ fontSize: '13px', fontWeight: 900, letterSpacing: '0.05em', whiteSpace: 'nowrap', color: '#fff' }}>
-                BRAES CREEK <span style={{ color: '#00F5FF' }}>HQ</span>
+                BRAES CREEK <span style={{ color: 'hsl(var(--text-muted))' }}>HQ</span>
               </h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
                 <span className="status-light" />
@@ -146,7 +146,7 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
                       gap: '14px',
                       transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
                       color: activePage === item.id ? '#fff' : 'rgba(255,255,255,0.5)',
-                      background: activePage === item.id ? 'rgba(0, 245, 255, 0.08)' : 'transparent',
+                      background: activePage === item.id ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
                       cursor: 'pointer',
                       position: 'relative',
                       overflow: 'hidden'
@@ -176,7 +176,7 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
               fontSize: '11px', 
               fontWeight: 900, 
               marginTop: '24px', 
-              background: isEditing ? 'rgba(0, 245, 255, 0.1)' : 'rgba(255,255,255,0.03)', 
+              background: isEditing ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255,255,255,0.03)', 
               border: '1px solid rgba(255,255,255,0.08)',
               borderRadius: '12px',
               color: '#fff',
@@ -194,7 +194,7 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
               borderRadius: '14px', 
               fontSize: '14px', 
               fontWeight: 900,
-              background: 'linear-gradient(135deg, #00F5FF, #FFD700)',
+              background: 'linear-gradient(135deg, #1e293b, #334155)',
               border: '1px solid rgba(255,255,255,0.2)',
               boxShadow: '0 8px 20px rgba(0,0,0,0.5)'
             }}>
@@ -202,7 +202,7 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
             </div>
             <div style={{ flex: 1, overflow: 'hidden' }}>
               <div style={{ fontSize: '14px', fontWeight: 900, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', color: '#fff' }}>{currentUser.name}</div>
-              <div style={{ fontSize: '10px', fontWeight: 900, color: '#00F5FF', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{currentUser.role}</div>
+              <div style={{ fontSize: '10px', fontWeight: 900, color: 'hsl(var(--text-muted))', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{currentUser.role}</div>
             </div>
             <button onClick={onLogout} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '8px', borderRadius: '10px', color: '#fff' }}>🚪</button>
           </div>

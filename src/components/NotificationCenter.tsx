@@ -258,8 +258,8 @@ export default function NotificationCenter() {
         .notification-count {
           font-size: 10px;
           font-weight: 700;
-          background: hsl(var(--accent-blue) / 0.15);
-          color: hsl(var(--accent-blue));
+          background: rgba(255, 255, 255, 0.05);
+          color: rgba(255, 255, 255, 0.6);
           padding: 2px 8px;
           border-radius: 100px;
           text-transform: uppercase;

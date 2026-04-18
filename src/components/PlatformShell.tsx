@@ -74,8 +74,8 @@ export default function PlatformShell() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setAuthenticated(!!session);
-      if (session && loadAllData) {
+      if (session) {
+        setAuthenticated(true);
         loadAllData(session.user.id);
       }
       setLoadingSession(false);
@@ -83,7 +83,7 @@ export default function PlatformShell() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setAuthenticated(!!session);
-      if (session && loadAllData) {
+      if (session) {
         loadAllData(session.user.id);
       }
     });
@@ -91,20 +91,18 @@ export default function PlatformShell() {
     return () => subscription.unsubscribe();
   }, [loadAllData]);
 
+  // Mission Logic: Persistent Session Guard
   useEffect(() => {
-    // FORCE SYNC for the new Intelligence Upgrade
-    const HAS_MIGRATED = 'braes_creek_migrated_v4';
-    if (typeof window !== 'undefined' && !localStorage.getItem(HAS_MIGRATED)) {
-      console.log("Intelligence Upgrade: Synchronizing data modules...");
-      loadAllData('admin').then(() => {
-         localStorage.setItem(HAS_MIGRATED, 'true');
-         // Silent switch to the new data constants
-         setTimeout(() => {
-           window.location.reload();
-         }, 500);
-      });
-    }
-  }, [loadAllData]);
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setAuthenticated(true);
+      } else {
+        setAuthenticated(false);
+      }
+    };
+    checkSession();
+  }, []);
 
   useEffect(() => {
     document.title = `${PAGE_TITLES[activePage] || 'Dashboard'} | Braes Creek Estate`;
@@ -194,7 +192,10 @@ export default function PlatformShell() {
       <Sidebar
         activePage={activePage}
         onNavigate={setActivePage}
-        onLogout={() => setAuthenticated(false)}
+        onLogout={async () => {
+          await supabase.auth.signOut();
+          setAuthenticated(false);
+        }}
       />
 
       <div className="main-content">
@@ -218,7 +219,7 @@ export default function PlatformShell() {
             <button 
               className="btn btn-primary btn-sm desktop-only" 
               onClick={() => setControlPanelOpen(true)}
-              style={{ borderRadius: '100px', fontSize: '11px', padding: '0 20px', height: '36px' }}
+              style={{ borderRadius: '100px', fontSize: '11px', padding: '0 24px', height: '38px', fontWeight: 900 }}
             >
               COMMAND [K]
             </button>

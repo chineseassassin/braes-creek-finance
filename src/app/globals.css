@@ -14,15 +14,16 @@
   --text-secondary: 215 15% 75%;      /* Slate Silver */
   --text-muted: 215 10% 55%;          /* Deep Slate */
   
-  --accent-blue: 182 100% 50%;         /* Electric Cyan (#00F5FF) */
-  --accent-teal: 182 100% 50%;         /* Core Hynex Glow */
+  --accent-blue: 215 15% 75%;         /* Slate Silver - Professional */
+  --accent-teal: 215 15% 75%;         /* Subdued Hub */
   --accent-amber: 45 100% 55%;        /* Strategic Gold */
   --accent-red: 0 84% 60%;           /* Emergency Red Alert */
 
-  --glass-bg: rgba(15, 23, 42, 0.85);  /* PREMIUM ELITE GLASS - APPROVED */
-  --glass-border: rgba(255, 255, 255, 0.06); 
+  --btn-primary-bg: 222 15% 15%;     /* Stealth Clinical Steel - Muted & Professional */
+  --btn-primary-text: 0 0% 90%;
+  --btn-primary-border: 255 255% 255% / 0.08;
   
-  --radius: 40px;                      /* HYNEX 40PX ROUNDING */
+  --radius: 40px;
   --radius-sm: 16px;
   --radius-lg: 56px;
   
@@ -52,7 +53,9 @@
   --glass-bg: rgba(255, 255, 255, 0.8);
   --glass-border: rgba(0, 0, 0, 0.04);
   
-  --shadow-premium: 0 0 0 1px hsl(var(--border)), 0 4px 12px rgba(0,0,0,0.03);
+  --btn-primary-bg: 222 15% 10%;
+  --btn-primary-text: 0 0% 100%;
+  --btn-primary-border: 0 0% 0% / 0.08;
   
   color-scheme: light;
 }
@@ -64,9 +67,15 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+button, 
+[role="button"],
+.clickable {
+  cursor: pointer;
+}
+
 html, body {
   height: 100%;
-  background: #000000;
+  background: hsl(var(--bg-primary));
   background-attachment: fixed;
   color: hsl(var(--text-primary));
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
@@ -97,6 +106,7 @@ html, body {
   box-shadow: 
     0 20px 60px rgba(0,0,0,0.8), 
     0 0 40px rgba(0, 245, 255, 0.1);
+  cursor: pointer;
 }
 
 /* =====================================
@@ -141,6 +151,10 @@ html, body {
 /* =====================================
    SIDEBAR NAV ENHANCEMENT
  ===================================== */
+.nav-item {
+  cursor: pointer;
+}
+
 .nav-item.active {
   color: #fff;
   background: rgba(0, 245, 255, 0.08);
@@ -348,15 +362,30 @@ html, body {
 }
 
 .btn-primary {
-  background: hsl(var(--accent-green));
-  color: #fff; /* HIGH CONTRAST */
-  box-shadow: 0 8px 24px hsla(var(--accent-green), 0.3);
+  background: hsl(var(--btn-primary-bg));
+  color: hsl(var(--btn-primary-text));
+  border: 1px solid hsl(var(--btn-primary-border));
+  box-shadow: none;
 }
 
 .btn-primary:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 16px 36px hsla(var(--accent-green), 0.4);
-  filter: brightness(1.1);
+  transform: translateY(-1px);
+  background: hsl(222, 15%, 20%);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.btn-secondary-glass {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  border-radius: 100px;
+}
+
+.btn-secondary-glass:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+  color: #fff;
 }
 
 
@@ -433,7 +462,7 @@ html, body {
 
 .nav-item.active {
   color: #fff;
-  background: rgba(0, 245, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   font-weight: 700;
 }
 
@@ -444,9 +473,9 @@ html, body {
   top: 20%;
   height: 60%;
   width: 3px;
-  background: #00F5FF;
+  background: #fff;
   border-radius: 0 4px 4px 0;
-  box-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
 .nav-item-icon {

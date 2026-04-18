@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-
 import { supabase } from '@/lib/supabase';
 
 interface LoginProps {
@@ -18,31 +17,36 @@ export default function LoginPage({ onLogin }: LoginProps) {
   const [activeField, setActiveField] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
 
-  // 3D Parallax Tracking
   const handleMouseMove = (e: React.MouseEvent) => {
     const x = (e.clientX / window.innerWidth - 0.5) * 20;
     const y = (e.clientY / window.innerHeight - 0.5) * 20;
     setMousePos({ x, y });
   };
 
-  const USERS = [
-    { email: 'admin@braescreek.com', password: 'admin123', role: 'admin' as const, name: 'Admin User' },
-    { email: 'manager@braescreek.com', password: 'mgr123', role: 'manager' as const, name: 'Farm Manager' },
-  ];
-
-  function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    const normalizedEmail = email.toLowerCase() === 'admin' ? 'admin@braescreek.com' : email;
-    const user = USERS.find(u => u.email === normalizedEmail && u.password === password);
+    setLoading(true);
+    setError('');
     
-    if (user) {
-      setIsScanning(true);
-      // Cinematic Scan Delay
-      setTimeout(() => {
-        onLogin(user.role);
-      }, 1200);
-    } else {
-      setError('Invalid credentials. Tip: Use "admin" as the email!');
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        setIsScanning(true);
+        setTimeout(() => {
+          onLogin('admin');
+          setIsScanning(false);
+          setLoading(false);
+        }, 1500);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Identity verification failed. Protocol mismatch.');
+      setLoading(false);
     }
   }
 
@@ -78,8 +82,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
         position: 'relative'
       }}
     >
-      {/* GENERATIVE NEURAL BACKGROUND */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.15, pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.1, pointerEvents: 'none' }}>
         {[...Array(20)].map((_, i) => (
           <div key={i} style={{
             position: 'absolute',
@@ -87,10 +90,8 @@ export default function LoginPage({ onLogin }: LoginProps) {
             left: `${Math.random() * 100}%`,
             width: '2px',
             height: '2px',
-            background: '#00F5FF',
-            boxShadow: '0 0 15px #00F5FF',
+            background: 'rgba(255,255,255,0.2)',
             borderRadius: '50%',
-            opacity: 0.5,
             transform: `translate(${mousePos.x * (i%4)}px, ${mousePos.y * (i%4)}px)`,
             transition: 'transform 0.4s ease-out'
           }} />
@@ -105,79 +106,48 @@ export default function LoginPage({ onLogin }: LoginProps) {
         animation: 'visionPop 1s cubic-bezier(0.16, 1, 0.3, 1)',
         transform: `perspective(1000px) rotateX(${mousePos.y * -0.05}deg) rotateY(${mousePos.x * 0.05}deg) translateZ(20px)`
       }}>
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '40px', cursor: 'default' }}>
-          <div style={{ 
-            margin: '0 auto', 
-            display: 'flex', 
-            justifyContent: 'center',
-            transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
-          }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
             <img
               src="/BRAES-CREEK-FINAL-MASTER.png"
               alt="Braes Creek Estate"
               width={340}
               height={340}
-              className="vision-logo-interactive"
               style={{ 
                 objectFit: 'contain', 
                 mixBlendMode: 'screen',
-                transform: `
-                  translate(${mousePos.x * 0.2}px, ${mousePos.y * 0.2}px) 
-                  scale(${Math.abs(mousePos.x) > 0.01 || Math.abs(mousePos.y) > 0.01 ? 1.02 : 1})
-                `,
-                transition: 'transform 0.2s ease-out, filter 0.3s ease'
+                transform: `translate(${mousePos.x * 0.2}px, ${mousePos.y * 0.2}px)`,
+                transition: 'transform 0.2s ease-out'
               }}
             />
           </div>
-          <p style={{ color: '#00F5FF', fontSize: '11px', fontWeight: 900, border: '1px solid rgba(0, 245, 255, 0.2)', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '4px', opacity: 0.6 }}>SYSTEM OS 2026</p>
+          <p style={{ color: 'hsl(var(--text-muted))', fontSize: '11px', fontWeight: 900, border: '1px solid hsl(var(--border))', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '4px', opacity: 0.6 }}>SYSTEM OS 2026</p>
         </div>
 
-        {/* Luminous Login Card (Hynex Obsidian) */}
         <div className="vision-card" style={{
-          background: 'rgba(15, 25, 40, 0.6)',
+          background: 'rgba(15, 23, 42, 0.6)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '40px',
           padding: '48px',
-          boxShadow: `
-            0 0 40px rgba(0, 245, 255, 0.08),
-            0 20px 60px rgba(0, 0, 0, 0.6),
-            0 0 100px rgba(255, 215, 0, 0.03)
-          `,
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6), 0 0 100px rgba(255, 255, 255, 0.01)',
           position: 'relative',
           overflow: 'hidden',
           transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
           transform: `translateZ(40px)`
         }}>
-           {/* ORBITAL LIGHT BEAM */}
            <div className="orbital-beam" />
-           
-           {/* BIOMETRIC SCAN LINE */}
            {isScanning && (
-             <div className="biometric-sweep" style={{
-               position: 'absolute',
-               top: 0,
-               left: 0,
-               width: '4px',
-               height: '100%',
-               background: '#00F5FF',
-               boxShadow: '0 0 30px #00F5FF, 0 0 60px rgba(0,245,255,0.5)',
-               zIndex: 10,
-               pointerEvents: 'none'
-             }} />
+             <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.03)', zIndex: 10 }} />
            )}
-           
-           {/* Subtle Scanning Beam */}
-           <div style={{ position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.02), transparent)', animation: 'visionSweep 6s infinite linear', pointerEvents: 'none' }} />
 
           <h2 style={{ fontSize: '32px', fontWeight: 900, color: '#fff', marginBottom: '8px', textAlign: 'center', letterSpacing: '-0.04em' }}>Welcome</h2>
           <p style={{ color: '#94A3B8', fontSize: '14px', fontWeight: 800, marginBottom: '44px', textAlign: 'center' }}>Sign in to the Intelligence Hub</p>
 
           <form onSubmit={handleLogin}>
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: activeField === 'email' ? '#00F5FF' : '#94A3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em', transition: '0.3s' }}>ID ACCESS</label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: activeField === 'email' ? '#fff' : '#94A3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>ID ACCESS</label>
               <input
                 type="text"
                 value={email}
@@ -191,7 +161,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
               />
             </div>
             <div style={{ marginBottom: '32px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: activeField === 'pass' ? '#00F5FF' : '#94A3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em', transition: '0.3s' }}>SECURITY PASS</label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: activeField === 'pass' ? '#fff' : '#94A3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>SECURITY PASS</label>
               <div style={{ position: 'relative' }}>
                 <input
                   type={showPassword ? "text" : "password"}
@@ -199,7 +169,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
                   disabled={isScanning}
                   onFocus={() => setActiveField('pass')}
                   onBlur={() => setActiveField(null)}
-                  onChange={setpassword => setPassword(setpassword.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
                   className="vision-input"
@@ -211,17 +181,11 @@ export default function LoginPage({ onLogin }: LoginProps) {
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
                     position: 'absolute',
-                    right: '16px',
-                    top: '50%',
+                    right: '16px', top: '50%',
                     transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    color: activeField === 'pass' ? '#00F5FF' : '#94A3B8',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: '0.3s'
+                    background: 'none', border: 'none',
+                    color: activeField === 'pass' ? '#fff' : '#94A3B8',
+                    cursor: 'pointer', display: 'flex'
                   }}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -230,13 +194,18 @@ export default function LoginPage({ onLogin }: LoginProps) {
             </div>
 
             {error && (
-              <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', borderRadius: '16px', padding: '14px 20px', marginBottom: '24px', color: '#fca5a5', fontSize: '13px', fontWeight: 900, display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <span>⚠️</span> {error}
+              <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', borderRadius: '16px', padding: '14px 20px', marginBottom: '24px', color: '#fca5a5', fontSize: '13px', fontWeight: 900 }}>
+                {error}
               </div>
             )}
 
-            <button type="submit" disabled={isScanning} className="vision-btn-primary pulse-btn">
-              {isScanning ? 'Verifying Identity...' : 'Initialize Access'}
+            <button 
+              type="submit" 
+              disabled={loading || isScanning} 
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '20px', borderRadius: '20px', fontSize: '16px', fontWeight: 900 }}
+            >
+              {(loading || isScanning) ? 'Authenticating...' : 'Initialize Access'}
             </button>
           </form>
 
@@ -252,156 +221,42 @@ export default function LoginPage({ onLogin }: LoginProps) {
             disabled={loading || isScanning}
             className="vision-btn-google"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            {loading ? 'Authenticating...' : 'Continue with Google'}
+            Continue with Google
           </button>
         </div>
 
-        {/* Footer */}
         <div style={{ marginTop: '24px', textAlign: 'center' }}>
            <p style={{ fontSize: '11px', color: '#FFFFFF', fontWeight: 900, opacity: 0.8 }}>© 2026 Braes Creek Estate · Secure Node · V.7.2</p>
         </div>
       </div>
 
       <style jsx>{`
-        .vision-bg-shift {
-          background: #000000;
-        }
-
+        .vision-bg-shift { background: hsl(var(--bg-primary)); }
         .orbital-beam {
-          position: absolute;
-          inset: -2px;
-          border-radius: 40px;
-          padding: 2px;
-          background: conic-gradient(from 0deg, transparent 70%, #00F5FF, #FFD700, #00F5FF);
-          -webkit-mask: 
-             linear-gradient(#fff 0 0) content-box, 
-             linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          animation: orbitRotate 4s linear infinite;
-          opacity: 0.3;
-          transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-          pointer-events: none;
+          position: absolute; inset: -2px; border-radius: 40px; padding: 2px;
+          background: conic-gradient(from 0deg, transparent 70%, rgba(255,255,255,0.1), rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor; mask-composite: exclude;
+          animation: orbitRotate 4s linear infinite; opacity: 0.1;
         }
-
-        .vision-card:hover .orbital-beam {
-          opacity: 0.8;
-          inset: -40px;
-          filter: blur(20px);
-          animation-duration: 2s;
-        }
-
-        @keyframes orbitRotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-
-        .vision-card:hover {
-          transform: translateY(-8px) translateZ(40px) !important;
-          box-shadow: 
-            0 0 80px rgba(0, 245, 255, 0.2),
-            0 20px 100px rgba(0, 0, 0, 0.8),
-            0 0 140px rgba(255, 215, 0, 0.08);
-        }
-
-        .pulse-btn:hover {
-          animation: visionButtonPulse 1.5s infinite ease-in-out;
-        }
-
-        @keyframes visionButtonPulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(0, 245, 255, 0.3); }
-          50% { box-shadow: 0 0 40px rgba(0, 245, 255, 0.6); }
-        }
-
-        .biometric-sweep {
-          animation: biosweep 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes biosweep {
-          0% { left: -10%; opacity: 0; }
-          20% { opacity: 1; }
-          80% { opacity: 1; }
-          100% { left: 110%; opacity: 0; }
-        }
-
+        @keyframes orbitRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .vision-input {
-          width: 100%;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 18px;
-          padding: 16px 20px;
-          color: #fff;
-          font-size: 15px;
-          font-weight: 700;
-          outline: none;
-          font-family: inherit;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          width: 100%; background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px;
+          padding: 16px 20px; color: #fff; font-size: 15px; font-weight: 700; outline: none; transition: 0.3s;
         }
-        .vision-input:focus {
-          background: rgba(0, 245, 255, 0.05);
-          border-color: #00F5FF;
-          box-shadow: 0 0 30px rgba(0, 245, 255, 0.2);
-        }
-        .vision-input::placeholder {
-          color: rgba(255,255,255,0.1);
-        }
-        .vision-btn-primary {
-          width: 100%;
-          padding: 20px;
-          font-size: 16px;
-          font-weight: 900;
-          color: #000;
-          background: #00F5FF;
-          border: none;
-          border-radius: 20px;
-          cursor: pointer;
-          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 16px 32px rgba(0, 245, 255, 0.2);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-        }
-        .vision-btn-primary:hover {
-          transform: translateY(-2px) scale(1.01);
-          box-shadow: 0 20px 40px rgba(0, 245, 255, 0.3);
-          filter: brightness(1.1);
-        }
+        .vision-input:focus { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.3); }
         .vision-btn-google {
-          width: 100%;
-          background: rgba(255, 255, 255, 0.03);
-          color: #fff;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 18px;
-          padding: 14px;
-          font-size: 14px;
-          font-weight: 900;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          transition: all 0.3s;
-          opacity: 0.5;
+          width: 100%; background: rgba(255, 255, 255, 0.03); color: #fff;
+          border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px; padding: 14px;
+          font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.3s; opacity: 0.6;
         }
-        .vision-btn-google:hover {
-          background: rgba(255, 255, 255, 0.08);
-          opacity: 1;
-        }
+        .vision-btn-google:hover { background: rgba(255, 255, 255, 0.08); opacity: 1; }
         @keyframes visionPop {
-          from { opacity: 0; transform: translateY(80px) scale(0.95); filter: blur(30px); }
-          to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-        }
-        @keyframes visionSweep {
-          0% { left: -100%; }
-          100% { left: 100%; }
+          from { opacity: 0; transform: translateY(80px); filter: blur(30px); }
+          to { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
       `}</style>
     </div>
   );
 }
-
