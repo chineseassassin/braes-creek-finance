@@ -151,6 +151,9 @@ export default function LoginPage({ onLogin }: LoginProps) {
           transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
           transform: `translateZ(40px)`
         }}>
+           {/* ORBITAL LIGHT BEAM */}
+           <div className="orbital-beam" />
+           
            {/* BIOMETRIC SCAN LINE */}
            {isScanning && (
              <div className="biometric-sweep" style={{
@@ -165,7 +168,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
                pointerEvents: 'none'
              }} />
            )}
-
+           
            {/* Subtle Scanning Beam */}
            <div style={{ position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.02), transparent)', animation: 'visionSweep 6s infinite linear', pointerEvents: 'none' }} />
 
@@ -270,12 +273,41 @@ export default function LoginPage({ onLogin }: LoginProps) {
           background: #000000;
         }
 
+        .orbital-beam {
+          position: absolute;
+          inset: -2px;
+          border-radius: 40px;
+          padding: 2px;
+          background: conic-gradient(from 0deg, transparent 70%, #00F5FF, #FFD700, #00F5FF);
+          -webkit-mask: 
+             linear-gradient(#fff 0 0) content-box, 
+             linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          animation: orbitRotate 4s linear infinite;
+          opacity: 0.3;
+          transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+          pointer-events: none;
+        }
+
+        .vision-card:hover .orbital-beam {
+          opacity: 0.8;
+          inset: -40px;
+          filter: blur(20px);
+          animation-duration: 2s;
+        }
+
+        @keyframes orbitRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
         .vision-card:hover {
           transform: translateY(-8px) translateZ(40px) !important;
           box-shadow: 
-            0 0 60px rgba(0, 245, 255, 0.15),
-            0 20px 80px rgba(0, 0, 0, 0.8),
-            0 0 120px rgba(255, 215, 0, 0.05);
+            0 0 80px rgba(0, 245, 255, 0.2),
+            0 20px 100px rgba(0, 0, 0, 0.8),
+            0 0 140px rgba(255, 215, 0, 0.08);
         }
 
         .pulse-btn:hover {
