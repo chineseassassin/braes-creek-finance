@@ -197,11 +197,16 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   loadAllData: async (userId: string) => {
-    // Try LocalStorage First for instant hydration
     const localData = localStorage.getItem(STORAGE_KEY);
     if (localData) {
       const parsed = JSON.parse(localData);
       set(parsed);
+    }
+
+    // EXECUTIVE BYPASS: If using the admin placeholder, don't clear demo data with failing Supabase requests
+    if (userId === 'admin@braescreek.com' || userId === 'admin') {
+      console.log("Master Node Active: Hydrating with mission demo data.");
+      return;
     }
 
     try {

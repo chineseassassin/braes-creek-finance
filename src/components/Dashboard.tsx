@@ -283,7 +283,7 @@ export default function Dashboard() {
                     <Area 
                       type="monotone" 
                       name={chartMode === 'compare' ? 'Revenue' : chartMode === 'efficiency' ? 'Efficiency' : 'Spend'}
-                      dataKey={chartMode === 'compare' ? 'revenue' : chartMode === 'efficiency' ? 'value' : 'value'} 
+                      dataKey={chartMode === 'compare' ? 'revenue' : chartMode === 'efficiency' ? 'efficiency' : 'amount'} 
                       stroke="#00F5FF" 
                       strokeWidth={4} 
                       fillOpacity={1} 
