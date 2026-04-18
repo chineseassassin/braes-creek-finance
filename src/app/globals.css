@@ -1,36 +1,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Spatial Studio Palette - High Luminosity VisionOS */
-  --bg-primary: 215 30% 12%;           /* Luminous Petroleum Wall */
-  --bg-secondary: 215 25% 15%;         /* Soft Slate */
-  --bg-card: 215 20% 20%;              /* Card Surface */
-  --bg-card-hover: 215 20% 25%;        /* Card Hover */
-  --sidebar-bg: 215 35% 8%;            /* Darker Wall Trim */
-  --border: 215 20% 25%;               /* Defined Border */
-  --border-light: 215 20% 35%;         /* Divider */
+  /* Hynex Precision Palette - Medical Tech Aesthetic */
+  --bg-primary: 225 30% 6%;           /* Deep Charcoal Wall (#0B0E14) */
+  --bg-secondary: 225 30% 4%;         /* Darker Workspace (#080A0E) */
+  --bg-card: 225 25% 10%;              /* Dark Obsidian Card Surface */
+  --bg-card-hover: 225 25% 12%;        /* Card Hover */
+  --sidebar-bg: 225 30% 4%;            /* Sidebar Deep Charcoal */
+  --border: 225 20% 12%;               /* Micro Border */
+  --border-light: 225 20% 15%;         /* Section Divider */
   
-  --text-primary: 210 20% 98%;        /* Crisp Silver-White */
-  --text-secondary: 215 15% 85%;      /* Light Platinum */
-  --text-muted: 215 10% 60%;          /* Muted Teal Gray */
+  --text-primary: 0 0% 100%;          /* High Luminosity White */
+  --text-secondary: 215 15% 65%;      /* Slate Gray (#94A3B8) */
+  --text-muted: 215 10% 45%;          /* Muted Tech Gray */
   
-  --accent-blue: 199 89% 55%;         /* Bright Petroleum */
-  --accent-green: 160 100% 25%;        /* Midnight Emerald */
-  --accent-purple: 270 91% 75%;       /* Luminous Lavender */
-  --accent-teal: 174 100% 45%;        /* Marine Glow */
-  --accent-red: 0 84% 65%;          /* Vibrant Red */
-  --accent-amber: 45 93% 55%;       /* Radiant Gold */
+  --accent-blue: 182 100% 50%;         /* Electric Cyan (#00F5FF) */
+  --accent-green: 82 100% 50%;         /* Vitality Lime (#A3FF00) */
+  --accent-purple: 270 91% 75%;       /* Tech Lavender */
+  --accent-teal: 182 100% 50%;        /* Hynex Teal Glow */
+  --accent-red: 0 84% 65%;          /* Emergency Red */
+  --accent-amber: 45 100% 50%;       /* Safety Gold */
 
-  --glass-bg: rgba(0, 0, 0, 0.6); /* ELITE OBSIDIAN GLASS */
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(20, 24, 33, 0.6);   /* HYNEX FROSTED OBSIDIAN */
+  --glass-border: rgba(255, 255, 255, 0.08); /* MICRO BORDER 0.08 */
   
-  --radius: 20px;
+  --radius: 24px;                      /* HYNEX LARGE ROUNDING */
   --radius-sm: 12px;
   --radius-lg: 32px;
   
-  --shadow-premium: 0 0 0 1px rgba(255,255,255,0.2), 0 24px 60px -12px rgba(0,0,0,0.4);
+  --shadow-premium: 0 40px 100px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset;
 
-  --sidebar-width: 260px;
+  --sidebar-width: 280px;
   --header-height: 80px;
 
   color-scheme: dark;
@@ -66,9 +66,9 @@
 
 html, body {
   height: 100%;
-  /* Spatial Studio Lighting: Petroleum Wall + White Cabinet Floor */
-  background: radial-gradient(circle at 10% 10%, hsla(200, 60%, 25%, 1) 0%, transparent 40%),
-              radial-gradient(circle at 50% 130%, hsla(40, 30%, 95%, 1) 0%, hsla(40, 30%, 90%, 0.8) 50%, transparent 80%),
+  /* Hynex Precision Lighting: Deep Charcoal Workspace */
+  background: radial-gradient(circle at 10% 10%, hsla(225, 30%, 15%, 1) 0%, transparent 40%),
+              radial-gradient(circle at 50% 120%, hsla(225, 30%, 8%, 1) 0%, transparent 70%),
               hsl(var(--bg-primary));
   background-attachment: fixed;
   color: hsl(var(--text-primary));
@@ -290,41 +290,39 @@ html, body {
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  color: hsl(var(--text-primary) / 0.8);
+  gap: 12px;
+  padding: 12px 20px;
+  margin: 4px 12px;
+  color: hsl(var(--text-secondary));
   text-decoration: none;
-  margin-bottom: 0px;
-  position: relative;
+  border-radius: 12px;
   font-weight: 500;
-  font-size: 13px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .nav-item:hover {
-  background: hsl(var(--bg-card));
-  color: hsl(var(--text-primary));
-  transform: translateX(4px);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .nav-item.active {
-  background: linear-gradient(90deg, hsl(var(--accent-blue) / 0.15), transparent);
-  color: hsl(var(--accent-blue));
-  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 245, 255, 0.1);
+  font-weight: 700;
 }
 
 .nav-item.active::before {
   content: '';
   position: absolute;
-  left: -8px;
-  top: 6px;
-  bottom: 6px;
-  width: 4px;
-  background: hsl(var(--accent-blue));
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 3px;
+  background: #00F5FF;
   border-radius: 0 4px 4px 0;
-  box-shadow: 4px 0 12px hsl(var(--accent-blue) / 0.5);
+  box-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
 }
 
 .nav-item-icon {

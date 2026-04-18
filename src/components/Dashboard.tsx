@@ -136,47 +136,49 @@ export default function Dashboard() {
         <button className="btn btn-ghost" style={{ fontSize: '13px', fontWeight: 800 }}>Full Analysis →</button>
       </div>
 
-      {/* STAGE 1: HERO REVENUE CARD */}
+      {/* STAGE 1: HYNEX HERO REVENUE CARD */}
       <div className="card" style={{ 
-        background: filterSegment ? 'linear-gradient(225deg, #1e3a8a, #1d4ed8)' : 'linear-gradient(225deg, hsl(var(--accent-green)), hsl(var(--accent-teal)))',
-        border: 'none',
-        padding: '48px',
+        background: 'linear-gradient(135deg, rgba(0, 245, 255, 0.05), rgba(0,0,0,0))',
+        border: '1px solid rgba(0, 245, 255, 0.15)',
+        padding: '32px 48px',
         marginBottom: '32px',
-        color: filterSegment ? '#fff' : '#000',
+        color: '#fff',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         position: 'relative',
         overflow: 'hidden',
-        transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+        boxShadow: '0 0 40px rgba(0, 245, 255, 0.05)'
       }}>
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', opacity: filterSegment ? 0.6 : 0.7, marginBottom: '16px' }}>
-            {filterSegment ? `${filterSegment} Valuation` : 'Total Estate Valuation'}
+          <div style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', color: '#00F5FF', marginBottom: '16px', opacity: 0.8 }}>
+            {filterSegment ? `${filterSegment} VALUATION` : 'TOTAL ESTATE VALUATION'}
           </div>
-          <div style={{ fontSize: '64px', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1, marginBottom: '16px' }}>
+          <div style={{ fontSize: '56px', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1, marginBottom: '16px' }}>
             {formatCurrency(totalRevenue)}
           </div>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <span style={{ background: 'rgba(0,0,0,0.1)', padding: '6px 16px', borderRadius: '100px', fontSize: '14px', fontWeight: 800 }}>
-              📈 {growth} <span style={{ opacity: 0.6, fontSize: '12px' }}>v. prev cycle</span>
+            <span style={{ color: '#00F5FF', fontSize: '14px', fontWeight: 800 }}>
+              📈 {growth} <span style={{ opacity: 0.4, fontSize: '11px', marginLeft: '6px' }}>v. prev cycle</span>
             </span>
-            <span style={{ fontSize: '14px', fontWeight: 700, opacity: 0.7 }}>Sector Impact Matrix Active</span>
+            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+            <span style={{ fontSize: '12px', fontWeight: 700, opacity: 0.4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Real-time Intelligence Active</span>
           </div>
         </div>
         
-        <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', gap: '48px', position: 'relative', zIndex: 1 }}>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', opacity: 0.6, marginBottom: '4px' }}>Expenses</div>
-            <div style={{ fontSize: '24px', fontWeight: 900 }}>{formatCurrency(totalExpenses)}</div>
+            <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', color: '#94A3B8', marginBottom: '8px', letterSpacing: '0.05em' }}>Gross Expenses</div>
+            <div style={{ fontSize: '22px', fontWeight: 900, color: '#fff' }}>{formatCurrency(totalExpenses)}</div>
           </div>
-          <div style={{ width: '1px', background: 'rgba(0,0,0,0.1)', margin: '4px 0' }} />
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', opacity: 0.6, marginBottom: '4px' }}>Debt Leverage</div>
-            <div style={{ fontSize: '24px', fontWeight: 900 }}>{formatCurrency(totalOutstanding)}</div>
+            <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', color: '#94A3B8', marginBottom: '8px', letterSpacing: '0.05em' }}>Leverage Ratio</div>
+            <div style={{ fontSize: '22px', fontWeight: 900, color: '#00F5FF' }}>{formatCurrency(totalOutstanding)}</div>
           </div>
         </div>
-        <div style={{ position: 'absolute', right: '-40px', bottom: '-80px', fontSize: '320px', opacity: 0.08, transform: 'rotate(-15deg)', pointerEvents: 'none' }}>🛡️</div>
+        
+        {/* Hynex Background Trace */}
+        <div style={{ position: 'absolute', right: '-80px', bottom: '-80px', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(0, 245, 255, 0.03) 0%, transparent 70%)', pointerEvents: 'none' }} />
       </div>
 
       {/* STAGE 2: Charts & Assets Grid */}
@@ -204,42 +206,44 @@ export default function Dashboard() {
 
           <div style={{ flex: 1, position: 'relative' }}>
              <ResponsiveContainer width="100%" height="100%">
-               {chartMode === 'compare' ? (
-                 <AreaChart data={comparisonData}>
+                <AreaChart data={chartMode === 'compare' ? comparisonData : chartMode === 'efficiency' ? efficiencyData : monthlyData}>
                     <defs>
-                      <linearGradient id="colRev" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/><stop offset="95%" stopColor="#10b981" stopOpacity={0}/></linearGradient>
-                      <linearGradient id="colExp" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/><stop offset="95%" stopColor="#ef4444" stopOpacity={0}/></linearGradient>
+                      <linearGradient id="colValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#00F5FF" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="#00F5FF" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colCompare" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#A3FF00" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#A3FF00" stopOpacity={0}/>
+                      </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--text-muted))', fontSize: 11, fontWeight: 800}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--text-muted))', fontSize: 11, fontWeight: 800}} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" name="Revenue" dataKey="revenue" stroke="#10b981" strokeWidth={3} fill="url(#colRev)" />
-                    <Area type="monotone" name="Expenses" dataKey="expense" stroke="#ef4444" strokeWidth={3} fill="url(#colExp)" />
-                 </AreaChart>
-               ) : chartMode === 'efficiency' ? (
-                 <AreaChart data={efficiencyData}>
-                    <defs>
-                      <linearGradient id="colEff" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/><stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/></linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--text-muted))', fontSize: 11, fontWeight: 800}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--text-muted))', fontSize: 11, fontWeight: 800}} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" name="Efficiency" dataKey="efficiency" stroke="#8b5cf6" strokeWidth={3} fill="url(#colEff)" />
-                 </AreaChart>
-               ) : (
-                 <AreaChart data={monthlyData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
-                   <defs>
-                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="hsl(var(--accent-green))" stopOpacity={0.4}/><stop offset="95%" stopColor="hsl(var(--accent-green))" stopOpacity={0}/></linearGradient>
-                   </defs>
-                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border) / 0.5)" />
-                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--text-muted))', fontSize: 11, fontWeight: 800}} dy={15} />
-                   <YAxis axisLine={false} tickLine={false} tick={{fill: 'hsl(var(--text-muted))', fontSize: 11, fontWeight: 800}} />
-                   <Tooltip content={<CustomTooltip />} cursor={{stroke: 'hsl(var(--accent-green))', strokeWidth: 2}} />
-                   <Area type="monotone" name="Expenses" dataKey="amount" stroke="hsl(var(--accent-green))" strokeWidth={4} fillOpacity={1} fill="url(#colorValue)" />
-                 </AreaChart>
-               )}
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
+                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}} dy={15} />
+                    <YAxis hide={true} />
+                    <Tooltip content={<CustomTooltip />} cursor={{stroke: 'rgba(0, 245, 255, 0.2)', strokeWidth: 2}} />
+                    <Area 
+                      type="monotone" 
+                      name={chartMode === 'compare' ? 'Revenue' : chartMode === 'efficiency' ? 'Efficiency' : 'Spend'}
+                      dataKey={chartMode === 'compare' ? 'revenue' : chartMode === 'efficiency' ? 'value' : 'value'} 
+                      stroke="#00F5FF" 
+                      strokeWidth={4} 
+                      fillOpacity={1} 
+                      fill="url(#colValue)" 
+                      animationDuration={1500}
+                    />
+                    {chartMode === 'compare' && (
+                      <Area 
+                        type="monotone" 
+                        name="Expenses"
+                        dataKey="expense" 
+                        stroke="#A3FF00" 
+                        strokeWidth={4} 
+                        fillOpacity={1} 
+                        fill="url(#colCompare)" 
+                        animationDuration={1500}
+                      />
+                    )}
+                </AreaChart>
              </ResponsiveContainer>
           </div>
         </div>

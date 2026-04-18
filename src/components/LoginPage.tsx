@@ -52,7 +52,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'radial-gradient(circle at 10% 10%, hsla(200, 60%, 25%, 1) 0%, transparent 40%), radial-gradient(circle at 50% 130%, hsla(40, 30%, 95%, 1) 0%, hsla(40, 30%, 90%, 0.8) 50%, transparent 80%), #05070a',
+      background: 'radial-gradient(circle at 10% 10%, hsla(225, 30%, 15%, 1) 0%, transparent 40%), radial-gradient(circle at 50% 120%, hsla(225, 30%, 8%, 1) 0%, transparent 70%), #0B0E14',
       backgroundAttachment: 'fixed',
       display: 'flex',
       alignItems: 'center',
@@ -62,8 +62,8 @@ export default function LoginPage({ onLogin }: LoginProps) {
       fontFamily: "'Plus Jakarta Sans', sans-serif"
     }}>
       {/* ATMOSPHERIC SPACE */}
-      <div style={{ position: 'fixed', top: '10%', right: '10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%)', filter: 'blur(100px)', pointerEvents: 'none' }} />
-      <div style={{ position: 'fixed', top: '0', left: '50%', transform: 'translateX(-50%)', width: '800px', height: '400px', background: 'radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', top: '10%', right: '10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(0, 245, 255, 0.05) 0%, transparent 70%)', filter: 'blur(100px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'fixed', top: '0', left: '50%', transform: 'translateX(-50%)', width: '800px', height: '400px', background: 'radial-gradient(circle, rgba(0, 245, 255, 0.03) 0%, transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
 
       <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 1, animation: 'visionPop 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         {/* Logo */}
@@ -74,33 +74,33 @@ export default function LoginPage({ onLogin }: LoginProps) {
               alt="Braes Creek Estate"
               width={260}
               height={260}
-              style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 25px rgba(255, 255, 255, 0.3))' }}
+              style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 40px rgba(0, 245, 255, 0.15))' }}
             />
           </div>
-          <p style={{ color: 'rgba(0,0,0,0.8)', fontSize: '11px', fontWeight: 900, border: '1px solid rgba(0,0,0,0.1)', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '4px', opacity: 0.6 }}>SYSTEM OS 2026</p>
+          <p style={{ color: '#00F5FF', fontSize: '11px', fontWeight: 900, border: '1px solid rgba(0, 245, 255, 0.2)', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '4px', opacity: 0.6 }}>SYSTEM OS 2026</p>
         </div>
 
-        {/* Luminous Login Card (Obsidian Glass) */}
+        {/* Luminous Login Card (Hynex Obsidian) */}
         <div style={{
-          background: 'rgba(0, 0, 0, 0.6)',
+          background: 'rgba(20, 24, 33, 0.6)',
           backdropFilter: 'blur(40px) saturate(150%)',
           WebkitBackdropFilter: 'blur(40px) saturate(150%)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '40px',
           padding: '48px',
-          boxShadow: '0 80px 160px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset',
+          boxShadow: '0 80px 160px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05) inset',
           position: 'relative',
           overflow: 'hidden'
         }}>
-           {/* Subtle Shimmer */}
-           <div style={{ position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent)', animation: 'visionSweep 6s infinite linear', pointerEvents: 'none' }} />
+           {/* Subtle Scanning Beam */}
+           <div style={{ position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.03), transparent)', animation: 'visionSweep 6s infinite linear', pointerEvents: 'none' }} />
 
           <h2 style={{ fontSize: '32px', fontWeight: 900, color: '#fff', marginBottom: '8px', textAlign: 'center', letterSpacing: '-0.04em' }}>Welcome</h2>
-          <p style={{ color: '#fff', fontSize: '14px', fontWeight: 800, marginBottom: '44px', textAlign: 'center', opacity: 0.3 }}>Strategic Intelligence Access</p>
+          <p style={{ color: '#94A3B8', fontSize: '14px', fontWeight: 800, marginBottom: '44px', textAlign: 'center' }}>Precision Intelligence Login</p>
 
           <form onSubmit={handleLogin}>
             <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: '#fff', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.3 }}>IDENTIFICATION</label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: '#94A3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>ID ACCESS</label>
               <input
                 type="text"
                 value={email}
@@ -111,7 +111,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
               />
             </div>
             <div style={{ marginBottom: '32px' }}>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: '#fff', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.3 }}>PASSKEY</label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, color: '#94A3B8', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>SECURITY PASS</label>
               <div style={{ position: 'relative' }}>
                 <input
                   type={showPassword ? "text" : "password"}
@@ -132,8 +132,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
                     transform: 'translateY(-50%)',
                     background: 'none',
                     border: 'none',
-                    color: '#fff',
-                    opacity: 0.3,
+                    color: '#94A3B8',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -158,7 +157,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '32px 0' }}>
             <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
-            <span style={{ fontSize: '11px', color: '#fff', fontWeight: 900, opacity: 0.2 }}>OR</span>
+            <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 900 }}>SECURE NODE</span>
             <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
           </div>
 
@@ -180,14 +179,14 @@ export default function LoginPage({ onLogin }: LoginProps) {
 
         {/* Footer */}
         <div style={{ marginTop: '24px', textAlign: 'center' }}>
-           <p style={{ fontSize: '11px', color: '#fff', fontWeight: 900, opacity: 0.2 }}>© 2026 Braes Creek Estate · Secure Node · V.7.2</p>
+           <p style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 900, opacity: 0.6 }}>© 2026 Braes Creek Estate · Secure Node · V.7.2</p>
         </div>
       </div>
 
       <style jsx>{`
         .vision-input {
           width: 100%;
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(255, 255, 255, 0.03);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 18px;
           padding: 16px 20px;
@@ -199,35 +198,36 @@ export default function LoginPage({ onLogin }: LoginProps) {
           transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .vision-input:focus {
-          background: rgba(255, 255, 255, 0.08);
-          border-color: #10b981;
-          box-shadow: 0 0 20px rgba(16,185,129,0.15);
+          background: rgba(255, 255, 255, 0.05);
+          border-color: #00F5FF;
+          box-shadow: 0 0 20px rgba(0, 245, 255, 0.15);
         }
         .vision-input::placeholder {
-          color: rgba(255,255,255,0.2);
+          color: rgba(255,255,255,0.1);
         }
         .vision-btn-primary {
           width: 100%;
           padding: 20px;
           font-size: 16px;
           font-weight: 900;
-          color: white;
-          background: linear-gradient(135deg, hsla(174, 100%, 45%, 1), hsla(160, 100%, 25%, 1));
+          color: #000;
+          background: #00F5FF;
           border: none;
           border-radius: 20px;
           cursor: pointer;
           transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 16px 32px rgba(16,185,129,0.3);
+          box-shadow: 0 16px 32px rgba(0, 245, 255, 0.2);
           letter-spacing: 0.1em;
+          text-transform: uppercase;
         }
         .vision-btn-primary:hover {
           transform: translateY(-2px);
-          box-shadow: 0 20px 40px rgba(16,185,129,0.4);
+          box-shadow: 0 20px 40px rgba(0, 245, 255, 0.3);
           filter: brightness(1.1);
         }
         .vision-btn-google {
           width: 100%;
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(255, 255, 255, 0.03);
           color: #fff;
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 18px;
