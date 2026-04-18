@@ -173,9 +173,8 @@ export default function LoginPage({ onLogin }: LoginProps) {
           </button>
         </div>
 
-        {/* Footer Metadata */}
         <div className="footer-metadata">
-          © 2026 Braes Creek Estate · Secure Node · V.7.2
+          © 2026 Braes Creek Estate
         </div>
       </div>
 
@@ -460,11 +459,11 @@ export default function LoginPage({ onLogin }: LoginProps) {
 
         .footer-metadata {
           margin-top: 40px;
-          color: #484f58;
+          color: #ffffff;
           font-size: 11px;
           font-weight: 500;
           text-align: center;
-          opacity: 0.8;
+          opacity: 0.6;
           letter-spacing: 0.02em;
         }
 
