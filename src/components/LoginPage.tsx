@@ -68,7 +68,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
       onMouseMove={handleMouseMove}
       className="vision-bg-shift"
       style={{
-        height: '100vh',
+        minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -79,21 +79,20 @@ export default function LoginPage({ onLogin }: LoginProps) {
       }}
     >
       {/* GENERATIVE NEURAL BACKGROUND */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.2, pointerEvents: 'none' }}>
-        {[...Array(30)].map((_, i) => (
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.15, pointerEvents: 'none' }}>
+        {[...Array(20)].map((_, i) => (
           <div key={i} style={{
             position: 'absolute',
             top: `${Math.random() * 100}%`,
             left: `${Math.random() * 100}%`,
-            width: i % 5 === 0 ? '3px' : '1px',
-            height: i % 5 === 0 ? '3px' : '1px',
+            width: '2px',
+            height: '2px',
             background: '#00F5FF',
             boxShadow: '0 0 15px #00F5FF',
             borderRadius: '50%',
-            opacity: Math.random() * 0.5 + 0.2,
-            transform: `translate(${mousePos.x * (i%6)}px, ${mousePos.y * (i%6)}px)`,
-            transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-            animation: `visionFlicker ${Math.random() * 3 + 2}s infinite ease-in-out`
+            opacity: 0.5,
+            transform: `translate(${mousePos.x * (i%4)}px, ${mousePos.y * (i%4)}px)`,
+            transition: 'transform 0.4s ease-out'
           }} />
         ))}
       </div>
@@ -103,11 +102,11 @@ export default function LoginPage({ onLogin }: LoginProps) {
         maxWidth: '440px', 
         position: 'relative', 
         zIndex: 1, 
-        animation: 'visionPop 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
+        animation: 'visionPop 1s cubic-bezier(0.16, 1, 0.3, 1)',
         transform: `perspective(1000px) rotateX(${mousePos.y * -0.05}deg) rotateY(${mousePos.x * 0.05}deg) translateZ(20px)`
       }}>
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '24px', animation: 'visionFloat 4s infinite ease-in-out' }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{ margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
             <img
               src="/BRAES-CREEK-FINAL-MASTER.png"
@@ -117,27 +116,25 @@ export default function LoginPage({ onLogin }: LoginProps) {
               style={{ 
                 objectFit: 'contain', 
                 mixBlendMode: 'screen',
-                transform: `translate(${mousePos.x * 0.15}px, ${mousePos.y * 0.15}px)`,
-                transition: 'transform 0.2s ease-out'
+                transform: `translate(${mousePos.x * 0.1}px, ${mousePos.y * 0.1}px)`
               }}
             />
           </div>
-          <p style={{ color: '#00F5FF', fontSize: '11px', fontWeight: 900, border: '1px solid rgba(0, 245, 255, 0.2)', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '-15px', opacity: 0.6 }}>SYSTEM OS 2026</p>
+          <p style={{ color: '#00F5FF', fontSize: '11px', fontWeight: 900, border: '1px solid rgba(0, 245, 255, 0.2)', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '4px', opacity: 0.6 }}>SYSTEM OS 2026</p>
         </div>
 
         {/* Luminous Login Card (Hynex Obsidian) */}
-        <div className="vision-card" style={{
+        <div style={{
           background: 'rgba(20, 24, 33, 0.75)',
           backdropFilter: 'blur(60px) saturate(160%)',
           WebkitBackdropFilter: 'blur(60px) saturate(160%)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '40px',
           padding: '48px',
-          boxShadow: activeField ? '0 80px 160px rgba(0, 245, 255, 0.15), 0 0 0 1px rgba(0, 245, 255, 0.2) inset' : '0 80px 160px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset',
+          boxShadow: activeField ? '0 80px 160px rgba(0, 245, 255, 0.1), 0 0 0 1px rgba(255,255,255,0.05) inset' : '0 80px 160px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset',
           position: 'relative',
           overflow: 'hidden',
-          transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
-          transform: `translateZ(40px)`
+          transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
         }}>
            {/* BIOMETRIC SCAN LINE */}
            {isScanning && (
@@ -256,31 +253,18 @@ export default function LoginPage({ onLogin }: LoginProps) {
       <style jsx>{`
         .vision-bg-shift {
           background: #000000;
-          animation: chromaShift 20s infinite linear;
-        }
-
-        @keyframes chromaShift {
-          0%, 100% { background-color: #000000; }
-          25% { background-color: #0B0E14; }
-          50% { background-color: #091114; }
-          75% { background-color: #110D14; }
-        }
-
-        @keyframes visionFloat {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-
-        @keyframes visionFlicker {
-          0%, 100% { opacity: 0.8; transform: scale(1); }
-          50% { opacity: 0.3; transform: scale(0.8); }
-        }
-
-        .vision-card:hover {
-          box-shadow: 0 80px 160px rgba(0, 245, 255, 0.2), 0 0 0 1px rgba(0, 245, 255, 0.3) inset;
         }
 
         .biometric-sweep {
+          animation: biosweep 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes biosweep {
+          0% { left: -10%; opacity: 0; }
+          20% { opacity: 1; }
+          80% { opacity: 1; }
+          100% { left: 110%; opacity: 0; }
+        }
 
         .vision-input {
           width: 100%;
