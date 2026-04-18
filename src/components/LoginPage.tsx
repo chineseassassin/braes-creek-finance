@@ -134,17 +134,22 @@ export default function LoginPage({ onLogin }: LoginProps) {
         </div>
 
         {/* Luminous Login Card (Hynex Obsidian) */}
-        <div style={{
-          background: 'rgba(20, 24, 33, 0.75)',
-          backdropFilter: 'blur(60px) saturate(160%)',
-          WebkitBackdropFilter: 'blur(60px) saturate(160%)',
+        <div className="vision-card" style={{
+          background: 'rgba(15, 25, 40, 0.6)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '40px',
           padding: '48px',
-          boxShadow: activeField ? '0 80px 160px rgba(0, 245, 255, 0.1), 0 0 0 1px rgba(255,255,255,0.05) inset' : '0 80px 160px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05) inset',
+          boxShadow: `
+            0 0 40px rgba(0, 245, 255, 0.08),
+            0 20px 60px rgba(0, 0, 0, 0.6),
+            0 0 100px rgba(255, 215, 0, 0.03)
+          `,
           position: 'relative',
           overflow: 'hidden',
-          transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+          transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+          transform: `translateZ(40px)`
         }}>
            {/* BIOMETRIC SCAN LINE */}
            {isScanning && (
@@ -191,7 +196,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
                   disabled={isScanning}
                   onFocus={() => setActiveField('pass')}
                   onBlur={() => setActiveField(null)}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={setpassword => setPassword(setpassword.target.value)}
                   placeholder="••••••••"
                   required
                   className="vision-input"
@@ -227,7 +232,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
               </div>
             )}
 
-            <button type="submit" disabled={isScanning} className="vision-btn-primary">
+            <button type="submit" disabled={isScanning} className="vision-btn-primary pulse-btn">
               {isScanning ? 'Verifying Identity...' : 'Initialize Access'}
             </button>
           </form>
@@ -263,6 +268,23 @@ export default function LoginPage({ onLogin }: LoginProps) {
       <style jsx>{`
         .vision-bg-shift {
           background: #000000;
+        }
+
+        .vision-card:hover {
+          transform: translateY(-8px) translateZ(40px) !important;
+          box-shadow: 
+            0 0 60px rgba(0, 245, 255, 0.15),
+            0 20px 80px rgba(0, 0, 0, 0.8),
+            0 0 120px rgba(255, 215, 0, 0.05);
+        }
+
+        .pulse-btn:hover {
+          animation: visionButtonPulse 1.5s infinite ease-in-out;
+        }
+
+        @keyframes visionButtonPulse {
+          0%, 100% { box-shadow: 0 0 20px rgba(0, 245, 255, 0.3); }
+          50% { box-shadow: 0 0 40px rgba(0, 245, 255, 0.6); }
         }
 
         .biometric-sweep {
