@@ -81,139 +81,75 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
       <aside 
         className={`sidebar ${sidebarOpen ? 'open' : ''}`} 
         style={{ 
-          background: 'rgba(0, 0, 0, 0.8)', 
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '20px 0 60px rgba(0,0,0,0.5)',
+          background: 'rgba(15, 23, 42, 0.4)', 
+          backdropFilter: 'blur(32px)',
+          WebkitBackdropFilter: 'blur(32px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '24px',
+          width: '80px',
+          height: 'calc(100vh - 48px)',
+          margin: '24px',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          zIndex: 100,
           display: 'flex',
           flexDirection: 'column',
-          position: 'relative',
-          zIndex: 50
+          alignItems: 'center',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
       >
-        <div className="sidebar-logo" style={{ height: '100px', padding: '0 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ padding: '4px', border: '1px solid hsl(var(--border))', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.03)' }}>
-              <Image
-                src="/logo-transparent.png"
-                alt="Braes Creek Estate"
-                width={40}
-                height={40}
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-            <div style={{ overflow: 'hidden' }}>
-              <h1 style={{ fontSize: '13px', fontWeight: 900, letterSpacing: '0.05em', whiteSpace: 'nowrap', color: '#fff' }}>
-                BRAES CREEK <span style={{ color: 'hsl(var(--text-muted))' }}>HQ</span>
-              </h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                <span className="status-light" />
-                <p style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  NODE ACTIVE
-                </p>
-              </div>
-            </div>
+        <div className="sidebar-logo" style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ padding: '4px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.03)' }}>
+            <Image
+              src="/logo-transparent.png"
+              alt="BC"
+              width={32}
+              height={32}
+              style={{ objectFit: 'contain' }}
+            />
           </div>
-          
-          <button 
-            className="mobile-only btn btn-ghost" 
-            onClick={() => setSidebarOpen(false)}
-            style={{ marginLeft: 'auto', padding: '8px', color: '#fff' }}
-          >✕</button>
         </div>
 
-        <nav className="sidebar-nav custom-scrollbar" style={{ padding: '32px 16px', flex: 1, overflowY: 'auto' }}>
+        <nav className="sidebar-nav custom-scrollbar" style={{ padding: '0 8px', flex: 1, overflowY: 'auto', width: '100%' }}>
           {navSections.map(section => (
-            <div key={section.label} style={{ marginBottom: '32px' }}>
-              <div style={{ padding: '0 12px', fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '20px' }}>
-                {section.label}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div key={section.label} style={{ marginBottom: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
                 {section.items.map(item => (
                   <div
                     key={item.id}
-                    className={`nav-item ${activePage === item.id ? 'active' : ''}`}
+                    className={`nav-item-icon-only ${activePage === item.id ? 'active' : ''}`}
+                    title={item.label}
                     onClick={() => {
-                      if (!isEditing) {
-                        onNavigate(item.id);
-                        if (window.innerWidth <= 1024) setSidebarOpen(false);
-                      }
+                      onNavigate(item.id);
+                      if (window.innerWidth <= 1024) setSidebarOpen(false);
                     }}
                     style={{ 
-                      padding: '12px 16px',
-                      borderRadius: '16px',
-                      fontSize: '13px',
-                      fontWeight: activePage === item.id ? 900 : 700,
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '14px',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '14px',
+                      justifyContent: 'center',
+                      fontSize: '20px',
                       transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                      color: activePage === item.id ? '#fff' : 'rgba(255,255,255,0.5)',
-                      background: activePage === item.id ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
+                      color: activePage === item.id ? '#fff' : 'rgba(255,255,255,0.3)',
+                      background: activePage === item.id ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
                       cursor: 'pointer',
-                      position: 'relative',
-                      overflow: 'hidden'
+                      border: activePage === item.id ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent'
                     }}
                   >
-                    <span style={{ fontSize: '18px', filter: activePage === item.id ? 'grayscale(0)' : 'grayscale(1) opacity(0.5)' }}>{item.icon}</span>
-                    <span style={{ flex: 1 }}>{item.label}</span>
-                    <div className="status-light" style={{ opacity: activePage === item.id ? 1 : 0 }} />
-                    
-                    {isEditing && (
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        <button className="btn-xs" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }} onClick={(e) => handleRename(e, item.id, item.label)}>✏️</button>
-                        <button className="btn-xs" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#ef4444' }} onClick={(e) => handleDelete(e, item.id, item.label)}>✕</button>
-                      </div>
-                    )}
+                    <span>{item.icon}</span>
                   </div>
                 ))}
               </div>
             </div>
           ))}
-          
-          <button 
-            className="btn btn-ghost"
-            onClick={() => setIsEditing(!isEditing)}
-            style={{ 
-              width: '100%', 
-              fontSize: '11px', 
-              fontWeight: 900, 
-              marginTop: '24px', 
-              background: isEditing ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255,255,255,0.03)', 
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '12px',
-              color: '#fff',
-              letterSpacing: '0.05em'
-            }}
-          >
-            {isEditing ? 'SAVING DATA...' : 'SYSTEM CONFIG'}
-          </button>
         </nav>
 
-        <div className="sidebar-user" style={{ padding: '24px', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 'auto', background: 'linear-gradient(0deg, rgba(0,0,0,0.4), transparent)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
-            {currentUser && (
-              <>
-                <div className="user-avatar" style={{ 
-                  width: '44px', height: '44px', 
-                  borderRadius: '14px', 
-                  fontSize: '14px', 
-                  fontWeight: 900,
-                  background: 'linear-gradient(135deg, #1e293b, #334155)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.5)'
-                }}>
-                  {currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                </div>
-                <div style={{ flex: 1, overflow: 'hidden' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 900, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', color: '#fff' }}>{currentUser.name}</div>
-                  <div style={{ fontSize: '10px', fontWeight: 900, color: 'hsl(var(--text-muted))', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{currentUser.role}</div>
-                </div>
-              </>
-            )}
-            <button onClick={onLogout} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '8px', borderRadius: '100px', color: '#fff' }}>🚪</button>
-          </div>
+        <div className="sidebar-user" style={{ padding: '24px 0', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+          <button onClick={onLogout} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '12px', borderRadius: '100px', color: '#fff' }}>🚪</button>
         </div>
       </aside>
 

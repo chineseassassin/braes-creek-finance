@@ -188,7 +188,7 @@ export default function PlatformShell() {
   }
 
   return (
-    <div className="app-layout">
+    <div className="app-layout" style={{ background: '#000', height: '100vh', width: '100vw', overflow: 'hidden' }}>
       <Sidebar
         activePage={activePage}
         onNavigate={setActivePage}
@@ -198,82 +198,45 @@ export default function PlatformShell() {
         }}
       />
 
-      <div className="main-content">
-        <header className="top-header">
+      <div className="main-content" style={{ marginLeft: '124px', marginRight: '24px', marginTop: '24px', marginBottom: '24px', flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', position: 'relative' }}>
+        <header className="top-header" style={{ height: '70px', background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderRadius: '24px 24px 0 0', border: '1px solid rgba(255, 255, 255, 0.08)', borderBottom: 'none', padding: '0 32px', display: 'flex', alignItems: 'center', gap: '20px', zIndex: 40 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
-            <button
-              className="btn btn-ghost btn-icon mobile-menu-btn"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              <span>{sidebarOpen ? '✕' : '☰'}</span>
-            </button>
             <div className="header-title-container">
-              <span className="header-title">{PAGE_TITLES[activePage] || 'Dashboard'}</span>
-              <div className="header-breadcrumbs">Braes Creek Estate / Platform</div>
+              <span className="header-title" style={{ fontSize: '16px', color: '#fff' }}>{PAGE_TITLES[activePage] || 'Dashboard'}</span>
+              <div className="header-breadcrumbs" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 800 }}>BRAES CREEK / HUB</div>
             </div>
             <div className="desktop-only" style={{ flex: 1, marginLeft: 20 }}>
               <GlobalSearch onNavigate={setActivePage} />
             </div>
           </div>
-          <div className="header-actions">
+          <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button 
               className="btn btn-primary btn-sm desktop-only" 
               onClick={() => setControlPanelOpen(true)}
-              style={{ borderRadius: '100px', fontSize: '11px', padding: '0 24px', height: '38px', fontWeight: 900 }}
+              style={{ borderRadius: '100px', fontSize: '10px', padding: '0 20px', height: '32px', fontWeight: 900, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)' }}
             >
-              COMMAND [K]
+              CMD [K]
             </button>
             <ThemeToggle />
             <NotificationCenter />
-            <span className="header-date">
-              📅 {typeof window !== 'undefined' ? new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '...'}
-            </span>
           </div>
         </header>
 
         <ControlPanel isOpen={controlPanelOpen} onClose={() => setControlPanelOpen(false)} />
 
-        <div className="mobile-only" style={{ padding: '0 16px 12px 16px', borderBottom: '1px solid hsl(var(--border) / 0.5)' }}>
-          <GlobalSearch onNavigate={setActivePage} />
-        </div>
-
-        <main className="page-content">
+        <main className="page-content custom-scrollbar" style={{ flex: 1, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderRadius: '0 0 24px 24px', border: '1px solid rgba(255, 255, 255, 0.08)', overflowY: 'auto', padding: '32px' }}>
           <Suspense fallback={<div className="loader"></div>}>
             <div className="content-inner" key={activePage}>{renderPage()}</div>
           </Suspense>
         </main>
-
-        <nav className="mobile-only mobile-nav-bar">
-          {[
-            { id: 'dashboard', icon: '📊', label: 'Home' },
-            { id: 'expenses', icon: '💸', label: 'Flow' },
-            { id: 'livestock', icon: '🐄', label: 'Live' },
-            { id: 'reports', icon: '📋', label: 'Data' },
-          ].map(item => (
-            <div key={item.id} className={`mobile-nav-item ${activePage === item.id ? 'active' : ''}`} onClick={() => setActivePage(item.id)}>
-              <span className="mobile-nav-icon">{item.icon}</span>
-              <span className="mobile-nav-label">{item.label}</span>
-            </div>
-          ))}
-        </nav>
       </div>
       
       <style jsx>{`
         .header-title-container { display: flex; flex-direction: column; }
-        .header-title { font-size: 18px; font-weight: 800; color: hsl(var(--text-primary)); line-height: 1.2; }
-        .header-breadcrumbs { font-size: 11px; color: hsl(var(--text-muted)); font-weight: 600; text-transform: uppercase; }
-        .header-actions { display: flex; align-items: center; gap: 12px; }
-        .header-date { font-size: 12px; font-weight: 700; color: hsl(var(--text-secondary)); padding: 8px 16px; background: hsl(var(--bg-secondary)); border-radius: 10px; display: flex; align-items: center; gap: 8px; }
-        .mobile-nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: hsl(var(--bg-card) / 0.8); backdrop-filter: blur(20px); border-top: 1px solid hsl(var(--border)); display: flex; justify-content: space-around; align-items: center; z-index: 100; }
-        .mobile-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: hsl(var(--text-muted)); }
-        .mobile-nav-item.active { color: hsl(var(--accent-blue)); }
-        .mobile-nav-icon { font-size: 20px; }
-        .mobile-nav-label { font-size: 10px; font-weight: 700; }
         .desktop-only { display: block; }
-        .mobile-only { display: none; }
         @media (max-width: 1024px) {
-          .desktop-only { display: none !important; }
-          .mobile-only { display: flex !important; }
+           .main-content { margin-left: 24px !important; }
+           .desktop-only { display: none !important; }
         }
       `}</style>
     </div>
