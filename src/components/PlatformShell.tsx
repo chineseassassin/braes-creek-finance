@@ -94,11 +94,10 @@ export default function PlatformShell() {
       console.log("Intelligence Upgrade: Synchronizing data modules...");
       loadAllData('admin').then(() => {
          localStorage.setItem(HAS_MIGRATED, 'true');
-         // We force a clear once to ensure the new STRATEGIC constants in store.ts take over
-         const { clearAllData } = (useAppStore as any).getState();
-         clearAllData().then(() => {
-            window.location.reload();
-         });
+         // Silent switch to the new data constants
+         setTimeout(() => {
+           window.location.reload();
+         }, 500);
       });
     }
   }, [loadAllData]);

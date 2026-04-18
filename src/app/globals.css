@@ -15,14 +15,14 @@
   --text-muted: 215 10% 60%;          /* Muted Teal Gray */
   
   --accent-blue: 199 89% 55%;         /* Bright Petroleum */
-  --accent-green: 162 94% 50%;        /* Vision Teal */
+  --accent-green: 160 100% 25%;        /* Midnight Emerald */
   --accent-purple: 270 91% 75%;       /* Luminous Lavender */
   --accent-teal: 174 100% 45%;        /* Marine Glow */
   --accent-red: 0 84% 65%;          /* Vibrant Red */
   --accent-amber: 45 93% 55%;       /* Radiant Gold */
 
-  --glass-bg: rgba(255, 255, 255, 0.15); /* HIGH-LUMINOSITY CLEAR GLASS */
-  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-bg: rgba(255, 255, 255, 0.4); /* RESTORED LUXURY GLOSS */
+  --glass-border: rgba(255, 255, 255, 0.3);
   
   --radius: 20px;
   --radius-sm: 12px;
@@ -173,8 +173,10 @@ html, body {
 
 /* 2026 Elite Design - Atmospheric & Immersive Layer */
 .card {
-  background: hsl(var(--bg-card));
-  border: 1px solid hsl(var(--border));
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   padding: 32px;
   position: relative;
@@ -190,7 +192,7 @@ html, body {
   inset: 0;
   border-radius: inherit;
   padding: 1.5px;
-  background: linear-gradient(135deg, hsla(var(--text-primary), 0.12), transparent 50%, hsla(var(--text-primary), 0.03));
+  background: linear-gradient(135deg, rgba(255,255,255, 0.12), transparent 50%, rgba(255,255,255, 0.03));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -200,9 +202,9 @@ html, body {
 
 .card:hover {
   transform: translateY(-8px) scale(1.005);
-  border-color: hsl(var(--accent-green) / 0.4);
-  background: hsl(var(--bg-card-hover));
-  box-shadow: 0 40px 80px -20px rgba(0,0,0,0.8), 0 0 0 1px hsl(var(--accent-green) / 0.2);
+  border-color: hsla(var(--accent-green), 0.4);
+  background: rgba(255, 255, 255, 0.08); /* Slightly brighter on hover */
+  box-shadow: 0 40px 80px -20px rgba(0,0,0,0.8), 0 0 0 1px hsla(var(--accent-green), 0.2);
 }
 
 .btn {
@@ -223,7 +225,7 @@ html, body {
 
 .btn-primary {
   background: hsl(var(--accent-green));
-  color: #000;
+  color: #fff; /* HIGH CONTRAST */
   box-shadow: 0 8px 24px hsla(var(--accent-green), 0.3);
 }
 
