@@ -126,29 +126,22 @@ export default function LoginPage({ onLogin }: LoginProps) {
               height={340}
               style={{ 
                 objectFit: 'contain', 
-                mixBlendMode: 'screen',
+                filter: 'drop-shadow(0 0 30px rgba(255, 255, 255, 0.1))',
                 transform: `translate(${mousePos.x * 0.2}px, ${mousePos.y * 0.2}px)`,
                 transition: 'transform 0.2s ease-out'
               }}
             />
           </div>
-          <p style={{ color: 'hsl(var(--text-muted))', fontSize: '11px', fontWeight: 900, border: '1px solid hsl(var(--border))', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '4px', opacity: 0.6 }}>SYSTEM OS 2026</p>
+          <p style={{ color: 'hsl(var(--text-muted))', fontSize: '11px', fontWeight: 900, border: 'none', display: 'inline-block', padding: '4px 12px', borderRadius: '100px', letterSpacing: '0.4em', marginTop: '4px', opacity: 0.6 }}>SYSTEM OS 2026</p>
         </div>
 
         <div className="vision-card" style={{
-          background: 'rgba(15, 23, 42, 0.6)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '40px',
+          background: 'transparent',
           padding: '48px',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6), 0 0 100px rgba(255, 255, 255, 0.01)',
           position: 'relative',
-          overflow: 'hidden',
           transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
           transform: `translateZ(40px)`
         }}>
-           <div className="orbital-beam" />
            {isScanning && (
              <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.03)', zIndex: 10 }} />
            )}
@@ -242,7 +235,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
       </div>
 
       <style jsx>{`
-        .vision-bg-shift { background: hsl(var(--bg-primary)); }
+        .vision-bg-shift { background: #000000; }
         .orbital-beam {
           position: absolute; inset: -2px; border-radius: 40px; padding: 2px;
           background: conic-gradient(from 0deg, transparent 70%, rgba(255,255,255,0.1), rgba(255,255,255,0.2), rgba(255,255,255,0.1));
