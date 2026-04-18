@@ -264,28 +264,22 @@ export default function LoginPage({ onLogin }: LoginProps) {
         }
 
         .login-card {
+          background: rgba(15, 23, 42, 0.85);
           backdrop-filter: blur(16px);
           -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(212, 175, 55, 0.2);
           border-radius: 40px;
           padding: 56px;
           width: 100%;
           box-shadow: 
             0 20px 60px rgba(0, 0, 0, 0.6),
-            0 0 40px rgba(20, 184, 166, 0.08);
+            0 0 40px rgba(212, 175, 55, 0.15);
           position: relative;
           z-index: 10;
           overflow: hidden;
           transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
           transform-origin: center;
-          will-change: transform, box-shadow, background-color;
-          animation: glassPulse 15s ease-in-out infinite;
-        }
-
-        @keyframes glassPulse {
-          0%, 100% { background: transparent; }
-          33% { background: rgba(2, 6, 23, 0.95); }
-          66% { background: rgba(15, 23, 42, 0.85); }
+          will-change: transform, box-shadow;
         }
 
         .login-card:hover {
