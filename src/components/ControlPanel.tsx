@@ -18,7 +18,6 @@ export default function ControlPanel({ isOpen, onClose }: ControlPanelProps) {
 
   const totalRevenue = sales.reduce((s: any, r: any) => s + (r.total_amount || 0), 0);
   const totalExpenses = expenses.reduce((s: any, r: any) => s + (r.amount || 0), 0);
-  const livestockHeadcount = livestockUnits.reduce((s, l) => s + l.quantity, 0);
 
   useEffect(() => {
     if (selectedItem) {
@@ -55,13 +54,13 @@ export default function ControlPanel({ isOpen, onClose }: ControlPanelProps) {
     >
       <div style={{ display: 'flex', gap: '48px', alignItems: 'center', maxWidth: '1100px', width: '100%', position: 'relative' }}>
         
-        {/* NAV DOCK - Hidden when inspecting an item */}
+        {/* NAV DOCK */}
         {!selectedItem && (
           <div style={{
             background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(40px)',
             border: '1px solid rgba(255, 255, 255, 0.2)', borderRadius: '100px',
             padding: '40px 20px', display: 'flex', flexDirection: 'column', gap: '32px',
-            animation: 'visionPop 0.4s ease', boxShadow: '0 40px 100px rgba(0,0,0,0.2)'
+            animation: 'visionPop 0.4s ease'
           }} onClick={e => e.stopPropagation()}>
             {stations.map(s => (
               <button key={s.id} onClick={() => { if ((window as any).__onNavigate) (window as any).__onNavigate(s.id); onClose(); }} 
@@ -81,10 +80,14 @@ export default function ControlPanel({ isOpen, onClose }: ControlPanelProps) {
             flex: 1, background: 'rgba(255, 255, 255, 0.03)', backdropFilter: 'blur(60px)',
             border: '1px solid rgba(255, 255, 255, 0.4)', borderRadius: '64px',
             padding: '64px', position: 'relative', minHeight: '600px', display: 'flex', flexDirection: 'column',
-            boxShadow: '0 120px 240px rgba(0,0,0,0.4)', animation: 'visionPop 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+            boxShadow: '0 120px 240px rgba(0,0,0,0.4)', animation: 'visionPop 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+            overflow: 'hidden'
           }}
           onClick={e => e.stopPropagation()}
         >
+          {/* Subtle Dynamic Glint */}
+          <div style={{ position: 'absolute', top: 0, left: '-100%', width: '40%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)', transform: 'skewX(-45deg)', animation: 'visionSweep 12s infinite linear', pointerEvents: 'none' }} />
+
           {selectedItem ? (
             <div style={{ animation: 'visionPop 0.5s ease' }}>
                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '48px' }}>
@@ -97,7 +100,7 @@ export default function ControlPanel({ isOpen, onClose }: ControlPanelProps) {
 
                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
                   <div className="inspector-field">
-                     <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, opacity: 0.5, marginBottom: '12px', letterSpacing: '0.1em' }}>DESCRIPTION / LENDER</label>
+                     <label style={labelStyle}>DESCRIPTION / LENDER</label>
                      <input 
                         type="text" 
                         value={editForm?.description || editForm?.lender_name || ''} 
@@ -107,7 +110,7 @@ export default function ControlPanel({ isOpen, onClose }: ControlPanelProps) {
                      />
                   </div>
                   <div className="inspector-field">
-                     <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, opacity: 0.5, marginBottom: '12px', letterSpacing: '0.1em' }}>VALUATION (JMD)</label>
+                     <label style={labelStyle}>VALUATION (JMD)</label>
                      <input 
                         type="number" 
                         value={editForm?.amount || editForm?.principal || ''} 
@@ -116,7 +119,7 @@ export default function ControlPanel({ isOpen, onClose }: ControlPanelProps) {
                      />
                   </div>
                   <div className="inspector-field" style={{ gridColumn: 'span 2' }}>
-                     <label style={{ display: 'block', fontSize: '11px', fontWeight: 900, opacity: 0.5, marginBottom: '12px', letterSpacing: '0.1em' }}>EXECUTIVE REMARKS</label>
+                     <label style={labelStyle}>EXECUTIVE REMARKS</label>
                      <textarea 
                         value={editForm?.notes || ''} 
                         onChange={e => setEditForm({ ...editForm, notes: e.target.value })}
@@ -125,172 +128,112 @@ export default function ControlPanel({ isOpen, onClose }: ControlPanelProps) {
                   </div>
                </div>
 
-               <div style={{ marginTop: '56px', display: 'flex', gap: '20px' }}>
+               <div style={{ marginTop: '56px' }}>
                   <button 
                     onClick={handleSave}
-                    style={{ flex: 1, background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#fff', border: 'none', padding: '24px', borderRadius: '32px', fontSize: '18px', fontWeight: 900, cursor: 'pointer', boxShadow: '0 20px 40px rgba(37, 99, 235, 0.4)' }}>
+                    style={{ width: '100%', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#fff', border: 'none', padding: '24px', borderRadius: '32px', fontSize: '18px', fontWeight: 900, cursor: 'pointer', boxShadow: '0 20px 40px rgba(37, 99, 235, 0.4)' }}>
                     COMMIT UPDATES TO SYSTEM
                   </button>
                </div>
             </div>
           ) : (
             <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '64px' }}>
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '56px', position: 'relative' }}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '4px', color: '#60a5fa', marginBottom: '12px' }}>BRAES CREEK INTELLIGENCE</div>
-                  <h2 style={{ fontSize: '56px', fontWeight: 900, color: '#fff', letterSpacing: '-0.05em' }}>HQ Command</h2>
+                  <div style={{ fontSize: '13px', fontWeight: 900, color: '#fff', opacity: 0.5, letterSpacing: '0.25em', marginBottom: '8px' }}>SYSTEM OS V.7</div>
+                  <h1 style={{ fontSize: '48px', fontWeight: 900, letterSpacing: '-0.06em', color: '#fff' }}>HQ Command</h1>
                 </div>
                 <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: '56px', height: '56px', borderRadius: '28px', cursor: 'pointer', fontSize: '24px' }}>✕</button>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px', marginTop: 'auto' }}>
-                <div style={statCardStyle}>
-                  <div style={{ fontSize: '36px', marginBottom: '20px' }}>💎</div>
-                  <div style={{ fontSize: '11px', fontWeight: 900, opacity: 0.5, marginBottom: '8px', letterSpacing: '0.1em' }}>ESTIMATED P&L</div>
-                  <div style={{ fontSize: '28px', fontWeight: 900 }}>{formatCurrency(totalRevenue - totalExpenses)}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 0.7fr 1.2fr', gap: '40px', marginBottom: '56px', position: 'relative' }}>
+                
+                {/* ACTIVITY CAPSULES */}
+                <div style={telemetryCard}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
+                     <span style={{ fontSize: '20px', fontWeight: 900, color: '#fff' }}>Health Index</span>
+                     <span style={{ fontSize: '11px', fontWeight: 900, padding: '6px 16px', background: '#fff', color: '#000', borderRadius: '100px' }}>STABLE</span>
+                   </div>
+                   <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '180px', padding: '0 10px' }}>
+                     {[45, 80, 55, 100, 70, 90, 60].map((h, i) => (
+                       <div key={i} style={{ width: '22px', height: `${h}%`, background: 'rgba(255,255,255,0.03)', borderRadius: '100px', position: 'relative', overflow: 'hidden' }}>
+                         <div style={{ width: '100%', height: '100%', background: 'linear-gradient(to top, #3b82f6, #60a5fa)', borderRadius: '100px', opacity: 0.8 }} />
+                       </div>
+                     ))}
+                   </div>
                 </div>
-                <div style={statCardStyle}>
-                  <div style={{ fontSize: '36px', marginBottom: '20px' }}>🌾</div>
-                  <div style={{ fontSize: '11px', fontWeight: 900, opacity: 0.5, marginBottom: '8px', letterSpacing: '0.1em' }}>PRODUCTION</div>
-                  <div style={{ fontSize: '28px', fontWeight: 900 }}>OPTIMAL</div>
+
+                {/* QUICK DATA CLOUD */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                   {[
+                     { icon: '💎', val: '8.4%', label: 'Purity' },
+                     { icon: '⚡', val: '0.4ms', label: 'Sync' },
+                     { icon: '🛰️', val: 'ACTIVE', label: 'Nodes' }
+                   ].map((s, i) => (
+                     <div key={i} style={{ ...telemetryCard, padding: '24px', flex: 1, display: 'flex', alignItems: 'center', gap: '20px' }}>
+                       <div style={{ width: '52px', height: '52px', background: 'rgba(255,255,255,0.1)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>{s.icon}</div>
+                       <div>
+                         <div style={{ fontSize: '20px', fontWeight: 900, color: '#fff' }}>{s.val}</div>
+                         <div style={{ fontSize: '10px', fontWeight: 900, color: '#fff', opacity: 0.4 }}>{s.label}</div>
+                       </div>
+                     </div>
+                   ))}
                 </div>
-                <div style={statCardStyle}>
-                  <div style={{ fontSize: '36px', marginBottom: '20px' }}>🛰️</div>
-                  <div style={{ fontSize: '11px', fontWeight: 900, opacity: 0.5, marginBottom: '8px', letterSpacing: '0.1em' }}>CLIENT SYNC</div>
-                  <div style={{ fontSize: '28px', fontWeight: 900, color: '#10b981' }}>VERIFIED</div>
+
+                {/* CIRCULAR INTEL */}
+                <div style={telemetryCard}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px' }}>
+                     <span style={{ fontSize: '20px', fontWeight: 900, color: '#fff' }}>Yield Flow</span>
+                     <span style={{ fontSize: '12px', fontWeight: 900, opacity: 0.3 }}>CORE</span>
+                   </div>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+                     <div style={{ width: '130px', height: '130px', borderRadius: '50%', border: '12px solid rgba(255,255,255,0.1)', borderTopColor: '#3b82f6', borderRightColor: '#60a5fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 900, color: '#fff' }}>
+                       84%
+                     </div>
+                     <div style={{ flex: 1 }}>
+                       <div>
+                         <div style={{ fontSize: '11px', color: '#fff', opacity: 0.4, fontWeight: 900 }}>REVENUE</div>
+                         <div style={{ fontSize: '18px', fontWeight: 900, color: '#fff' }}>{formatCurrency(totalRevenue)}</div>
+                       </div>
+                     </div>
+                   </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '48px', position: 'relative' }}>
+                <div>
+                  <h3 style={{ fontSize: '22px', fontWeight: 900, marginBottom: '32px', color: '#fff' }}>Directives</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {[
+                      { label: 'Asset Node Link', status: 'ACTIVE', color: '#fbbf24' },
+                      { label: 'Relay Integrity', status: 'OK', color: '#10b981' },
+                    ].map((item, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '24px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '20px 32px', borderRadius: '100px' }}>
+                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: item.color }} />
+                        <span style={{ flex: 1, fontSize: '17px', fontWeight: 900, color: '#fff' }}>{item.label}</span>
+                        <span style={{ fontSize: '10px', fontWeight: 900, color: item.color, background: 'rgba(255,255,255,0.05)', padding: '6px 16px', borderRadius: '100px', border: `1px solid ${item.color}40` }}>{item.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: '48px', padding: '40px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px' }}>
+                       <span style={{ fontSize: '18px', fontWeight: 900, color: '#fff' }}>Flux Output</span>
+                       <span style={{ fontSize: '11px', fontWeight: 900, color: '#10b981' }}>9.8V</span>
+                     </div>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                        <div style={{ width: '64px', height: '64px', background: 'rgba(255,255,255,0.05)', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>⚡</div>
+                        <div>
+                          <div style={{ fontSize: '32px', fontWeight: 900, color: '#fff' }}>98.4%</div>
+                          <div style={{ fontSize: '13px', fontWeight: 900, color: '#fff', opacity: 0.3 }}>SIGNAL</div>
+                        </div>
+                     </div>
                 </div>
               </div>
             </>
           )}
-        </div>
-      </div>
-
-      <style jsx>{`
-        @keyframes visionPop {
-          from { opacity: 0; transform: scale(0.9) translateY(40px); filter: blur(20px); }
-          to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
-        }
-      `}</style>
-    </div>
-  );
-}
-
-const inputStyle = {
-  width: '100%', background: 'rgba(255,255,255,0.05)', 
-  border: '1px solid rgba(255,255,255,0.15)', padding: '24px', 
-  borderRadius: '24px', color: '#fff', fontSize: '20px', 
-  fontWeight: 900, outline: 'none'
-};
-
-const statCardStyle = {
-  background: 'rgba(255, 255, 255, 0.05)',
-  border: '1px solid rgba(255, 255, 255, 0.15)',
-  borderRadius: '40px',
-  padding: '40px',
-  display: 'flex',
-  flexDirection: 'column'
-};
-        >
-          {/* Subtle Dynamic Glint */}
-          <div style={{ position: 'absolute', top: 0, left: '-100%', width: '40%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)', transform: 'skewX(-45deg)', animation: 'visionSweep 12s infinite linear', pointerEvents: 'none' }} />
-
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '56px', position: 'relative' }}>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 900, color: '#fff', opacity: 0.5, letterSpacing: '0.25em', marginBottom: '8px' }}>SYSTEM OS V.7</div>
-              <h1 style={{ fontSize: '48px', fontWeight: 900, letterSpacing: '-0.06em', color: '#fff' }}>Braes Creek HQ</h1>
-            </div>
-            <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-               <div style={{ width: '56px', height: '56px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', cursor: 'pointer' }}>🔔</div>
-               <div style={{ width: '56px', height: '56px', background: 'linear-gradient(135deg, #2563eb, #7c3aed)', borderRadius: '50%', border: '2px solid rgba(255,255,255,0.8)', cursor: 'pointer', boxShadow: '0 8px 32px rgba(37,99,235,0.3)' }} />
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 0.7fr 1.2fr', gap: '40px', marginBottom: '56px', position: 'relative' }}>
-            
-            {/* ACTIVITY CAPSULES */}
-            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '48px', padding: '40px', border: '1px solid rgba(255,255,255,0.2)' }}>
-               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
-                 <span style={{ fontSize: '20px', fontWeight: 900, color: '#fff' }}>Health Index</span>
-                 <span style={{ fontSize: '11px', fontWeight: 900, padding: '6px 16px', background: '#fff', color: '#000', borderRadius: '100px' }}>STABLE</span>
-               </div>
-               <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '180px', padding: '0 10px' }}>
-                 {[45, 80, 55, 100, 70, 90, 60].map((h, i) => (
-                   <div key={i} style={{ width: '22px', height: `${h}%`, background: 'rgba(255,255,255,0.03)', borderRadius: '100px', position: 'relative', overflow: 'hidden' }}>
-                     <div style={{ width: '100%', height: '100%', background: 'linear-gradient(to top, #3b82f6, #60a5fa)', borderRadius: '100px', opacity: 0.8 }} />
-                   </div>
-                 ))}
-               </div>
-            </div>
-
-            {/* QUICK DATA CLOUD */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-               {[
-                 { icon: '💎', val: '8.4%', label: 'Purity' },
-                 { icon: '⚡', val: '0.4ms', label: 'Sync' },
-                 { icon: '🛰️', val: 'ACTIVE', label: 'Nodes' }
-               ].map((s, i) => (
-                 <div key={i} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '32px', padding: '24px', flex: 1, display: 'flex', alignItems: 'center', gap: '20px', border: '1px solid rgba(255,255,255,0.2)' }}>
-                   <div style={{ width: '52px', height: '52px', background: 'rgba(255,255,255,0.1)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>{s.icon}</div>
-                   <div>
-                     <div style={{ fontSize: '20px', fontWeight: 900, color: '#fff' }}>{s.val}</div>
-                     <div style={{ fontSize: '10px', fontWeight: 900, color: '#fff', opacity: 0.4 }}>{s.label}</div>
-                   </div>
-                 </div>
-               ))}
-            </div>
-
-            {/* CIRCULAR INTEL */}
-            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '48px', padding: '40px', border: '1px solid rgba(255,255,255,0.2)' }}>
-               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px' }}>
-                 <span style={{ fontSize: '20px', fontWeight: 900, color: '#fff' }}>Yield Flow</span>
-                 <span style={{ fontSize: '12px', fontWeight: 900, opacity: 0.3 }}>CORE</span>
-               </div>
-               <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-                 <div style={{ width: '130px', height: '130px', borderRadius: '50%', border: '12px solid rgba(255,255,255,0.1)', borderTopColor: '#3b82f6', borderRightColor: '#60a5fa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 900, color: '#fff' }}>
-                   84%
-                 </div>
-                 <div style={{ flex: 1 }}>
-                   <div>
-                     <div style={{ fontSize: '11px', color: '#fff', opacity: 0.4, fontWeight: 900 }}>REVENUE</div>
-                     <div style={{ fontSize: '18px', fontWeight: 900, color: '#fff' }}>{formatCurrency(totalRevenue)}</div>
-                   </div>
-                 </div>
-               </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '48px', position: 'relative' }}>
-            <div>
-              <h3 style={{ fontSize: '22px', fontWeight: 900, marginBottom: '32px', color: '#fff' }}>Directives</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {[
-                  { label: 'Asset Node Link', status: 'ACTIVE', color: '#fbbf24' },
-                  { label: 'Relay Integrity', status: 'OK', color: '#10b981' },
-                ].map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '24px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', padding: '20px 32px', borderRadius: '100px' }}>
-                    <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: item.color }} />
-                    <span style={{ flex: 1, fontSize: '17px', fontWeight: 900, color: '#fff' }}>{item.label}</span>
-                    <span style={{ fontSize: '10px', fontWeight: 900, color: item.color, background: 'rgba(255,255,255,0.05)', padding: '6px 16px', borderRadius: '100px', border: `1px solid ${item.color}40` }}>{item.status}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: '48px', padding: '40px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px' }}>
-                   <span style={{ fontSize: '18px', fontWeight: 900, color: '#fff' }}>Flux Output</span>
-                   <span style={{ fontSize: '11px', fontWeight: 900, color: '#10b981' }}>9.8V</span>
-                 </div>
-                 <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                    <div style={{ width: '64px', height: '64px', background: 'rgba(255,255,255,0.05)', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>⚡</div>
-                    <div>
-                      <div style={{ fontSize: '32px', fontWeight: 900, color: '#fff' }}>98.4%</div>
-                      <div style={{ fontSize: '13px', fontWeight: 900, color: '#fff', opacity: 0.3 }}>SIGNAL</div>
-                    </div>
-                 </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -309,3 +252,22 @@ const statCardStyle = {
     </div>
   );
 }
+
+const inputStyle = {
+  width: '100%', background: 'rgba(255,255,255,0.05)', 
+  border: '1px solid rgba(255,255,255,0.15)', padding: '24px', 
+  borderRadius: '24px', color: '#fff', fontSize: '20px', 
+  fontWeight: 900, outline: 'none'
+};
+
+const labelStyle = { 
+  display: 'block', fontSize: '11px', fontWeight: 900, 
+  opacity: 0.5, marginBottom: '12px', letterSpacing: '0.1em' 
+};
+
+const telemetryCard = {
+  background: 'rgba(255, 255, 255, 0.05)',
+  border: '1px solid rgba(255, 255, 255, 0.15)',
+  borderRadius: '48px',
+  padding: '40px'
+};
