@@ -124,12 +124,12 @@ export default function LoginPage({ onLogin }: LoginProps) {
             <img
               src="/LOG-IN-PAGE.png"
               alt="Braes Creek Estate"
-              width={280}
-              height={280}
+              width={340}
+              height={340}
               style={{ 
                 objectFit: 'contain', 
                 mixBlendMode: 'screen',
-                filter: 'drop-shadow(0 0 30px rgba(0, 245, 255, 0.1))',
+                filter: 'drop-shadow(0 0 40px rgba(0, 245, 255, 0.15))',
                 transform: `translate(${mousePos.x * 0.1}px, ${mousePos.y * 0.1}px)`
               }}
             />
