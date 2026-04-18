@@ -148,7 +148,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
            <div style={{ position: 'absolute', top: 0, left: '-100%', width: '100%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.02), transparent)', animation: 'visionSweep 6s infinite linear', pointerEvents: 'none' }} />
 
           <h2 style={{ fontSize: '32px', fontWeight: 900, color: '#fff', marginBottom: '8px', textAlign: 'center', letterSpacing: '-0.04em' }}>Welcome</h2>
-          <p style={{ color: '#94A3B8', fontSize: '14px', fontWeight: 800, marginBottom: '44px', textAlign: 'center' }}>Portal Status: {activeField ? 'ACTIVE ENTRY' : 'STBY'}</p>
+          <p style={{ color: '#94A3B8', fontSize: '14px', fontWeight: 800, marginBottom: '44px', textAlign: 'center' }}>Sign in to the Intelligence Hub</p>
 
           <form onSubmit={handleLogin}>
             <div style={{ marginBottom: '24px' }}>
