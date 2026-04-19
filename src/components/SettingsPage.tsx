@@ -6,9 +6,9 @@ import { BUSINESS_SEGMENTS } from '@/lib/data';
 export default function SettingsPage() {
   const { currentUser, clearAllData } = useAppStore();
   const [activeTab, setActiveTab] = useState('account');
-  const [name, setName] = useState(currentUser.name);
-  const [email, setEmail] = useState(currentUser.email);
-  const [role, setRole] = useState(currentUser.role);
+  const [name, setName] = useState(currentUser?.name || '');
+  const [email, setEmail] = useState(currentUser?.email || '');
+  const [role, setRole] = useState(currentUser?.role || 'User');
   const [currency, setCurrency] = useState('USD');
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);

@@ -95,38 +95,32 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
           transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
       >
-        <div className="sidebar-logo" style={{ height: '100px', padding: '0 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ padding: '4px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.03)' }}>
+        <div className="sidebar-logo" style={{ height: '70px', padding: '0 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ padding: '3px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.03)' }}>
               <Image
                 src="/logo-transparent.png"
                 alt="BC"
-                width={32}
-                height={32}
+                width={28}
+                height={28}
                 style={{ objectFit: 'contain' }}
               />
             </div>
             <div style={{ overflow: 'hidden' }}>
-              <h1 style={{ fontSize: '13px', fontWeight: 900, letterSpacing: '0.05em', whiteSpace: 'nowrap', color: '#fff' }}>
+              <h1 style={{ fontSize: '11px', fontWeight: 900, letterSpacing: '0.05em', whiteSpace: 'nowrap', color: '#fff' }}>
                 BRAES CREEK <span style={{ color: 'rgba(255,255,255,0.3)' }}>HUB</span>
               </h1>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                <span className="status-light" />
-                <p style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  NODE ACTIVE
-                </p>
-              </div>
             </div>
           </div>
         </div>
 
-        <nav className="sidebar-nav custom-scrollbar" style={{ padding: '32px 16px', flex: 1, overflowY: 'auto' }}>
+        <nav className="sidebar-nav custom-scrollbar" style={{ padding: '16px 12px', flex: 1, overflowY: 'hidden' }}>
           {navSections.map(section => (
-            <div key={section.label} style={{ marginBottom: '32px' }}>
-              <div style={{ padding: '0 12px', fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '20px' }}>
+            <div key={section.label} style={{ marginBottom: '16px' }}>
+              <div style={{ padding: '0 12px', fontSize: '9px', fontWeight: 900, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>
                 {section.label}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                 {section.items.map(item => (
                   <div
                     key={item.id}
@@ -136,23 +130,22 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
                       if (window.innerWidth <= 1024) setSidebarOpen(false);
                     }}
                     style={{ 
-                      padding: '12px 16px',
-                      borderRadius: '16px',
-                      fontSize: '13px',
-                      fontWeight: activePage === item.id ? 900 : 700,
+                      padding: '8px 12px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: activePage === item.id ? 900 : 600,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '14px',
-                      transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                      color: activePage === item.id ? '#fff' : 'rgba(255,255,255,0.5)',
-                      background: activePage === item.id ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
+                      gap: '12px',
+                      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                      color: activePage === item.id ? '#fff' : 'rgba(255,255,255,0.45)',
+                      background: activePage === item.id ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
                       cursor: 'pointer',
                       position: 'relative'
                     }}
                   >
-                    <span style={{ fontSize: '18px', filter: activePage === item.id ? 'grayscale(0)' : 'grayscale(1) opacity(0.5)' }}>{item.icon}</span>
+                    <span style={{ fontSize: '16px', filter: activePage === item.id ? 'grayscale(0)' : 'grayscale(1) opacity(0.4)' }}>{item.icon}</span>
                     <span style={{ flex: 1 }}>{item.label}</span>
-                    <div className="status-light" style={{ opacity: activePage === item.id ? 1 : 0 }} />
                   </div>
                 ))}
               </div>
