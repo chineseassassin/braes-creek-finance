@@ -117,7 +117,7 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
         <nav className="sidebar-nav custom-scrollbar" style={{ padding: '16px 12px', flex: 1, overflowY: 'hidden' }}>
           {navSections.map(section => (
             <div key={section.label} style={{ marginBottom: '16px' }}>
-              <div style={{ padding: '0 12px', fontSize: '9px', fontWeight: 900, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>
+              <div style={{ padding: '0 12px', fontSize: '9px', fontWeight: 900, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>
                 {section.label}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
