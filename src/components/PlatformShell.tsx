@@ -57,6 +57,18 @@ export default function PlatformShell() {
   const [authenticated, setAuthenticated] = useState(false);
   const [loadingSession, setLoadingSession] = useState(true);
   const [activePage, setActivePage] = useState('dashboard');
+  const { navSections, renameNavItem } = useAppStore();
+
+  // TERMINOLOGY PATCH: Auto-convert Labor -> Workers
+  useEffect(() => {
+    navSections.forEach(section => {
+      section.items.forEach((item: any) => {
+        if (item.id === 'labor' && item.label === 'Labor') {
+          renameNavItem('labor', 'Workers');
+        }
+      });
+    });
+  }, [navSections, renameNavItem]);
 
   useEffect(() => {
     (window as any).__onNavigate = setActivePage;
