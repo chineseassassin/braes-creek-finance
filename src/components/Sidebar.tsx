@@ -81,92 +81,73 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
       <aside 
         className={`sidebar ${sidebarOpen ? 'open' : ''}`} 
         style={{ 
-          background: 'rgba(15, 23, 42, 0.4)', 
-          backdropFilter: 'blur(32px)',
-          WebkitBackdropFilter: 'blur(32px)',
-          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-          width: '280px',
+          background: '#0A0A0A', 
+          borderRight: '1px solid rgba(255, 255, 255, 0.05)',
+          width: '80px',
           height: '100vh',
           display: 'flex',
           flexDirection: 'column',
+          alignItems: 'center',
           position: 'relative',
           zIndex: 100,
-          boxShadow: '20px 0 60px rgba(0,0,0,0.5)',
-          transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+          transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+          padding: '24px 0'
         }}
       >
-        <div className="sidebar-logo" style={{ height: '70px', padding: '0 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img
-            src="/bc-logo-final-v72.png"
-            alt="Braes Creek"
-            style={{ 
-              width: '120px', 
-              height: 'auto', 
-              filter: 'drop-shadow(0 0 15px rgba(255, 215, 0, 0.2))',
-              mixBlendMode: 'screen',
-              opacity: 0.9
-            }}
-          />
+        <div className="sidebar-logo" style={{ marginBottom: '40px', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ 
+            width: '44px', height: '44px', 
+            background: 'rgba(0, 245, 255, 0.1)', 
+            border: '1px solid rgba(0, 245, 255, 0.2)', 
+            borderRadius: '12px', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 0 20px rgba(0, 245, 255, 0.1)'
+          }}>
+            <img src="/bc-logo-final-v72.png" alt="B" style={{ width: '28px', height: 'auto', mixBlendMode: 'screen' }} />
+          </div>
         </div>
 
-        <nav className="sidebar-nav custom-scrollbar" style={{ padding: '16px 12px', flex: 1, overflowY: 'hidden' }}>
+        <nav className="sidebar-nav custom-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', alignItems: 'center' }}>
           {navSections.map(section => (
-            <div key={section.label} style={{ marginBottom: '16px' }}>
-              <div style={{ padding: '0 12px', fontSize: '9px', fontWeight: 900, color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>
-                {section.label}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                {section.items.map(item => (
-                  <div
-                    key={item.id}
-                    className={`nav-item ${activePage === item.id ? 'active' : ''}`}
-                    onClick={() => {
-                      onNavigate(item.id);
-                      if (window.innerWidth <= 1024) setSidebarOpen(false);
-                    }}
-                    style={{ 
-                      padding: '8px 12px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: activePage === item.id ? 900 : 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                      color: activePage === item.id ? '#00F5FF' : 'rgba(255,255,255,0.45)',
-                      background: activePage === item.id ? 'rgba(0, 245, 255, 0.05)' : 'transparent',
-                      border: activePage === item.id ? '1px solid rgba(0, 245, 255, 0.1)' : '1px solid transparent',
-                      boxShadow: activePage === item.id ? '0 0 20px rgba(0, 245, 255, 0.05)' : 'none',
-                      cursor: 'pointer',
-                      position: 'relative'
-                    }}
-                  >
-                    <span style={{ fontSize: '16px', filter: activePage === item.id ? 'grayscale(0)' : 'grayscale(1) opacity(0.4)' }}>{item.icon}</span>
-                    <span style={{ flex: 1 }}>{item.label}</span>
-                  </div>
-                ))}
-              </div>
+            <div key={section.label} style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px', alignItems: 'center', width: '100%' }}>
+              <div style={{ height: '1px', width: '20px', background: 'rgba(255,255,255,0.05)', marginBottom: '8px' }} />
+              {section.items.map(item => (
+                <div
+                  key={item.id}
+                  className={`nav-item ${activePage === item.id ? 'active' : ''}`}
+                  onClick={() => {
+                    onNavigate(item.id);
+                    if (window.innerWidth <= 1024) setSidebarOpen(false);
+                  }}
+                  title={item.label}
+                  style={{ 
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    background: activePage === item.id ? 'rgba(0, 245, 255, 0.08)' : 'transparent',
+                    border: activePage === item.id ? '1px solid rgba(0, 245, 255, 0.15)' : '1px solid transparent',
+                    cursor: 'pointer',
+                    color: activePage === item.id ? '#00F5FF' : 'rgba(255,255,255,0.3)',
+                    position: 'relative'
+                  }}
+                >
+                  <span style={{ fontSize: '20px', filter: activePage === item.id ? 'none' : 'grayscale(1) opacity(0.5)' }}>{item.icon}</span>
+                  {activePage === item.id && (
+                    <div style={{ position: 'absolute', right: '-12px', width: '3px', height: '20px', background: '#00F5FF', borderRadius: '10px', boxShadow: '0 0 10px #00F5FF' }} />
+                  )}
+                </div>
+              ))}
             </div>
           ))}
         </nav>
 
-        <div className="sidebar-user" style={{ padding: '24px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div className="user-avatar" style={{ 
-            width: '40px', height: '40px', 
-            borderRadius: '12px', 
-            fontSize: '14px', 
-            fontWeight: 800,
-            background: 'linear-gradient(135deg, #1e293b, #334155)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
-            {currentUser?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'AD'}
-          </div>
-          <div style={{ flex: 1, overflow: 'hidden' }}>
-            <div style={{ fontSize: '13px', fontWeight: 800, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', color: '#fff' }}>{currentUser?.name}</div>
-            <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{currentUser?.role}</div>
-          </div>
-          <button onClick={onLogout} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '8px', borderRadius: '10px', color: '#fff' }}>🚪</button>
+        <div className="sidebar-footer" style={{ padding: '24px 0', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
+           <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'linear-gradient(135deg, #1e293b, #334155)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 800, border: '1px solid rgba(255,255,255,0.1)' }}>{currentUser?.name?.[0]}</div>
+           <button onClick={onLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'rgba(255,255,255,0.4)' }}>🚪</button>
         </div>
       </aside>
 
