@@ -51,7 +51,8 @@ const PAGE_TITLES: Record<string, string> = {
 export default function PlatformShell() {
   const { 
     sidebarOpen, setSidebarOpen, loadAllData, controlPanelOpen, setControlPanelOpen,
-    loans, sales, expenses, livestockUnits, notifications, addNotification, clearAllData
+    loans, sales, expenses, livestockUnits, notifications, addNotification, clearAllData,
+    currentUser
   } = useAppStore();
 
   const [authenticated, setAuthenticated] = useState(false);
