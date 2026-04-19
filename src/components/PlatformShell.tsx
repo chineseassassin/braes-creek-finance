@@ -200,7 +200,7 @@ export default function PlatformShell() {
   }
 
   return (
-    <div className="app-layout" style={{ background: '#050505', height: '100vh', width: '100vw', overflow: 'hidden', display: 'flex' }}>
+    <div className="app-layout" style={{ background: '#000', height: '100vh', width: '100vw', overflow: 'hidden', display: 'flex' }}>
       <Sidebar
         activePage={activePage}
         onNavigate={setActivePage}
@@ -211,54 +211,35 @@ export default function PlatformShell() {
       />
 
       <div className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-        <header className="top-header" style={{ 
-          height: '70px', 
-          background: 'rgba(5, 5, 5, 0.4)', 
-          backdropFilter: 'blur(20px)', 
-          WebkitBackdropFilter: 'blur(20px)', 
-          borderBottom: '1px solid rgba(255, 255, 255, 0.03)', 
-          padding: '0 32px', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '24px', 
-          zIndex: 40 
-        }}>
+        <header className="top-header" style={{ height: '80px', background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', padding: '0 40px', display: 'flex', alignItems: 'center', gap: '20px', zIndex: 40 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
             <div className="header-title-container" style={{ width: '224px' }}>
-              <span className="header-title" style={{ fontSize: '20px', fontWeight: 900, color: '#fff', letterSpacing: '-0.02em' }}>{PAGE_TITLES[activePage] || 'Dashboard'}</span>
-              <div className="header-breadcrumbs" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>BC ESTATE</div>
+              <span className="header-title" style={{ fontSize: '18px', fontWeight: 800, color: '#fff' }}>{PAGE_TITLES[activePage] || 'Dashboard'}</span>
+              <div className="header-breadcrumbs" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase' }}>BC ESTATE</div>
             </div>
             <div className="desktop-only" style={{ flex: 1 }}>
               <GlobalSearch onNavigate={setActivePage} />
             </div>
           </div>
-          <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button 
-              className="btn-command" 
+              className="btn btn-primary btn-sm desktop-only" 
               onClick={() => setControlPanelOpen(true)}
-              style={{ borderRadius: '12px', fontSize: '10px', padding: '0 20px', height: '36px', fontWeight: 900, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}
+              style={{ borderRadius: '100px', fontSize: '11px', padding: '0 24px', height: '38px', fontWeight: 900, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)' }}
             >
-              CMD K
+              COMMAND [K]
             </button>
-            <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.05)' }} />
             <ThemeToggle />
             <NotificationCenter />
-            <div style={{ 
-              width: '36px', height: '36px', 
-              borderRadius: '10px', 
-              background: 'linear-gradient(135deg, #1e293b, #334155)', 
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: '1px solid rgba(255,255,255,0.1)',
-              cursor: 'pointer'
-            }}>
-               <span style={{ fontSize: '12px', fontWeight: 800 }}>{currentUser?.name?.[0]}</span>
-            </div>
+            <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', padding: '8px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
+               📅 {typeof window !== 'undefined' ? new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '...'}
+            </span>
           </div>
         </header>
 
         <ControlPanel isOpen={controlPanelOpen} onClose={() => setControlPanelOpen(false)} />
 
-        <main className="page-content custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '32px' }}>
+        <main className="page-content custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '40px' }}>
           <Suspense fallback={<div className="loader"></div>}>
             <div className="content-inner" key={activePage}>{renderPage()}</div>
           </Suspense>
