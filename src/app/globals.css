@@ -53,17 +53,13 @@
   --glass-bg: rgba(255, 255, 255, 0.8);
   --glass-border: rgba(0, 0, 0, 0.04);
   
-  --btn-primary-bg: 222 15% 15%;
-  --btn-primary-text: 0 0% 100%;
-  --btn-primary-border: 255 255% 255% / 0.08;
-  
   --z-header: 100;
   --z-sidebar: 110;
   --z-dropdown: 500;
   --z-modal: 2000;
   --z-search: 1500;
   
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 * {
@@ -316,7 +312,7 @@ html, body {
 }
 
 /* 2026 Elite Design - Atmospheric & Immersive Layer */
-.card {
+.card-elite {
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -329,8 +325,8 @@ html, body {
   box-shadow: var(--shadow-premium);
 }
 
-/* Elite 'Inner Glow' effect */
-.card::before {
+/* Elite 'Inner Glow' effect Shard */
+.card-glow::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -342,13 +338,6 @@ html, body {
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-}
-
-.card:hover {
-  transform: translateY(-8px) scale(1.005);
-  border-color: hsla(var(--accent-green), 0.4);
-  background: rgba(255, 255, 255, 0.08); /* Slightly brighter on hover */
-  box-shadow: 0 40px 80px -20px rgba(0,0,0,0.8), 0 0 0 1px hsla(var(--accent-green), 0.2);
 }
 
 .btn {
@@ -801,6 +790,9 @@ html, body {
   animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+.modal-header {
+  margin-bottom: 32px;
+  padding-bottom: 20px;
   border-bottom: 1px solid hsl(var(--border));
 }
 
