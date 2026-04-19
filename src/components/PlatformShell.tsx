@@ -188,7 +188,7 @@ export default function PlatformShell() {
   }
 
   return (
-    <div className="app-layout" style={{ background: '#000', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+    <div className="app-layout" style={{ background: '#000', height: '100vh', width: '100vw', overflow: 'hidden', display: 'flex' }}>
       <Sidebar
         activePage={activePage}
         onNavigate={setActivePage}
@@ -198,12 +198,12 @@ export default function PlatformShell() {
         }}
       />
 
-      <div className="main-content" style={{ marginLeft: '124px', marginRight: '24px', marginTop: '24px', marginBottom: '24px', flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', position: 'relative' }}>
-        <header className="top-header" style={{ height: '70px', background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderRadius: '24px 24px 0 0', border: '1px solid rgba(255, 255, 255, 0.08)', borderBottom: 'none', padding: '0 32px', display: 'flex', alignItems: 'center', gap: '20px', zIndex: 40 }}>
+      <div className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', position: 'relative', overflow: 'hidden' }}>
+        <header className="top-header" style={{ height: '80px', background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', padding: '0 40px', display: 'flex', alignItems: 'center', gap: '20px', zIndex: 40 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
             <div className="header-title-container">
-              <span className="header-title" style={{ fontSize: '16px', color: '#fff' }}>{PAGE_TITLES[activePage] || 'Dashboard'}</span>
-              <div className="header-breadcrumbs" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: 800 }}>BRAES CREEK / HUB</div>
+              <span className="header-title" style={{ fontSize: '18px', fontWeight: 800, color: '#fff' }}>{PAGE_TITLES[activePage] || 'Dashboard'}</span>
+              <div className="header-breadcrumbs" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase' }}>BRAES CREEK ESTATE / INTELLIGENCE HUB</div>
             </div>
             <div className="desktop-only" style={{ flex: 1, marginLeft: 20 }}>
               <GlobalSearch onNavigate={setActivePage} />
@@ -213,18 +213,21 @@ export default function PlatformShell() {
             <button 
               className="btn btn-primary btn-sm desktop-only" 
               onClick={() => setControlPanelOpen(true)}
-              style={{ borderRadius: '100px', fontSize: '10px', padding: '0 20px', height: '32px', fontWeight: 900, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ borderRadius: '100px', fontSize: '11px', padding: '0 24px', height: '38px', fontWeight: 900, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)' }}
             >
-              CMD [K]
+              COMMAND [K]
             </button>
             <ThemeToggle />
             <NotificationCenter />
+            <span style={{ fontSize: '12px', fontWeight: 700, color: 'rgba(255,255,255,0.4)', padding: '8px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
+               📅 {typeof window !== 'undefined' ? new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '...'}
+            </span>
           </div>
         </header>
 
         <ControlPanel isOpen={controlPanelOpen} onClose={() => setControlPanelOpen(false)} />
 
-        <main className="page-content custom-scrollbar" style={{ flex: 1, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderRadius: '0 0 24px 24px', border: '1px solid rgba(255, 255, 255, 0.08)', overflowY: 'auto', padding: '32px' }}>
+        <main className="page-content custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '40px' }}>
           <Suspense fallback={<div className="loader"></div>}>
             <div className="content-inner" key={activePage}>{renderPage()}</div>
           </Suspense>
@@ -235,7 +238,6 @@ export default function PlatformShell() {
         .header-title-container { display: flex; flex-direction: column; }
         .desktop-only { display: block; }
         @media (max-width: 1024px) {
-           .main-content { margin-left: 24px !important; }
            .desktop-only { display: none !important; }
         }
       `}</style>

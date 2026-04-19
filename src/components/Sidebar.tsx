@@ -84,63 +84,75 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
           background: 'rgba(15, 23, 42, 0.4)', 
           backdropFilter: 'blur(32px)',
           WebkitBackdropFilter: 'blur(32px)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          borderRadius: '24px',
-          width: '80px',
-          height: 'calc(100vh - 48px)',
-          margin: '24px',
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          zIndex: 100,
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          width: '280px',
+          height: '100vh',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          position: 'relative',
+          zIndex: 100,
+          boxShadow: '20px 0 60px rgba(0,0,0,0.5)',
           transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
       >
-        <div className="sidebar-logo" style={{ padding: '24px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ padding: '4px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.03)' }}>
-            <Image
-              src="/logo-transparent.png"
-              alt="BC"
-              width={32}
-              height={32}
-              style={{ objectFit: 'contain' }}
-            />
+        <div className="sidebar-logo" style={{ height: '100px', padding: '0 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ padding: '4px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.03)' }}>
+              <Image
+                src="/logo-transparent.png"
+                alt="BC"
+                width={32}
+                height={32}
+                style={{ objectFit: 'contain' }}
+              />
+            </div>
+            <div style={{ overflow: 'hidden' }}>
+              <h1 style={{ fontSize: '13px', fontWeight: 900, letterSpacing: '0.05em', whiteSpace: 'nowrap', color: '#fff' }}>
+                BRAES CREEK <span style={{ color: 'rgba(255,255,255,0.3)' }}>HUB</span>
+              </h1>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                <span className="status-light" />
+                <p style={{ fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  NODE ACTIVE
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <nav className="sidebar-nav custom-scrollbar" style={{ padding: '0 8px', flex: 1, overflowY: 'auto', width: '100%' }}>
+        <nav className="sidebar-nav custom-scrollbar" style={{ padding: '32px 16px', flex: 1, overflowY: 'auto' }}>
           {navSections.map(section => (
-            <div key={section.label} style={{ marginBottom: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
+            <div key={section.label} style={{ marginBottom: '32px' }}>
+              <div style={{ padding: '0 12px', fontSize: '10px', fontWeight: 900, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '20px' }}>
+                {section.label}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {section.items.map(item => (
                   <div
                     key={item.id}
-                    className={`nav-item-icon-only ${activePage === item.id ? 'active' : ''}`}
-                    title={item.label}
+                    className={`nav-item ${activePage === item.id ? 'active' : ''}`}
                     onClick={() => {
                       onNavigate(item.id);
                       if (window.innerWidth <= 1024) setSidebarOpen(false);
                     }}
                     style={{ 
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '14px',
+                      padding: '12px 16px',
+                      borderRadius: '16px',
+                      fontSize: '13px',
+                      fontWeight: activePage === item.id ? 900 : 700,
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '20px',
+                      gap: '14px',
                       transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-                      color: activePage === item.id ? '#fff' : 'rgba(255,255,255,0.3)',
-                      background: activePage === item.id ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                      color: activePage === item.id ? '#fff' : 'rgba(255,255,255,0.5)',
+                      background: activePage === item.id ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
                       cursor: 'pointer',
-                      border: activePage === item.id ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent'
+                      position: 'relative'
                     }}
                   >
-                    <span>{item.icon}</span>
+                    <span style={{ fontSize: '18px', filter: activePage === item.id ? 'grayscale(0)' : 'grayscale(1) opacity(0.5)' }}>{item.icon}</span>
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    <div className="status-light" style={{ opacity: activePage === item.id ? 1 : 0 }} />
                   </div>
                 ))}
               </div>
@@ -148,8 +160,23 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
           ))}
         </nav>
 
-        <div className="sidebar-user" style={{ padding: '24px 0', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-          <button onClick={onLogout} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', cursor: 'pointer', fontSize: '18px', padding: '12px', borderRadius: '100px', color: '#fff' }}>🚪</button>
+        <div className="sidebar-user" style={{ padding: '24px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="user-avatar" style={{ 
+            width: '40px', height: '40px', 
+            borderRadius: '12px', 
+            fontSize: '14px', 
+            fontWeight: 800,
+            background: 'linear-gradient(135deg, #1e293b, #334155)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            {currentUser?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'AD'}
+          </div>
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <div style={{ fontSize: '13px', fontWeight: 800, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', color: '#fff' }}>{currentUser?.name}</div>
+            <div style={{ fontSize: '10px', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{currentUser?.role}</div>
+          </div>
+          <button onClick={onLogout} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', cursor: 'pointer', fontSize: '16px', padding: '8px', borderRadius: '10px', color: '#fff' }}>🚪</button>
         </div>
       </aside>
 
