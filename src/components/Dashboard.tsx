@@ -79,7 +79,7 @@ export default function Dashboard() {
       {/* Top Header Row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', overflow: 'visible' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          <div style={{ width: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 0' }}>
             <img
               src="/bc-logo-final-v72.png"
               alt="Braes Creek"
