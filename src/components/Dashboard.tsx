@@ -77,18 +77,21 @@ export default function Dashboard() {
   return (
     <div style={{ animation: 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
       {/* Top Header Row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', overflow: 'visible' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          <img
-            src="/bc-logo-final-v72.png"
-            alt="Braes Creek"
-            style={{ 
-              width: '180px', 
-              height: 'auto', 
-              filter: 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.2))',
-              mixBlendMode: 'screen'
-            }}
-          />
+          <div style={{ width: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img
+              src="/bc-logo-final-v72.png"
+              alt="Braes Creek"
+              style={{ 
+                width: '180px', 
+                height: 'auto', 
+                filter: 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.2))',
+                mixBlendMode: 'screen',
+                display: 'block'
+              }}
+            />
+          </div>
           <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.1)' }} />
           <div>
             <h1 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.04em' }}>Strategic Intelligence</h1>
