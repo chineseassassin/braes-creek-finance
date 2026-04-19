@@ -182,173 +182,128 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* HYNEX HERO HUB (THE HEARTBEAT) */}
-      <div className="card shimmer-surface" style={{ 
-        padding: '56px',
-        marginBottom: '40px',
+      {/* BENTO DASHBOARD PANEL */}
+      <div className="bento-canvas" style={{ 
+        background: 'rgba(15, 23, 42, 0.4)', 
+        backdropFilter: 'blur(32px)', 
+        WebkitBackdropFilter: 'blur(32px)', 
+        borderRadius: '40px', 
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        boxShadow: '0 40px 100px rgba(0,0,0,0.4)',
+        padding: '32px',
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        position: 'relative',
-        transform: 'scale(1.02)',
-        transformOrigin: 'top center',
-        border: '1px solid rgba(0, 245, 255, 0.2)',
-        boxShadow: '0 40px 100px rgba(0,0,0,0.9), 0 0 80px rgba(0, 245, 255, 0.1)',
-        cursor: 'pointer'
+        flexDirection: 'column',
+        gap: '32px'
       }}>
-         {/* ORBITAL LIGHT BEAM - DASHBOARD EDITION */}
-         <div style={{
-          position: 'absolute',
-          inset: '-2px',
-          borderRadius: '40px',
-          padding: '2px',
-          background: 'conic-gradient(from 0deg, transparent 80%, #00F5FF, #FFD700, #00F5FF)',
-          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-          WebkitMaskComposite: 'xor',
-          maskComposite: 'exclude',
-          animation: 'orbitRotate 8s linear infinite',
-          opacity: 0.5,
-          pointerEvents: 'none'
-        }} />
+        {/* HYNEX HERO TILE */}
+        <div className="shimmer-surface" style={{ 
+          padding: '48px',
+          borderRadius: '32px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          position: 'relative',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(0, 245, 255, 0.15)',
+          cursor: 'pointer',
+          overflow: 'hidden'
+        }}>
+           <div style={{
+            position: 'absolute',
+            inset: '-2px',
+            borderRadius: '32px',
+            padding: '2px',
+            background: 'conic-gradient(from 0deg, transparent 80%, #00F5FF, #FFD700, #00F5FF)',
+            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            WebkitMaskComposite: 'xor',
+            maskComposite: 'exclude',
+            animation: 'orbitRotate 8s linear infinite',
+            opacity: 0.3,
+            pointerEvents: 'none'
+          }} />
 
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.3em', color: '#00F5FF', marginBottom: '24px', opacity: 0.9 }}>
-             {filterSegment ? `NODE ANALYTICS: ${filterSegment}` : 'ESTATE AGGREGATE VALUATION'}
-             <span className="status-light" style={{ marginLeft: '12px', verticalAlign: 'middle' }} />
-          </div>
-          <div style={{ fontSize: '72px', fontWeight: 900, letterSpacing: '-0.06em', lineHeight: 0.9, marginBottom: '24px', color: '#fff', textShadow: '0 0 30px rgba(255,255,255,0.2)' }}>
-            {formatCurrency(totalRevenue)}
-          </div>
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-            <span style={{ 
-              background: 'rgba(0, 245, 255, 0.15)', 
-              color: '#00F5FF', 
-              padding: '8px 20px', 
-              borderRadius: '100px', 
-              fontSize: '13px', 
-              fontWeight: 900,
-              border: '1px solid rgba(0, 245, 255, 0.3)',
-              boxShadow: '0 0 20px rgba(0, 245, 255, 0.2)'
-            }}>
-              🚀 {growth} GROWTH
-            </span>
-            <span style={{ fontSize: '11px', fontWeight: 900, opacity: 0.5, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Node 0024 Active</span>
-          </div>
-        </div>
-        
-        <div style={{ display: 'flex', gap: '80px', position: 'relative', zIndex: 1 }}>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', color: '#94A3B8', marginBottom: '10px', letterSpacing: '0.2em' }}>OUTFLOW</div>
-            <div style={{ fontSize: '28px', fontWeight: 900, color: '#fff' }}>{formatCurrency(totalExpenses)}</div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', color: '#94A3B8', marginBottom: '10px', letterSpacing: '0.2em' }}>LEVERAGE</div>
-            <div style={{ fontSize: '28px', fontWeight: 900, color: '#FFD700' }}>{formatCurrency(totalOutstanding)}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* STAGE 2: Charts & Assets Grid */}
-      <div className="grid-2" style={{ marginBottom: '40px' }}>
-        <div className="card" style={{ height: '440px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-                 <button onClick={() => setChartMode('compare')} style={{ border: 'none', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: 900, cursor: 'pointer', background: chartMode === 'compare' ? '#fff' : 'transparent', color: chartMode === 'compare' ? '#000' : 'inherit' }}>COMPARE</button>
-                 <button onClick={() => setChartMode('efficiency')} style={{ border: 'none', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: 900, cursor: 'pointer', background: chartMode === 'efficiency' ? '#fff' : 'transparent', color: chartMode === 'efficiency' ? '#000' : 'inherit' }}>EFFIC.</button>
-              </div>
-            
-            <div style={{ display: 'flex', background: 'hsl(var(--bg-primary))', borderRadius: '100px', padding: '4px', gap: '4px', border: '1px solid hsl(var(--border))' }}>
-              {['1W', '1M', '1Y'].map(range => (
-                <button key={range} onClick={() => setActiveRange(range)} style={{ border: 'none', background: activeRange === range ? 'hsl(var(--bg-card))' : 'transparent', color: activeRange === range ? 'hsl(var(--text-primary))' : 'hsl(var(--text-muted))', padding: '6px 16px', borderRadius: '100px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}>{range}</button>
-              ))}
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.25em', color: '#00F5FF', marginBottom: '16px', opacity: 0.7 }}>
+               {filterSegment ? `NODE ANALYTICS: ${filterSegment}` : 'ESTATE AGGREGATE VALUATION'}
             </div>
+            <div style={{ fontSize: '64px', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 1, marginBottom: '20px', color: '#fff' }}>
+              {formatCurrency(totalRevenue)}
+            </div>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              <span style={{ background: 'rgba(0, 245, 255, 0.1)', color: '#00F5FF', padding: '6px 16px', borderRadius: '100px', fontSize: '12px', fontWeight: 900, border: '1px solid rgba(0, 245, 255, 0.2)' }}>
+                🚀 {growth}
+              </span>
+              <span className="status-light" />
+            </div>
+          </div>
           
-          <div style={{ flex: 1, position: 'relative' }}>
-             <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartMode === 'compare' ? comparisonData : chartMode === 'efficiency' ? efficiencyData : monthlyData}>
-                    <defs>
-                      <linearGradient id="colValue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#00F5FF" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="#00F5FF" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colCompare" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#A3FF00" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#A3FF00" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#94A3B8', fontSize: 10, fontWeight: 700}} dy={15} />
-                    <YAxis hide={true} />
-                    <Tooltip content={<CustomTooltip />} cursor={{stroke: 'rgba(0, 245, 255, 0.2)', strokeWidth: 2}} />
-                    <Area 
-                      type="monotone" 
-                      name={chartMode === 'compare' ? 'Revenue' : chartMode === 'efficiency' ? 'Efficiency' : 'Spend'}
-                      dataKey={chartMode === 'compare' ? 'revenue' : chartMode === 'efficiency' ? 'value' : 'value'} 
-                      stroke="#00F5FF" 
-                      strokeWidth={4} 
-                      fillOpacity={1} 
-                      fill="url(#colValue)" 
-                      animationDuration={1500}
-                    />
-                    {chartMode === 'compare' && (
-                      <Area 
-                        type="monotone" 
-                        name="Expenses"
-                        dataKey="expense" 
-                        stroke="#A3FF00" 
-                        strokeWidth={4} 
-                        fillOpacity={1} 
-                        fill="url(#colCompare)" 
-                        animationDuration={1500}
-                      />
-                    )}
-                </AreaChart>
-             </ResponsiveContainer>
+          <div style={{ display: 'flex', gap: '60px', position: 'relative', zIndex: 1 }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', letterSpacing: '0.15em' }}>OUTFLOW</div>
+              <div style={{ fontSize: '24px', fontWeight: 900, color: '#fff' }}>{formatCurrency(totalExpenses)}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '9px', fontWeight: 900, textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', letterSpacing: '0.15em' }}>LEVERAGE</div>
+              <div style={{ fontSize: '24px', fontWeight: 900, color: '#FFD700' }}>{formatCurrency(totalOutstanding)}</div>
+            </div>
           </div>
         </div>
 
-        {/* Assets Column (DRILL-DOWN ENABLED) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          <div className="card" style={{ flex: 1, padding: '32px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 900, marginBottom: '24px' }}>Strategic Assets</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* ANALYTICS & ASSET ROW */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px' }}>
+          {/* CHART TILE */}
+          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '32px', borderRadius: '32px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+               <div style={{ display: 'flex', gap: '8px' }}>
+                 {['single', 'compare', 'efficiency'].map(mode => (
+                   <button key={mode} onClick={() => setChartMode(mode as any)} style={{ border: 'none', background: chartMode === mode ? 'rgba(255,255,255,0.1)' : 'transparent', color: chartMode === mode ? '#fff' : 'rgba(255,255,255,0.3)', padding: '6px 16px', borderRadius: '100px', fontSize: '10px', fontWeight: 900, cursor: 'pointer', textTransform: 'uppercase' }}>{mode}</button>
+                 ))}
+               </div>
+               <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '100px' }}>
+                  {['1W', '1M', '1Y'].map(range => (
+                    <button key={range} onClick={() => setActiveRange(range)} style={{ border: 'none', background: activeRange === range ? 'rgba(255,255,255,0.05)' : 'transparent', color: activeRange === range ? '#fff' : 'rgba(255,255,255,0.3)', padding: '6px 12px', borderRadius: '100px', fontSize: '10px', fontWeight: 800, cursor: 'pointer' }}>{range}</button>
+                  ))}
+               </div>
+            </div>
+            
+            <div style={{ flex: 1, minHeight: '300px' }}>
+               <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartMode === 'compare' ? comparisonData : chartMode === 'efficiency' ? efficiencyData : monthlyData}>
+                      <defs>
+                        <linearGradient id="colValue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#00F5FF" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#00F5FF" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.02)" />
+                      <XAxis dataKey="month" hide />
+                      <YAxis hide />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area type="monotone" dataKey={chartMode === 'compare' ? 'revenue' : 'amount'} stroke="#00F5FF" strokeWidth={3} fill="url(#colValue)" />
+                      {chartMode === 'compare' && <Area type="monotone" dataKey="expense" stroke="#A3FF00" strokeWidth={3} fill="transparent" />}
+                  </AreaChart>
+               </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* ASSETS TILE */}
+          <div style={{ background: 'rgba(255,255,255,0.02)', padding: '32px', borderRadius: '32px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 900, marginBottom: '24px', letterSpacing: '0.05em' }}>STRATEGIC ASSETS</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {segmentData.map((asset, i) => (
-                <div 
-                  key={i} 
-                  onClick={() => setFilterSegment(asset.name)}
-                  style={{ 
-                    display: 'flex', alignItems: 'center', gap: '16px', paddingBottom: '20px', 
-                    borderBottom: i === segmentData.length - 1 ? 'none' : '1px solid hsl(var(--border))',
-                    cursor: 'pointer',
-                    opacity: filterSegment && filterSegment !== asset.name ? 0.4 : 1,
-                    transition: 'all 0.3s'
-                  }}
-                >
-                  <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'hsl(var(--bg-primary))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', border: '1px solid hsl(var(--border))' }}>
-                    {asset.icon}
-                  </div>
+                <div key={i} onClick={() => setFilterSegment(asset.name)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '16px', background: filterSegment === asset.name ? 'rgba(255,255,255,0.05)' : 'transparent', cursor: 'pointer', transition: 'all 0.3s' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>{asset.icon}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '14px', fontWeight: 800 }}>{asset.shortName}</div>
-                    <div style={{ fontSize: '10px', color: 'hsl(var(--text-muted))', fontWeight: 900, textTransform: 'uppercase' }}>{filterSegment === asset.name ? 'ACTIVE FOCUS' : 'SELECT NODE'}</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '15px', fontWeight: 900 }}>{formatCurrency(asset.value)}</div>
-                    <div style={{ fontSize: '11px', color: 'hsl(var(--accent-green))', fontWeight: 900 }}>{asset.trend}</div>
+                    <div style={{ fontSize: '12px', fontWeight: 800 }}>{asset.name}</div>
+                    <div style={{ fontSize: '10px', fontWeight: 800, color: '#00F5FF', opacity: 0.8 }}>{formatCurrency(asset.value)}</div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-
-          <div className="card" style={{ padding: '32px', background: 'hsl(var(--bg-secondary) / 0.5)' }}>
-            <h4 style={{ fontSize: '14px', fontWeight: 900, marginBottom: '16px', color: '#10b981' }}>SYSTEM STATUS</h4>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', fontWeight: 700 }}>
-               <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }} />
-               {filterSegment ? `Isolating: ${filterSegment}` : 'Full Estate Synchronized'}
-            </div>
-          </div>
         </div>
-
       </div>
+
       <RapidAction 
         isOpen={isRapidActionOpen} 
         onClose={() => setIsRapidActionOpen(false)} 
