@@ -26,7 +26,7 @@ const NAV_SECTIONS = [
     label: 'Operations',
     items: [
       { id: 'operations', label: 'Yield & Sales', icon: '🚜', color: 'teal' },
-      { id: 'labor', label: 'Labor', icon: '👷', color: 'amber' },
+      { id: 'labor', label: 'Workers', icon: '👷', color: 'amber' },
       { id: 'livestock', label: 'Livestock', icon: '🐄', color: 'red' },
       { id: 'crops', label: 'Crops', icon: '🌿', color: 'green' },
       { id: 'maintenance', label: 'Maintenance', icon: '🔧', color: 'purple' },
