@@ -201,7 +201,7 @@ export default function PlatformShell() {
       <div className="main-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', position: 'relative', overflow: 'hidden' }}>
         <header className="top-header" style={{ height: '80px', background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(32px)', WebkitBackdropFilter: 'blur(32px)', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', padding: '0 40px', display: 'flex', alignItems: 'center', gap: '20px', zIndex: 40 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
-            <div className="header-title-container" style={{ width: '225px' }}>
+            <div className="header-title-container" style={{ width: '224px' }}>
               <span className="header-title" style={{ fontSize: '18px', fontWeight: 800, color: '#fff' }}>{PAGE_TITLES[activePage] || 'Dashboard'}</span>
               <div className="header-breadcrumbs" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase' }}>BC ESTATE</div>
             </div>

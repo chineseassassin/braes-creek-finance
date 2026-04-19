@@ -112,7 +112,7 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
         <nav className="sidebar-nav custom-scrollbar" style={{ padding: '16px 12px', flex: 1, overflowY: 'hidden' }}>
           {navSections.map(section => (
             <div key={section.label} style={{ marginBottom: '16px' }}>
-              <div style={{ padding: '0 12px', fontSize: '9px', fontWeight: 900, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>
+              <div style={{ padding: '0 12px', fontSize: '9px', fontWeight: 900, color: 'rgba(255,255,255,0.9)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '8px' }}>
                 {section.label}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -133,8 +133,10 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
                       alignItems: 'center',
                       gap: '12px',
                       transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                      color: activePage === item.id ? '#fff' : 'rgba(255,255,255,0.45)',
-                      background: activePage === item.id ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
+                      color: activePage === item.id ? '#00F5FF' : 'rgba(255,255,255,0.45)',
+                      background: activePage === item.id ? 'rgba(0, 245, 255, 0.05)' : 'transparent',
+                      border: activePage === item.id ? '1px solid rgba(0, 245, 255, 0.1)' : '1px solid transparent',
+                      boxShadow: activePage === item.id ? '0 0 20px rgba(0, 245, 255, 0.05)' : 'none',
                       cursor: 'pointer',
                       position: 'relative'
                     }}
