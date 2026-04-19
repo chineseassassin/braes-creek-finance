@@ -95,23 +95,18 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
           transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
       >
-        <div className="sidebar-logo" style={{ height: '70px', padding: '0 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ padding: '3px', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.03)' }}>
-              <Image
-                src="/logo-transparent.png"
-                alt="BC"
-                width={28}
-                height={28}
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-            <div style={{ overflow: 'hidden' }}>
-              <h1 style={{ fontSize: '11px', fontWeight: 900, letterSpacing: '0.05em', whiteSpace: 'nowrap', color: '#fff' }}>
-                BRAES CREEK <span style={{ color: 'rgba(255,255,255,0.3)' }}>HUB</span>
-              </h1>
-            </div>
-          </div>
+        <div className="sidebar-logo" style={{ height: '70px', padding: '0 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img
+            src="/bc-logo-final-v72.png"
+            alt="Braes Creek"
+            style={{ 
+              width: '120px', 
+              height: 'auto', 
+              filter: 'drop-shadow(0 0 15px rgba(255, 215, 0, 0.2))',
+              mixBlendMode: 'screen',
+              opacity: 0.9
+            }}
+          />
         </div>
 
         <nav className="sidebar-nav custom-scrollbar" style={{ padding: '16px 12px', flex: 1, overflowY: 'hidden' }}>
