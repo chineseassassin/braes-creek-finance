@@ -268,18 +268,17 @@ export default function LaborPage() {
 
       {tab === 'entries' && (
         <>
-          {/* Filters */}
           <div className="filter-bar">
             <div className="search-wrapper">
               <span className="search-icon">🔍</span>
               <input className="search-input" placeholder="Search worker or task..." value={search} onChange={e => setSearch(e.target.value)} />
             </div>
-            <select className="form-select" style={{ width: 180 }} value={workerFilter} onChange={e => setWorkerFilter(e.target.value)}>
-              <option value="">All Workers</option>
+            <select className="form-select" style={{ flex: '0 0 200px' }} value={workerFilter} onChange={e => setWorkerFilter(e.target.value)}>
+              <option value="">All Personnel</option>
               {workers.map(w => <option key={w}>{w}</option>)}
             </select>
-            <select className="form-select" style={{ width: 180 }} value={segFilter} onChange={e => setSegFilter(e.target.value)}>
-              <option value="">All Segments</option>
+            <select className="form-select" style={{ flex: '0 0 200px' }} value={segFilter} onChange={e => setSegFilter(e.target.value)}>
+              <option value="">Operational Nodes</option>
               {BUSINESS_SEGMENTS.map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
             </select>
           </div>

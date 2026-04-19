@@ -95,16 +95,17 @@ export default function Sidebar({ activePage, onNavigate, onLogout }: SidebarPro
           transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
         }}
       >
-        <div className="sidebar-logo" style={{ height: '70px', padding: '0 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="sidebar-logo" style={{ height: '100px', padding: '12px 24px 0 24px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <img
             src="/bc-logo-final-v72.png"
             alt="Braes Creek"
             style={{ 
-              width: '120px', 
+              width: '140px', 
               height: 'auto', 
-              filter: 'drop-shadow(0 0 15px rgba(255, 215, 0, 0.2))',
+              filter: 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.25))',
               mixBlendMode: 'screen',
-              opacity: 0.9
+              display: 'block',
+              opacity: 0.95
             }}
           />
         </div>

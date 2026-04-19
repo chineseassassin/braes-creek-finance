@@ -76,50 +76,77 @@ export default function Dashboard() {
 
   return (
     <div style={{ animation: 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-      {/* Top Header Row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', overflow: 'visible' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          <div style={{ width: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px 0' }}>
+      {/* Top Header Row - RE-ENGINEERED FOR STABILITY */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: '48px', 
+        overflow: 'visible',
+        gap: '40px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '32px', flex: 1 }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            padding: '12px 0',
+            flexShrink: 0
+          }}>
             <img
               src="/bc-logo-final-v72.png"
               alt="Braes Creek"
               style={{ 
                 width: '180px', 
                 height: 'auto', 
-                filter: 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.2))',
+                filter: 'drop-shadow(0 0 25px rgba(255, 215, 0, 0.25))',
                 mixBlendMode: 'screen',
                 display: 'block'
               }}
             />
           </div>
-          <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.1)' }} />
-          <div>
-            <h1 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.04em' }}>Strategic Intelligence</h1>
-            <p style={{ color: 'hsl(var(--text-muted))', fontSize: '14px', fontWeight: 500 }}>
-              {filterSegment ? `Drill-down: ${filterSegment}` : 'Live executive overview of Braes Creek Estate.'}
+          <div style={{ width: '1px', height: '48px', background: 'rgba(255,255,255,0.08)', flexShrink: 0 }} />
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-0.04em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Strategic Intelligence</h1>
+            <p style={{ color: 'hsl(var(--text-muted))', fontSize: '14px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {filterSegment ? `Analytic Drill-down: ${filterSegment}` : 'Live executive overview of Braes Creek Estate.'}
             </p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexShrink: 0 }}>
            {filterSegment && (
              <button 
                onClick={() => setFilterSegment(null)} 
                className="btn btn-secondary-glass"
-               style={{ height: '38px', padding: '0 20px', fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}
+               style={{ height: '40px', padding: '0 24px', fontSize: '11px', fontWeight: 900 }}
              >
-               RESET VIEW
+               RESET AGGREGATE
              </button>
            )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '100px', background: 'hsl(var(--bg-secondary))', border: '1px solid hsl(var(--border))' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px', 
+            padding: '10px 20px', 
+            borderRadius: '100px', 
+            background: 'rgba(255, 255, 255, 0.03)', 
+            border: '1px solid rgba(255, 255, 255, 0.08)' 
+          }}>
              <span style={{ fontSize: '20px' }}>{weatherIcon}</span>
-             <span style={{ fontSize: '14px', fontWeight: 800 }}>{temperature}</span>
+             <span style={{ fontSize: '14px', fontWeight: 900, letterSpacing: '-0.02em' }}>{temperature}</span>
           </div>
           <button 
-            className="btn btn-secondary-glass" 
+            className="btn btn-primary" 
             onClick={() => setIsRapidActionOpen(true)}
-            style={{ height: '48px', padding: '0 32px', cursor: 'pointer', fontSize: '13px', fontWeight: 900 }}
+            style={{ 
+              height: '48px', 
+              padding: '0 32px', 
+              fontSize: '13px', 
+              fontWeight: 900,
+              boxShadow: '0 20px 40px rgba(0, 245, 255, 0.15)'
+            }}
           >
-            ➕ Rapid Action
+            ➕ RAPID ACTION
           </button>
         </div>
       </div>

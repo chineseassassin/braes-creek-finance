@@ -8,12 +8,18 @@ function AddLivestockModal({ onClose }: { onClose: () => void }) {
     animal_type: '',
     breed: '',
     quantity: '',
+    mortality_qty: '0',
     purchase_date: new Date().toISOString().split('T')[0],
     acquisition_date: new Date().toISOString().split('T')[0],
     acquisition_cost: '',
     current_value: '',
     location: '',
     segment_id: '',
+    slaughter_date: '',
+    slaughter_qty: '',
+    slaughter_weight: '',
+    gross_profit: '',
+    net_profit: '',
     notes: '',
   });
 
@@ -23,11 +29,16 @@ function AddLivestockModal({ onClose }: { onClose: () => void }) {
       animal_type: form.animal_type,
       breed: form.breed,
       quantity: parseInt(form.quantity),
+      mortality_qty: parseInt(form.mortality_qty || '0'),
       purchase_date: form.purchase_date,
       acquisition_date: form.acquisition_date,
       acquisition_cost: parseFloat(form.acquisition_cost),
       current_value: parseFloat(form.current_value),
-      mortality_qty: 0,
+      slaughter_date: form.slaughter_date || undefined,
+      slaughter_qty: form.slaughter_qty ? parseInt(form.slaughter_qty) : undefined,
+      slaughter_weight: form.slaughter_weight ? parseFloat(form.slaughter_weight) : undefined,
+      gross_profit: form.gross_profit ? parseFloat(form.gross_profit) : undefined,
+      net_profit: form.net_profit ? parseFloat(form.net_profit) : undefined,
       location: form.location,
       segment_id: form.segment_id,
       notes: form.notes,
@@ -37,59 +48,88 @@ function AddLivestockModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content glass" onClick={e => e.stopPropagation()}>
+      <div className="modal-content glass" style={{ maxWidth: '800px' }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-title">🐄 Add New Livestock Unit</div>
+          <div className="modal-title">🐄 Add Livestock / Update Metrics</div>
           <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
         </div>
-        <form onSubmit={handleSubmit} className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <form onSubmit={handleSubmit} className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
           <div className="form-group">
             <label>Animal Type</label>
-            <input type="text" className="form-input" placeholder="e.g. Broiler Chicken, Boer Goat" required value={form.animal_type} onChange={e => setForm({...form, animal_type: e.target.value})} />
+            <input type="text" className="form-input" placeholder="e.g. Broiler Chicken" required value={form.animal_type} onChange={e => setForm({...form, animal_type: e.target.value})} />
           </div>
           <div className="form-group">
             <label>Breed</label>
-            <input type="text" className="form-input" placeholder="e.g. Ross 308, Angus" value={form.breed} onChange={e => setForm({...form, breed: e.target.value})} />
+            <input type="text" className="form-input" placeholder="e.g. Ross 308" value={form.breed} onChange={e => setForm({...form, breed: e.target.value})} />
           </div>
           <div className="form-group">
             <label>Initial Quantity</label>
             <input type="number" className="form-input" required value={form.quantity} onChange={e => setForm({...form, quantity: e.target.value})} />
           </div>
+          
+          <div className="form-group">
+            <label>Mortality Qty</label>
+            <input type="number" className="form-input" value={form.mortality_qty} onChange={e => setForm({...form, mortality_qty: e.target.value})} />
+          </div>
           <div className="form-group">
             <label>Location / Pen</label>
-            <input type="text" className="form-input" placeholder="e.g. House A, Back Pasture" required value={form.location} onChange={e => setForm({...form, location: e.target.value})} />
+            <input type="text" className="form-input" placeholder="House A" required value={form.location} onChange={e => setForm({...form, location: e.target.value})} />
           </div>
+          <div className="form-group">
+            <label>Business Segment</label>
+            <select className="form-select" required value={form.segment_id} onChange={e => setForm({...form, segment_id: e.target.value})}>
+              <option value="">Select...</option>
+              {BUSINESS_SEGMENTS.filter(s => s.id.startsWith('seg-00')).map(s => (
+                <option key={s.id} value={s.id}>{s.icon} {s.name}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="form-group">
             <label>Purchase Date</label>
             <input type="date" className="form-input" required value={form.purchase_date} onChange={e => setForm({...form, purchase_date: e.target.value})} />
           </div>
           <div className="form-group">
-            <label>Internal Track Date</label>
-            <input type="date" className="form-input" value={form.acquisition_date} onChange={e => setForm({...form, acquisition_date: e.target.value})} />
-          </div>
-          <div className="form-group">
-            <label>Total Acquisition Cost ($)</label>
+            <label>Total Acq. Cost ($)</label>
             <input type="number" className="form-input" required value={form.acquisition_cost} onChange={e => setForm({...form, acquisition_cost: e.target.value})} />
           </div>
           <div className="form-group">
             <label>Current Est. Value ($)</label>
             <input type="number" className="form-input" required value={form.current_value} onChange={e => setForm({...form, current_value: e.target.value})} />
           </div>
-          <div className="form-group full-width" style={{ gridColumn: 'span 2' }}>
-            <label>Business Segment</label>
-            <select className="form-select" required value={form.segment_id} onChange={e => setForm({...form, segment_id: e.target.value})}>
-              <option value="">Select segment...</option>
-              {BUSINESS_SEGMENTS.filter(s => ['seg-001','seg-002','seg-003','seg-004','seg-005'].includes(s.id)).map(s => (
-                <option key={s.id} value={s.id}>{s.icon} {s.name}</option>
-              ))}
-            </select>
+
+          <div style={{ gridColumn: 'span 3', padding: '8px 0', borderTop: '1px solid hsl(var(--border) / 0.2)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'hsl(var(--accent-red))', marginBottom: 12 }}>🪓 Slaughter & Profit Analytics (Optional/Updates)</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              <div className="form-group">
+                <label>Slaughter Date</label>
+                <input type="date" className="form-input" value={form.slaughter_date} onChange={e => setForm({...form, slaughter_date: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label>Slaughter Qty</label>
+                <input type="number" className="form-input" value={form.slaughter_qty} onChange={e => setForm({...form, slaughter_qty: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label>Total Slaughter Weight (lbs)</label>
+                <input type="number" step="0.1" className="form-input" value={form.slaughter_weight} onChange={e => setForm({...form, slaughter_weight: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label>Gross Profit ($)</label>
+                <input type="number" className="form-input" value={form.gross_profit} onChange={e => setForm({...form, gross_profit: e.target.value})} />
+              </div>
+              <div className="form-group">
+                <label>Net Profit ($)</label>
+                <input type="number" className="form-input" value={form.net_profit} onChange={e => setForm({...form, net_profit: e.target.value})} />
+              </div>
+            </div>
           </div>
-          <div className="form-group full-width" style={{ gridColumn: 'span 2' }}>
+
+          <div className="form-group full-width" style={{ gridColumn: 'span 3' }}>
             <label>Notes</label>
             <textarea className="form-input" placeholder="Vaccination status, source, etc." value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} />
           </div>
-          <div style={{ gridColumn: 'span 2', marginTop: 8 }}>
-            <button type="submit" className="btn btn-primary w-full">Save Livestock Record</button>
+          <div style={{ gridColumn: 'span 3', marginTop: 8 }}>
+            <button type="submit" className="btn btn-primary w-full">Save Lifecycle Record</button>
           </div>
         </form>
       </div>
