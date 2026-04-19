@@ -131,56 +131,60 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* EXECUTIVE INTELLIGENCE BRIEF */}
-      <div style={{ 
-        background: 'rgba(59, 130, 246, 0.05)', 
-        border: '1px solid rgba(59, 130, 246, 0.2)', 
-        borderRadius: '24px', 
-        padding: '24px 32px', 
-        marginBottom: '32px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '24px',
-        cursor: 'pointer',
-        transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
-      }}>
-        <div style={{ width: '48px', height: '48px', background: '#3b82f6', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🛡️</div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '11px', fontWeight: 900, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Executive Narrative Analysis</div>
-          <div style={{ fontSize: '16px', fontWeight: 700, color: 'hsl(var(--text-primary))', lineHeight: 1.4 }}>
-            {execBrief}
+      {/* EXECUTIVE INTELLIGENCE BRIEF - ADMIN ONLY */}
+      {currentUser?.role === 'admin' && (
+        <div style={{ 
+          background: 'rgba(59, 130, 246, 0.05)', 
+          border: '1px solid rgba(59, 130, 246, 0.2)', 
+          borderRadius: '24px', 
+          padding: '24px 32px', 
+          marginBottom: '32px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '24px',
+          cursor: 'pointer',
+          transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}>
+          <div style={{ width: '48px', height: '48px', background: '#3b82f6', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🛡️</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '11px', fontWeight: 900, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>Executive Narrative Analysis</div>
+            <div style={{ fontSize: '16px', fontWeight: 700, color: 'hsl(var(--text-primary))', lineHeight: 1.4 }}>
+              {execBrief}
+            </div>
+          </div>
+          <button className="btn btn-ghost" style={{ fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}>Full Analysis →</button>
+        </div>
+      )}
+
+      {/* ELITE URGENT ALERT - ADMIN ONLY */}
+      {currentUser?.role === 'admin' && (
+        <div className="alert-urgent" style={{ 
+          background: 'rgba(239, 68, 68, 0.1)', 
+          border: '1px solid rgba(239, 68, 68, 0.2)', 
+          borderRadius: '20px', 
+          padding: '16px 24px', 
+          marginBottom: '32px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '16px',
+          position: 'relative',
+          overflow: 'hidden',
+          cursor: 'pointer'
+        }}>
+          <div style={{ 
+            position: 'absolute', 
+            top: 0, left: '-100%', 
+            width: '50%', height: '100%', 
+            background: 'linear-gradient(90deg, transparent, rgba(239,68,68,0.1), transparent)',
+            animation: 'visionSweep 4s infinite linear'
+          }} />
+          <span style={{ fontSize: '20px', animation: 'blink 1.5s infinite' }}>⚠️</span>
+          <div>
+            <strong style={{ color: '#ef4444', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '12px' }}>Security Protocol Alpha:</strong>
+            <span style={{ color: '#fca5a5', marginLeft: '12px', fontSize: '13px', fontWeight: 600 }}>Unexpected variance detected in High-Yield Crop segment. Review liquidity immediately.</span>
           </div>
         </div>
-        <button className="btn btn-ghost" style={{ fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}>Full Analysis →</button>
-      </div>
-
-      {/* ELITE URGENT ALERT - RED SWEEP */}
-      <div className="alert-urgent" style={{ 
-        background: 'rgba(239, 68, 68, 0.1)', 
-        border: '1px solid rgba(239, 68, 68, 0.2)', 
-        borderRadius: '20px', 
-        padding: '16px 24px', 
-        marginBottom: '32px', 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '16px',
-        position: 'relative',
-        overflow: 'hidden',
-        cursor: 'pointer'
-      }}>
-        <div style={{ 
-          position: 'absolute', 
-          top: 0, left: '-100%', 
-          width: '50%', height: '100%', 
-          background: 'linear-gradient(90deg, transparent, rgba(239,68,68,0.1), transparent)',
-          animation: 'visionSweep 4s infinite linear'
-        }} />
-        <span style={{ fontSize: '20px', animation: 'blink 1.5s infinite' }}>⚠️</span>
-        <div>
-          <strong style={{ color: '#ef4444', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '12px' }}>Security Protocol Alpha:</strong>
-          <span style={{ color: '#fca5a5', marginLeft: '12px', fontSize: '13px', fontWeight: 600 }}>Unexpected variance detected in High-Yield Crop segment. Review liquidity immediately.</span>
-        </div>
-      </div>
+      )}
 
       {/* BENTO DASHBOARD PANEL */}
       <div className="bento-canvas" style={{ 
