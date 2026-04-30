@@ -4,7 +4,7 @@ import Sidebar from '@/components/Sidebar'
 import Topbar from '@/components/Topbar'
 import { SAMPLE_SEGMENTS, SAMPLE_CATEGORIES } from '@/lib/sample-data'
 
-const SETTING_TABS = ['General', 'Users & Roles', 'Categories', 'Segments', 'Notifications', 'Audit Log']
+const SETTING_TABS = ['General', 'Users & Access', 'Categories', 'Segments', 'Notifications', 'Audit Log']
 
 const SAMPLE_USERS = [
   { id: 'user-1', name: 'Admin User', email: 'admin@agrofarm.tt', role: 'admin', lastLogin: '2024-12-10', status: 'active' },
@@ -122,48 +122,246 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Users & Roles */}
-          {activeTab === 'Users & Roles' && (
-            <div className="card">
-              <div className="card-header">
-                <div className="card-title">👥 Users & Access Control</div>
-                <button className="btn btn-primary btn-sm">+ Invite User</button>
-              </div>
-              <div className="data-table-wrapper">
-                <table className="data-table">
-                  <thead>
-                    <tr><th>User</th><th>Email</th><th>Role</th><th>Last Login</th><th>Status</th><th>Actions</th></tr>
-                  </thead>
-                  <tbody>
-                    {SAMPLE_USERS.map(u => (
-                      <tr key={u.id}>
-                        <td className="primary">
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg, #16a34a, #0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff' }}>
-                              {u.name[0]}
+          {/* Users & Access */}
+          {activeTab === 'Users & Access' && (
+            <div style={{ maxWidth: 840, display: 'flex', flexDirection: 'column', gap: 24 }}>
+              
+              {/* SECTION 1 — TEAM MANAGEMENT */}
+              <div className="card">
+                <div className="card-header" style={{ marginBottom: 16 }}>
+                  <div>
+                     <div className="card-title" style={{ fontSize: 16 }}>Team Management</div>
+                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Manage your organization's members and their system access.</div>
+                  </div>
+                  <button className="btn btn-primary btn-sm">+ Invite User</button>
+                </div>
+                <div className="data-table-wrapper" style={{ overflow: 'visible' }}>
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>User</th><th>Role</th><th>Status</th><th>Last Active</th></tr>
+                    </thead>
+                    <tbody>
+                      {SAMPLE_USERS.map(u => (
+                        <tr key={u.id}>
+                          <td className="primary">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: '#4ade80' }}>
+                                {u.name[0]}
+                              </div>
+                              <div>
+                                 <div style={{ fontWeight: 700, fontSize: 14 }}>{u.name}</div>
+                                 <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email}</div>
+                              </div>
                             </div>
-                            {u.name}
-                          </div>
-                        </td>
-                        <td style={{ fontSize: 12 }}>{u.email}</td>
-                        <td>
-                          <span className={`badge ${u.role === 'admin' ? 'badge-danger' : u.role === 'manager' ? 'badge-warning' : 'badge-info'}`}>
-                            {u.role}
-                          </span>
-                        </td>
-                        <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{u.lastLogin}</td>
-                        <td><span className="badge badge-success">● Active</span></td>
+                          </td>
+                          <td>
+                            <select className="form-select" style={{ padding: '6px 12px', fontSize: 12, minWidth: 140, background: 'var(--bg-card)' }} defaultValue={u.role === 'admin' ? 'Admin' : u.role === 'manager' ? 'Data Entry' : 'View Only'}>
+                               <option>View Only</option>
+                               <option>Data Entry</option>
+                               <option>Admin</option>
+                            </select>
+                          </td>
+                          <td><span className="badge" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#4ade80', fontWeight: 800 }}>● Active</span></td>
+                          <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{u.lastLogin}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* SECTION 2 & 3 — SMART ROLE PREVIEW */}
+              <div className="card">
+                <div className="card-header" style={{ marginBottom: 16 }}>
+                  <div>
+                     <div className="card-title" style={{ fontSize: 16 }}>Smart Role Preview</div>
+                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Capabilities granted to the selected role.</div>
+                  </div>
+                  <select className="form-select" style={{ width: 180, fontWeight: 700 }} defaultValue="Data Entry">
+                     <option>View Only</option>
+                     <option>Data Entry</option>
+                     <option>Admin</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(255,255,255,0.02)', padding: 24, borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#4ade80', fontSize: 13, fontWeight: 600 }}>
+                      <span style={{ fontSize: 14 }}>✔</span> Can add expenses
+                   </div>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#4ade80', fontSize: 13, fontWeight: 600 }}>
+                      <span style={{ fontSize: 14 }}>✔</span> Can log payroll
+                   </div>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#4ade80', fontSize: 13, fontWeight: 600 }}>
+                      <span style={{ fontSize: 14 }}>✔</span> Can update livestock
+                   </div>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#f87171', fontSize: 13, fontWeight: 600 }}>
+                      <span style={{ fontSize: 14 }}>✖</span> Cannot delete data
+                   </div>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#f87171', fontSize: 13, fontWeight: 600 }}>
+                      <span style={{ fontSize: 14 }}>✖</span> Cannot access settings
+                   </div>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#f87171', fontSize: 13, fontWeight: 600 }}>
+                      <span style={{ fontSize: 14 }}>✖</span> Cannot modify reports
+                   </div>
+                </div>
+              </div>
+
+              {/* NEW SECTION — TEMPORARY ACCESS ASSIGNMENTS */}
+              <div className="card">
+                <div className="card-header" style={{ marginBottom: 16 }}>
+                  <div>
+                     <div className="card-title" style={{ fontSize: 16 }}>Temporary Access Assignments</div>
+                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Grant limited-time access to specific entry tasks. Missed deadlines notify the owner.</div>
+                  </div>
+                  <button className="btn btn-primary btn-sm" style={{ background: '#f59e0b', color: '#101010', border: 'none', fontWeight: 800 }}>+ New Task Access</button>
+                </div>
+                <div className="data-table-wrapper" style={{ overflow: 'visible' }}>
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Employee</th><th>Task Preset</th><th>Deadline</th><th>Status</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="primary">Mary Joseph</td>
+                        <td style={{ fontSize: 12 }}>Update Livestock Mortality</td>
+                        <td style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600 }}>Due in 2h 15m</td>
+                        <td><span className="badge badge-warning">In Progress</span></td>
                         <td>
                           <div style={{ display: 'flex', gap: 6 }}>
-                            <button className="btn btn-secondary btn-sm">✏️ Edit</button>
-                            <button className="btn btn-ghost btn-sm">🔑</button>
+                             <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>Extend</button>
+                             <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', color: '#f87171' }}>Revoke</button>
                           </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                      <tr>
+                        <td className="primary">James Ali</td>
+                        <td style={{ fontSize: 12 }}>Upload Feed Receipt</td>
+                        <td style={{ fontSize: 12, color: '#f87171', fontWeight: 600 }}>Expired (Yesterday)</td>
+                        <td><span className="badge badge-danger">Missed</span></td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                             <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }}>Reminder</button>
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="primary">Jane Doe</td>
+                        <td style={{ fontSize: 12 }}>Log Today's Labor</td>
+                        <td style={{ fontSize: 12, color: '#4ade80', fontWeight: 600 }}>Submitted</td>
+                        <td><span className="badge badge-success">Reviewing</span></td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                             <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', color: '#4ade80' }}>View</button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
+
+              {/* SECTION 4 — MODULE ACCESS */}
+              <div className="card">
+                <div className="card-header" style={{ marginBottom: 16 }}>
+                  <div>
+                     <div className="card-title" style={{ fontSize: 16 }}>Module Access Defaults</div>
+                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Enable or disable core system modules for non-admin users.</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                   {['Expenses', 'Payroll', 'Livestock', 'Crops'].map((mod, i) => (
+                      <div key={mod} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: 'rgba(255,255,255,0.02)', borderRadius: i === 0 ? '12px 12px 0 0' : i === 3 ? '0 0 12px 12px' : 0, borderBottom: i < 3 ? '1px solid var(--border-subtle)' : 'none' }}>
+                         <div style={{ fontWeight: 600, fontSize: 13 }}>{mod}</div>
+                         <label className="settings-switch">
+                            <input type="checkbox" defaultChecked={true} />
+                            <span className="settings-slider"></span>
+                         </label>
+                      </div>
+                   ))}
+                </div>
+              </div>
+
+              {/* SECTION 5 — SECURITY PANEL */}
+              <div className="card">
+                <div className="card-header" style={{ marginBottom: 16 }}>
+                  <div>
+                     <div className="card-title" style={{ fontSize: 16 }}>Security Panel</div>
+                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Authentication and session management.</div>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                   <div style={{ padding: 20, background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Change Password</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>Last changed 45 days ago.</div>
+                      <button className="btn btn-secondary" style={{ width: '100%', fontSize: 12 }}>Update Password</button>
+                   </div>
+                   <div style={{ padding: 20, background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Two-Factor Auth</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>Secure your account with 2FA.</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                         <span style={{ fontSize: 12, color: '#4ade80', fontWeight: 800 }}>Enabled</span>
+                         <label className="settings-switch"><input type="checkbox" defaultChecked /><span className="settings-slider"></span></label>
+                      </div>
+                   </div>
+                   <div style={{ gridColumn: 'span 2', padding: 20, background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                         <div>
+                            <div style={{ fontWeight: 700, fontSize: 13 }}>Active Sessions</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Current login activity.</div>
+                         </div>
+                         <button className="btn btn-secondary" style={{ fontSize: 11, color: '#f87171', borderColor: 'rgba(248,113,113,0.3)' }}>Logout All Sessions</button>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(0,0,0,0.2)', borderRadius: 8 }}>
+                         <div>
+                            <div style={{ fontSize: 12, fontWeight: 700 }}>MacBook Pro (Chrome)</div>
+                            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>New York, USA — IP: 192.168.1.1</div>
+                         </div>
+                         <div style={{ fontSize: 11, fontWeight: 600, color: '#4ade80' }}>Current Session</div>
+                      </div>
+                   </div>
+                </div>
+              </div>
+
+              {/* SECTION 6 — DANGER ZONE UPGRADE */}
+              <div className="card" style={{ border: '1px solid rgba(239, 68, 68, 0.3)', background: 'linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, transparent 100%)' }}>
+                <div className="card-header" style={{ marginBottom: 16, borderBottom: '1px solid rgba(239, 68, 68, 0.1)', paddingBottom: 16 }}>
+                  <div>
+                     <div className="card-title" style={{ fontSize: 16, color: '#f87171' }}>Danger Zone</div>
+                     <div style={{ fontSize: 12, color: '#fca5a5' }}>Destructive operations.</div>
+                  </div>
+                </div>
+                <div style={{ padding: '8px 0' }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                     <div>
+                       <div style={{ fontWeight: 700, color: '#f87171', fontSize: 14, marginBottom: 4 }}>System Factory Reset</div>
+                       <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                          This will permanently delete all records, transactions, users, and logs.<br/>
+                          <span style={{ fontWeight: 800, color: '#fca5a5' }}>Warning: 4,129 records will be destroyed.</span>
+                       </div>
+                     </div>
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 220 }}>
+                        <input type="text" placeholder='Type "RESET" to confirm' className="form-input" style={{ borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(0,0,0,0.2)' }} />
+                        <button className="btn" style={{ background: '#ef4444', color: '#fff', fontSize: 12, fontWeight: 800, padding: '10px' }}>PERMANENTLY RESET</button>
+                     </div>
+                   </div>
+                </div>
+              </div>
+
+              <style jsx>{`
+                 .settings-switch {
+                    position: relative; display: inline-block; width: 36px; height: 20px;
+                 }
+                 .settings-switch input { opacity: 0; width: 0; height: 0; }
+                 .settings-slider {
+                    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+                    background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 34px;
+                 }
+                 .settings-slider:before {
+                    position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
+                    background-color: white; transition: .4s; border-radius: 50%;
+                 }
+                 input:checked + .settings-slider { background-color: #22c55e; }
+                 input:checked + .settings-slider:before { transform: translateX(16px); }
+              `}</style>
             </div>
           )}
 

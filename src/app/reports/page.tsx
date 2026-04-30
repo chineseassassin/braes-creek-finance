@@ -7,17 +7,24 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line
 } from 'recharts'
+import { 
+  Calendar, ArrowRight, BarChart3, Banknote, Landmark, 
+  Users, Sprout, FileText, Download, Printer, TrendingUp, 
+  TrendingDown, DollarSign, PieChart as LucidePieChart, Activity,
+  Layers, Package, ChevronRight, Calculator, Clock
+} from 'lucide-react'
+import React from 'react'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n)
 
 const REPORT_TYPES = [
-  { id: 'pl', label: 'Profit & Loss', icon: '📊', desc: 'Revenue vs expenses summary' },
-  { id: 'cashflow', label: 'Cash Flow', icon: '💵', desc: 'Monthly in/out analysis' },
-  { id: 'loans', label: 'Loan Summary', icon: '🏦', desc: 'Repayment status & schedules' },
-  { id: 'labor', label: 'Labor Efficiency', icon: '👷', desc: 'Hours & cost by worker/task' },
-  { id: 'segment', label: 'Segment P&L', icon: '🗂️', desc: 'By business division' },
-  { id: 'crop', label: 'Crop Cost Report', icon: '🌱', desc: 'Inputs per crop type' },
+  { id: 'pl', label: 'Profit & Loss', icon: <BarChart3 size={20} />, desc: 'Revenue vs expenses summary' },
+  { id: 'cashflow', label: 'Cash Flow', icon: <Banknote size={20} />, desc: 'Monthly in/out analysis' },
+  { id: 'loans', label: 'Loan Summary', icon: <Landmark size={20} />, desc: 'Repayment status & schedules' },
+  { id: 'labor', label: 'Labor Efficiency', icon: <Users size={20} />, desc: 'Hours & cost by worker/task' },
+  { id: 'segment', label: 'Segment P&L', icon: <Layers size={20} />, desc: 'By business division' },
+  { id: 'crop', label: 'Crop Cost Report', icon: <Sprout size={20} />, desc: 'Inputs per crop type' },
 ]
 
 export default function ReportsPage() {
@@ -86,14 +93,38 @@ export default function ReportsPage() {
 
           {/* Date Range */}
           <div className="card" style={{ marginBottom: 20 }}>
-            <div className="card-body" style={{ padding: '14px 20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>📅 Report Period:</span>
-                <input type="date" className="form-input" style={{ width: 160 }} value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
-                <span style={{ color: 'var(--text-muted)' }}>→</span>
-                <input type="date" className="form-input" style={{ width: 160 }} value={dateTo} onChange={e => setDateTo(e.target.value)} />
-                <button className="btn btn-primary btn-sm">Generate Report</button>
-                <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>Data as of Dec 31, 2024</span>
+            <div className="card-body" style={{ padding: '20px 24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ 
+                    background: 'rgba(34,197,94,0.12)', 
+                    width: 42, 
+                    height: 42, 
+                    borderRadius: 12, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    border: '1px solid rgba(34,197,94,0.2)'
+                  }}>
+                     <Calendar size={20} color="#FFFFFF" strokeWidth={2.5} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                     <span style={{ fontSize: 10, fontWeight: 900, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Intelligence Period</span>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <input type="date" className="form-input" style={{ width: 140, height: 34, fontSize: 12 }} value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+                        <ArrowRight size={14} color="var(--color-text-muted)" />
+                        <input type="date" className="form-input" style={{ width: 140, height: 34, fontSize: 12 }} value={dateTo} onChange={e => setDateTo(e.target.value)} />
+                     </div>
+                  </div>
+                </div>
+
+                <button className="btn btn-primary" style={{ height: 44, padding: '0 24px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+                   <Activity size={18} /> <span style={{ fontWeight: 850 }}>Generate Tactical Report</span>
+                </button>
+                <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                   <span className="pulse-dot" style={{ display: 'inline-block', marginRight: 8, verticalAlign: 'middle' }}></span>
+                   Live Data Hub: Dec 31, 2024
+                </span>
               </div>
             </div>
           </div>
@@ -103,14 +134,16 @@ export default function ReportsPage() {
             <>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
                 {[
-                  { label: 'Est. Revenue', val: estimatedRevenue, color: '#22c55e', icon: '💰' },
-                  { label: 'Total Expenses', val: totalExpenses + totalPayroll, color: '#ef4444', icon: '💸' },
-                  { label: 'Net Income', val: estimatedRevenue - totalExpenses - totalPayroll, color: '#3b82f6', icon: '📈' },
+                  { label: 'Est. Revenue', val: estimatedRevenue, color: '#22c55e', icon: <DollarSign size={18}/> },
+                  { label: 'Total Expenses', val: totalExpenses + totalPayroll, color: '#ef4444', icon: <TrendingDown size={18}/> },
+                  { label: 'Net Income', val: estimatedRevenue - totalExpenses - totalPayroll, color: '#3b82f6', icon: <TrendingUp size={18}/> },
                 ].map(item => (
-                  <div key={item.label} className="kpi-card" style={{ '--kpi-color': item.color } as any}>
-                    <div className="kpi-icon">{item.icon}</div>
-                    <div className="kpi-label" style={{ marginTop: 8 }}>{item.label}</div>
-                    <div className="kpi-value" style={{ color: item.color }}>{fmt(item.val)}</div>
+                  <div key={item.label} className="kpi-card" style={{ '--kpi-color': item.color, display: 'flex', alignItems: 'center', gap: 16, padding: '20px 24px' } as any}>
+                    <div className="kpi-icon" style={{ width: 44, height: 44, borderRadius: 12, background: `${item.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color }}>{item.icon}</div>
+                    <div>
+                       <div className="kpi-label" style={{ marginBottom: 2 }}>{item.label}</div>
+                       <div className="kpi-value" style={{ color: item.color, fontSize: 24, fontWeight: 900 }}>{fmt(item.val)}</div>
+                    </div>
                   </div>
                 ))}
               </div>

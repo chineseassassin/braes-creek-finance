@@ -1,242 +1,500 @@
-'use client'
-import { useState } from 'react'
-import Sidebar from '@/components/Sidebar'
-import Topbar from '@/components/Topbar'
-import { SAMPLE_PAYROLL, SAMPLE_SEGMENTS } from '@/lib/sample-data'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+"use client";
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n)
+import { useEffect, useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import Sidebar from "@/components/Sidebar";
+import NotificationCenter from "@/components/NotificationCenter";
+import ThemeToggle from "@/components/ThemeToggle";
+import { useDashboardStore } from '@/store/useDashboardStore';
+import { useUIStore } from '@/store/useUIStore';
+import { useAppStore } from '@/store/useAppStore';
+import { useWorkflowStore } from '@/store/useWorkflowStore';
+import { toast, Toaster } from 'react-hot-toast';
+import { 
+  Plus, Search, Filter, Download, 
+  DollarSign, Users, Clock, RefreshCw,
+  BarChart3, Calendar, FileText, Banknote,
+  AlertCircle, ChevronRight, MoreVertical,
+  Zap, CheckCircle2, Wallet, ArrowRight,
+  TrendingUp, TrendingDown, Target, Sparkles,
+  PieChart, Activity, X, Trash2, Edit2, Copy
+} from "lucide-react";
 
 export default function PayrollPage() {
-  const [payroll, setPayroll] = useState(SAMPLE_PAYROLL)
-  const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState({
-    employee_name: '', employee_id: '', pay_period_start: '', pay_period_end: '',
-    base_salary: '', overtime_hours: '0', overtime_rate: '0', deductions: '0',
-    segment_id: '', notes: ''
-  })
+  const searchParams = useSearchParams();
+  const highlightId = searchParams.get('highlight');
+  const { transactions, fetchTransactions, addTransaction } = useDashboardStore();
+  const { sidebarCollapsed } = useUIStore();
+  const { currentUser, switchRole } = useAppStore();
+  const { addApprovalRequest } = useWorkflowStore();
 
-  const totalNetPay = payroll.reduce((s, p) => s + p.net_pay, 0)
-  const totalBaseSalary = payroll.reduce((s, p) => s + p.base_salary, 0)
-  const totalDeductions = payroll.reduce((s, p) => s + p.deductions, 0)
-  const totalOvertime = payroll.reduce((s, p) => s + p.overtime_hours * p.overtime_rate, 0)
-  const pendingCount = payroll.filter(p => p.status === 'pending').length
+  const [mountedTime, setMountedTime] = useState("");
+  
+  // States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [areaFilter, setAreaFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
 
-  const employeeChart = payroll.map(p => ({
-    name: p.employee_name.split(' ')[0],
-    base: p.base_salary,
-    overtime: p.overtime_hours * p.overtime_rate,
-    deductions: -p.deductions,
-    net: p.net_pay,
-  }))
-
-  const calcNet = () => {
-    const base = parseFloat(form.base_salary) || 0
-    const ot = (parseFloat(form.overtime_hours) || 0) * (parseFloat(form.overtime_rate) || 0)
-    const ded = parseFloat(form.deductions) || 0
-    return base + ot - ded
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const newRec = {
-      id: `pay-${Date.now()}`,
-      ...form,
-      base_salary: parseFloat(form.base_salary) || 0,
-      overtime_hours: parseFloat(form.overtime_hours) || 0,
-      overtime_rate: parseFloat(form.overtime_rate) || 0,
-      deductions: parseFloat(form.deductions) || 0,
-      net_pay: calcNet(),
-      status: 'pending' as const,
-      created_by: 'user-1',
-      created_at: new Date().toISOString(),
+  useEffect(() => {
+    if (highlightId) {
+      const el = document.getElementById(`row-${highlightId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('highlight-flash');
+      }
     }
-    setPayroll(prev => [newRec as any, ...prev])
-    setShowModal(false)
-  }
+  }, [highlightId, transactions]);
+
+  // Form State
+  const [form, setForm] = useState({
+    name: '', role: '', area: 'Poultry', hours: '', rate: '', overtime: '', date: new Date().toISOString().split('T')[0]
+  });
+
+  useEffect(() => {
+    fetchTransactions();
+    setMountedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  }, [fetchTransactions]);
+
+  const payrollRecords = useMemo(() => {
+    // Merge mock records with live store transactions of category 'Payroll'
+    const livePayroll = transactions.filter(t => t.category === 'Payroll' || t.description.toLowerCase().includes('payroll'))
+      .map(t => ({
+        id: t.id,
+        name: t.description.split(' - ')[0] || 'Unknown',
+        role: 'Farm Operator',
+        area: (t as any).segment_id || 'General',
+        hours: 0, rate: 0, overtime: 0,
+        total: t.amount,
+        date: t.date,
+        status: t.status === 'approved' ? 'Paid' : 'Pending'
+      }));
+
+    const mockRecords = [
+      { id: 'm1', name: 'John Doe', role: 'Farm Manager', area: 'General Labor', hours: 40, rate: 35, overtime: 5, total: 1575, date: '2023-10-24', status: 'Paid' },
+      { id: 'm2', name: 'Jane Smith', role: 'Livestock Specialist', area: 'Poultry', hours: 42, rate: 28, overtime: 8, total: 1512, date: '2023-10-24', status: 'Approved' },
+      { id: 'm3', name: 'Mike Johnson', role: 'Equipment Operator', area: 'Maintenance', hours: 38, rate: 25, overtime: 0, total: 950, date: '2023-10-23', status: 'Pending' },
+    ];
+
+    return [...livePayroll, ...mockRecords];
+  }, [transactions]);
+
+  const hasData = payrollRecords.length > 0;
+
+  const filteredRecords = useMemo(() => {
+    return payrollRecords.filter(r => {
+      const matchSearch = r.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchArea = areaFilter === "All" || r.area === areaFilter;
+      const matchStatus = statusFilter === "All" || r.status === statusFilter;
+      return matchSearch && matchArea && matchStatus;
+    });
+  }, [payrollRecords, searchTerm, areaFilter, statusFilter]);
+
+  const stats = useMemo(() => {
+     const approved = payrollRecords.filter(r => r.status === 'Paid' || r.status === 'Approved');
+     const total = approved.reduce((sum, r) => sum + r.total, 0);
+     const hours = approved.reduce((sum, r) => sum + r.hours + r.overtime, 0);
+     const ot = approved.reduce((sum, r) => sum + (r.overtime * r.rate * 1.5), 0);
+     return { total, hours, ot };
+  }, [payrollRecords]);
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    const h = parseFloat(form.hours) || 0;
+    const r = parseFloat(form.rate) || 0;
+    const o = parseFloat(form.overtime) || 0;
+    const totalPay = (h * r) + (o * r * 1.5);
+
+    const isDataEntry = currentUser.role === 'data-entry';
+    const status = isDataEntry ? 'pending' : 'approved';
+
+    const newRecord = await addTransaction({
+      type: 'expense',
+      category: 'Payroll',
+      description: `${form.name} - ${form.role}`,
+      amount: totalPay,
+      date: form.date,
+      status: status,
+    });
+
+    if (isDataEntry && newRecord) {
+       addApprovalRequest({
+         entity_type: 'labor',
+         entity_id: newRecord.id,
+         requester_id: currentUser.id,
+         priority: totalPay > 2000 ? 'high' : 'medium',
+         status: 'pending'
+       });
+       toast.success('Payroll submitted for approval', { icon: '⏳', style: { background: '#101010', color: '#fff' } });
+    } else if (!isDataEntry) {
+       toast.success('Payroll entry approved', { icon: '✅', style: { background: '#101010', color: '#fff' } });
+    }
+
+    setIsModalOpen(false);
+    setForm({ name: '', role: '', area: 'Poultry', hours: '', rate: '', overtime: '', date: new Date().toISOString().split('T')[0] });
+  };
+
+  const costByArea = [
+    { name: 'Poultry', value: 4200, color: 'var(--color-info)' },
+    { name: 'Crops', value: 3800, color: 'var(--color-primary)' },
+    { name: 'Livestock', value: 2500, color: 'var(--color-warning)' },
+    { name: 'Maintenance', value: 1800, color: 'var(--color-danger)' },
+    { name: 'Transport', value: 1200, color: 'var(--color-ai)' },
+    { name: 'General Labor', value: 900, color: 'var(--color-text-muted)' },
+  ];
 
   return (
-    <div className="app-shell">
+    <div style={{ display: 'flex', minHeight: '100vh', maxWidth: '100vw', overflow: 'hidden', background: 'var(--color-bg-body)' }}>
+      <Toaster position="top-right" />
       <Sidebar />
-      <div className="main-content">
-        <Topbar
-          title="Payroll"
-          subtitle="Employee compensation, deductions & payment tracking"
-          actions={<button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>+ Add Payroll</button>}
-        />
-        <div className="page-container">
-          {pendingCount > 0 && (
-            <div className="alert alert-warning" style={{ marginBottom: 16 }}>
-              ⏳ <strong>{pendingCount} payroll record(s)</strong> are pending payment.
-            </div>
-          )}
 
-          <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-            <div className="kpi-card" style={{ '--kpi-color': '#6366f1' } as any}>
-              <div className="kpi-label">Total Net Pay</div>
-              <div className="kpi-value">{fmt(totalNetPay)}</div>
-              <div className="kpi-sub">{payroll.length} employees</div>
-            </div>
-            <div className="kpi-card" style={{ '--kpi-color': '#3b82f6' } as any}>
-              <div className="kpi-label">Base Salaries</div>
-              <div className="kpi-value">{fmt(totalBaseSalary)}</div>
-              <div className="kpi-sub">before adjustments</div>
-            </div>
-            <div className="kpi-card" style={{ '--kpi-color': '#10b981' } as any}>
-              <div className="kpi-label">Overtime Paid</div>
-              <div className="kpi-value">{fmt(totalOvertime)}</div>
-              <div className="kpi-sub">extra hours</div>
-            </div>
-            <div className="kpi-card" style={{ '--kpi-color': '#ef4444' } as any}>
-              <div className="kpi-label">Total Deductions</div>
-              <div className="kpi-value">{fmt(totalDeductions)}</div>
-              <div className="kpi-sub">NIS, tax, etc.</div>
-            </div>
+      <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease', overflow: 'hidden' }}>
+        
+        <header style={{ height: 72, background: 'var(--color-surface-sidebar)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid var(--color-border)` }}>
+          <div>
+             <h1 style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Payroll & Labor Control</h1>
+             <p className="label-small">Track labor costs, worker hours, and farm-area productivity</p>
           </div>
-
-          <div className="card section-gap">
-            <div className="card-header"><div className="card-title">Payroll Breakdown by Employee</div></div>
-            <div className="card-body" style={{ paddingTop: 0 }}>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={employeeChart} margin={{ top: 4, right: 0, left: -16, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                  <XAxis dataKey="name" tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#71717a', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(0)}K`} />
-                  <Tooltip formatter={(v: any) => fmt(v)} contentStyle={{ background: '#1f1f23', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }} />
-                  <Bar dataKey="base" name="Base" fill="#3b82f6" stackId="a" fillOpacity={0.8} />
-                  <Bar dataKey="overtime" name="Overtime" fill="#10b981" stackId="a" fillOpacity={0.9} />
-                </BarChart>
-              </ResponsiveContainer>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <div className="label-small" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <RefreshCw size={14} /> Synced: {mountedTime}
             </div>
+            
+            {/* Role Switcher */}
+            <select 
+              className="form-select" 
+              style={{ width: 120, fontSize: 10, padding: '4px 8px', height: 32, background: 'rgba(255,255,255,0.05)', color: '#fff', borderRadius: 8, border: '1px solid var(--color-border)' }}
+              value={currentUser.role}
+              onChange={(e) => switchRole(e.target.value as any)}
+            >
+              <option value="admin">Peter (Admin)</option>
+              <option value="data-entry">Mary (Entry)</option>
+            </select>
+
+            <ThemeToggle />
+            <NotificationCenter />
+            <button className="btn-primary" onClick={() => setIsModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px' }}>
+               <Plus size={16} /> Add Payroll Entry
+            </button>
           </div>
+        </header>
 
-          <div className="card">
-            <div className="card-header">
-              <div className="card-title">Payroll Records</div>
-              <button className="btn btn-secondary btn-sm">📥 Export CSV</button>
-            </div>
-            <div className="data-table-wrapper">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Employee</th>
-                    <th>ID</th>
-                    <th>Period</th>
-                    <th>Base Salary</th>
-                    <th>OT Hours</th>
-                    <th>OT Pay</th>
-                    <th>Deductions</th>
-                    <th>Net Pay</th>
-                    <th>Status</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payroll.map(p => {
-                    const seg = SAMPLE_SEGMENTS.find(s => s.id === p.segment_id)
-                    return (
-                      <tr key={p.id}>
-                        <td className="primary">
-                          <div>{p.employee_name}</div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{seg?.icon} {seg?.name?.split('/')[0].trim()}</div>
-                        </td>
-                        <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{p.employee_id ?? '—'}</td>
-                        <td style={{ fontSize: 12 }}>{p.pay_period_start} → {p.pay_period_end}</td>
-                        <td className="amount">{fmt(p.base_salary)}</td>
-                        <td style={{ textAlign: 'center' }}>{p.overtime_hours}h</td>
-                        <td style={{ color: '#4ade80', fontWeight: 600 }}>{fmt(p.overtime_hours * p.overtime_rate)}</td>
-                        <td style={{ color: '#f87171', fontWeight: 600 }}>{fmt(p.deductions)}</td>
-                        <td className="amount" style={{ fontSize: 14 }}>{fmt(p.net_pay)}</td>
-                        <td>
-                          <span className={`badge ${p.status === 'paid' ? 'badge-success' : 'badge-warning'}`}>
-                            {p.status === 'paid' ? '✓ Paid' : '⏳ Pending'}
-                          </span>
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            {p.status === 'pending' && <button className="btn btn-primary btn-sm">Pay</button>}
-                            <button className="btn btn-ghost btn-sm">✏️</button>
+        <main style={{ padding: '40px', flex: 1, overflowY: 'auto' }} className="page-padding">
+           <div className="max-container">
+          
+              {/* 1. PAYROLL HERO */}
+              <div className="card" style={{ marginBottom: 32, padding: '32px', background: 'linear-gradient(135deg, var(--color-surface-card) 0%, var(--color-surface-elevated) 100%)', position: 'relative', overflow: 'hidden' }}>
+                 <div style={{ position: 'absolute', top: -20, right: -20, width: 200, height: 200, background: 'rgba(34, 197, 94, 0.05)', borderRadius: '50%', filter: 'blur(60px)' }} />
+                 
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1 }}>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+                          <span className="label-small" style={{ color: 'var(--color-text-muted)' }}>Payroll Status:</span>
+                          <span className="badge-warning">REVIEW NEEDED</span>
+                       </div>
+                       
+                       <div className="grid-12" style={{ marginBottom: 32 }}>
+                          <div style={{ gridColumn: 'span 3' }}>
+                             <div className="label-small" style={{ marginBottom: 4 }}>This Week Payroll</div>
+                             <div className="metric-main">${stats.total.toLocaleString()}</div>
                           </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+                          <div style={{ gridColumn: 'span 3' }}>
+                             <div className="label-small" style={{ marginBottom: 4 }}>Total Labor Hours</div>
+                             <div className="metric-main">{stats.hours}h</div>
+                          </div>
+                          <div style={{ gridColumn: 'span 3' }}>
+                             <div className="label-small" style={{ marginBottom: 4 }}>Avg Hourly Rate</div>
+                             <div className="metric-main">$26.50</div>
+                          </div>
+                          <div style={{ gridColumn: 'span 3' }}>
+                             <div className="label-small" style={{ marginBottom: 4 }}>Next Due Date</div>
+                             <div className="metric-main">Oct 31</div>
+                          </div>
+                       </div>
+
+                       <div className="card-elevated" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderRadius: 16, maxWidth: 800 }}>
+                          <Zap size={18} color="var(--color-warning)" />
+                          <div className="text-body" style={{ color: 'var(--color-text-primary)' }}>
+                             <span style={{ fontWeight: 900 }}>AI Insight:</span> {hasData ? "Labor cost is stable, but poultry labor hours increased 14% this week." : "Add worker hours to activate payroll intelligence."}
+                          </div>
+                       </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                       <button className="btn-secondary" style={{ width: 160 }}>Cycle Audit</button>
+                       <button className="btn-primary" style={{ width: 160 }}>Approve All</button>
+                    </div>
+                 </div>
+              </div>
+
+              {/* 2. PAYROLL SNAPSHOT CARDS */}
+              <div className="grid-12" style={{ gap: 16, marginBottom: 32 }}>
+                 {[
+                    { label: 'Total Payroll', val: `$${stats.total.toLocaleString()}`, trend: '+4.2%', color: 'var(--color-primary)', insight: 'Within monthly budget' },
+                    { label: 'Hours Worked', val: `${stats.hours}h`, trend: '+2.1%', color: 'var(--color-info)', insight: 'High harvest activity' },
+                    { label: 'Avg Hourly Rate', val: '$26.50', trend: '0%', color: 'var(--color-text-muted)', insight: 'Stable vs last period' },
+                    { label: 'Overtime Cost', val: `$${stats.ot.toLocaleString()}`, trend: '+12.5%', color: 'var(--color-danger)', insight: 'Critical spike detected' },
+                    { label: 'Highest Labor Area', val: 'Poultry', trend: '+14%', color: 'var(--color-warning)', insight: 'Needs efficiency audit' }
+                 ].map((card, i) => (
+                    <div key={i} style={{ gridColumn: 'span 2' }} className="card-elevated" style={{ gridColumn: 'span 2', padding: '24px' }}>
+                       <div className="label-small" style={{ marginBottom: 16 }}>{card.label}</div>
+                       <div className="metric-main" style={{ fontSize: 24, marginBottom: 4 }}>{card.val}</div>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 900, color: card.color, marginBottom: 12 }}>
+                          <TrendingUp size={14} /> {card.trend}
+                       </div>
+                       <div style={{ height: 1, background: 'var(--color-border)', marginBottom: 12 }} />
+                       <div className="label-small" style={{ textTransform: 'none' }}>{card.insight}</div>
+                    </div>
+                 ))}
+              </div>
+
+              <div className="grid-12" style={{ gap: 24, marginBottom: 32 }}>
+                 {/* 4. WORKER TIMESHEET TABLE */}
+                 <div style={{ gridColumn: 'span 8' }} className="card" style={{ gridColumn: 'span 8', padding: '32px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                       <h3 className="section-title" style={{ color: 'var(--color-text-primary)', textTransform: 'none', fontSize: 16, margin: 0 }}>Worker Timesheet Ledger</h3>
+                       <div style={{ display: 'flex', gap: 12 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--color-surface-input)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '8px 16px' }}>
+                             <Search size={14} color="var(--color-text-muted)" />
+                             <input 
+                               placeholder="Search worker..." 
+                               value={searchTerm}
+                               onChange={(e) => setSearchTerm(e.target.value)}
+                               style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--color-text-primary)', fontSize: 13, width: 180 }} 
+                             />
+                          </div>
+                          <button className="btn-secondary" style={{ padding: '8px 16px' }}><Filter size={14} /> Filter</button>
+                       </div>
+                    </div>
+
+                    <table className="saas-table">
+                       <thead>
+                          <tr>
+                             <th>Worker</th>
+                             <th>Area</th>
+                             <th>Hours</th>
+                             <th>OT</th>
+                             <th>Total Pay</th>
+                             <th>Status</th>
+                             <th style={{ width: 40 }}></th>
+                          </tr>
+                       </thead>
+                       <tbody>
+                          {filteredRecords.map((r) => (
+                             <tr id={`row-${r.id}`} key={r.id}>
+                                <td>
+                                   <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-text-primary)' }}>{r.name}</div>
+                                   <div className="label-small" style={{ textTransform: 'none' }}>{r.role}</div>
+                                </td>
+                                <td>
+                                   <span className="label-small">{r.area.toUpperCase()}</span>
+                                </td>
+                                <td style={{ fontSize: 13, fontWeight: 800 }}>{r.hours}h</td>
+                                <td style={{ fontSize: 13, fontWeight: 800, color: r.overtime > 0 ? 'var(--color-danger)' : 'var(--color-text-muted)' }}>{r.overtime}h</td>
+                                <td style={{ fontSize: 14, fontWeight: 900, color: 'var(--color-text-primary)' }}>${r.total.toLocaleString()}</td>
+                                <td>
+                                   <span className="status-pill" style={{ 
+                                      color: r.status === 'Paid' ? 'var(--color-primary)' : (r.status === 'Flagged' ? 'var(--color-danger)' : 'var(--color-warning)'),
+                                      background: `${r.status === 'Paid' ? 'var(--color-primary)' : (r.status === 'Flagged' ? 'var(--color-danger)' : 'var(--color-warning)')}1a`,
+                                      border: `1px solid ${r.status === 'Paid' ? 'var(--color-primary)' : (r.status === 'Flagged' ? 'var(--color-danger)' : 'var(--color-warning)')}33`
+                                   }}>
+                                      {r.status.toUpperCase()}
+                                   </span>
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                   <button className="btn-secondary" style={{ width: 32, height: 32, padding: 0 }}><MoreVertical size={14} /></button>
+                                </td>
+                             </tr>
+                          ))}
+                          {!hasData && (
+                             <tr>
+                                <td colSpan={7} style={{ textAlign: 'center', padding: '80px 0' }}>
+                                   <div style={{ marginBottom: 16 }}><Users size={48} opacity={0.1} /></div>
+                                   <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--color-text-primary)', marginBottom: 4 }}>No payroll records yet</div>
+                                   <div className="label-small" style={{ marginBottom: 24, textTransform: 'none' }}>Start by adding worker hours and rates to activate intelligence.</div>
+                                   <button className="btn-primary" onClick={() => setIsModalOpen(true)}>Add First Payroll Entry</button>
+                                </td>
+                             </tr>
+                          )}
+                       </tbody>
+                    </table>
+                 </div>
+
+                 <div style={{ gridColumn: 'span 4' }}>
+                    {/* 5. LABOR COST BY FARM AREA */}
+                    <div className="card" style={{ padding: '32px', marginBottom: 24 }}>
+                       <h3 className="label-small" style={{ color: 'var(--color-text-primary)', marginBottom: 24 }}>Cost Distribution</h3>
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                          {costByArea.map((area, i) => (
+                             <div key={i}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                                   <span className="text-body" style={{ fontWeight: 800 }}>{area.name}</span>
+                                   <span style={{ fontWeight: 900, color: 'var(--color-text-primary)', fontSize: 12 }}>${area.value.toLocaleString()} <span className="label-small">({((area.value / 14400) * 100).toFixed(0)}%)</span></span>
+                                </div>
+                                <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+                                   <div style={{ height: '100%', width: `${(area.value / 4500) * 100}%`, background: area.color, borderRadius: 2 }} />
+                                </div>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+
+                    {/* 7. LABOR EFFICIENCY INSIGHTS */}
+                    <div className="card" style={{ padding: '32px' }}>
+                       <h3 className="label-small" style={{ color: 'var(--color-text-primary)', marginBottom: 24 }}>AI Efficiency Insights</h3>
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                          {[
+                             { text: "Poultry labor increased but poultry revenue stayed flat.", type: "warning" },
+                             { text: "Crop labor is high this week due to planting activity.", type: "info" },
+                             { text: "Maintenance labor is rising; review equipment issues.", type: "danger" }
+                          ].map((insight, i) => (
+                             <div key={i} className="card-elevated" style={{ padding: '16px', borderRadius: 16, display: 'flex', gap: 12 }}>
+                                <Sparkles size={16} color={insight.type === 'warning' ? 'var(--color-warning)' : (insight.type === 'danger' ? 'var(--color-danger)' : 'var(--color-info)')} style={{ flexShrink: 0 }} />
+                                <div className="text-body" style={{ fontSize: 13, color: 'var(--color-text-primary)', lineHeight: 1.4 }}>{insight.text}</div>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
+              {/* 6. PAYROLL ALERTS */}
+              <div className="card" style={{ padding: '32px' }}>
+                 <h3 className="label-small" style={{ color: 'var(--color-text-primary)', marginBottom: 24 }}>Payroll Alerts & Labor Risks</h3>
+                 <div className="grid-12">
+                    {[
+                       { label: 'Overtime increased this week', severity: 'High', color: 'var(--color-danger)', desc: 'Overtime hours up 12.5% vs last week.' },
+                       { label: 'Labor cost rising faster than revenue', severity: 'Critical', color: 'var(--color-danger)', desc: 'Efficiency gap of 4.2% detected.' },
+                       { label: 'Unapproved timesheets pending', severity: 'Med', color: 'var(--color-warning)', desc: '3 records require manager sign-off.' },
+                       { label: 'Payroll due in 2 days', severity: 'Low', color: 'var(--color-info)', desc: 'Disbursement scheduled for Oct 31.' }
+                    ].map((alert, i) => (
+                       <div key={i} style={{ gridColumn: 'span 3' }} className="card-elevated" style={{ gridColumn: 'span 3', padding: '20px', borderLeft: `4px solid ${alert.color}` }}>
+                          <div className="label-small" style={{ color: alert.color, marginBottom: 8 }}>{alert.severity.toUpperCase()} SEVERITY</div>
+                          <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--color-text-primary)', marginBottom: 8 }}>{alert.label}</div>
+                          <div className="label-small" style={{ textTransform: 'none' }}>{alert.desc}</div>
+                       </div>
+                    ))}
+                 </div>
+              </div>
+
+           </div>
+        </main>
+
+         {/* 3. ADD PAYROLL ENTRY MODAL */}
+         {isModalOpen && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+               <div className="card" style={{ width: 600, padding: '48px', position: 'relative' }}>
+                  <button onClick={() => setIsModalOpen(false)} style={{ position: 'absolute', top: 32, right: 32, background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }}>
+                     <X size={24} />
+                  </button>
+                  <h2 className="section-title" style={{ color: 'var(--color-text-primary)', textTransform: 'none', fontSize: 24, marginBottom: 40 }}>Add Payroll Entry</h2>
+                  
+                  <form onSubmit={handleSubmit}>
+                    <div className="grid-12" style={{ gap: 24 }}>
+                       <div style={{ gridColumn: 'span 6' }}>
+                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Worker Name</label>
+                          <input 
+                            className="card-elevated" 
+                            placeholder="Search worker" 
+                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
+                            value={form.name}
+                            onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))}
+                            required
+                          />
+                       </div>
+                       <div style={{ gridColumn: 'span 6' }}>
+                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Role</label>
+                          <input 
+                            className="card-elevated" 
+                            placeholder="e.g. Field Hand" 
+                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
+                            value={form.role}
+                            onChange={(e) => setForm(p => ({ ...p, role: e.target.value }))}
+                            required
+                          />
+                       </div>
+                       <div style={{ gridColumn: 'span 6' }}>
+                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Farm Area</label>
+                          <select 
+                            className="card-elevated" 
+                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }}
+                            value={form.area}
+                            onChange={(e) => setForm(p => ({ ...p, area: e.target.value }))}
+                          >
+                             {['Poultry', 'Goats', 'Pigs', 'Cattle', 'Crops', 'Maintenance', 'Transport', 'General Labor'].map(area => <option key={area} value={area}>{area}</option>)}
+                          </select>
+                       </div>
+                       <div style={{ gridColumn: 'span 6' }}>
+                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Date</label>
+                          <input 
+                            type="date" 
+                            className="card-elevated" 
+                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
+                            value={form.date}
+                            onChange={(e) => setForm(p => ({ ...p, date: e.target.value }))}
+                            required
+                          />
+                       </div>
+                       <div style={{ gridColumn: 'span 4' }}>
+                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Hours</label>
+                          <input 
+                            type="number" 
+                            placeholder="40" 
+                            className="card-elevated" 
+                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
+                            value={form.hours}
+                            onChange={(e) => setForm(p => ({ ...p, hours: e.target.value }))}
+                            required
+                          />
+                       </div>
+                       <div style={{ gridColumn: 'span 4' }}>
+                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Rate ($)</label>
+                          <input 
+                            type="number" 
+                            placeholder="25" 
+                            className="card-elevated" 
+                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
+                            value={form.rate}
+                            onChange={(e) => setForm(p => ({ ...p, rate: e.target.value }))}
+                            required
+                          />
+                       </div>
+                       <div style={{ gridColumn: 'span 4' }}>
+                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Overtime</label>
+                          <input 
+                            type="number" 
+                            placeholder="0" 
+                            className="card-elevated" 
+                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
+                            value={form.overtime}
+                            onChange={(e) => setForm(p => ({ ...p, overtime: e.target.value }))}
+                          />
+                       </div>
+                       <div style={{ gridColumn: 'span 12', marginTop: 32, display: 'flex', gap: 16, justifyContent: 'flex-end' }}>
+                          <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary" style={{ padding: '12px 32px' }}>Cancel</button>
+                          <button type="submit" className="btn-primary" style={{ padding: '12px 32px' }}>Save Entry</button>
+                       </div>
+                    </div>
+                  </form>
+               </div>
             </div>
-          </div>
-        </div>
+         )}
+
       </div>
 
-      {showModal && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
-          <div className="modal">
-            <div className="modal-header">
-              <div className="modal-title">Add Payroll Record</div>
-              <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body">
-                <div className="form-grid" style={{ marginBottom: 16 }}>
-                  <div className="form-group">
-                    <label className="form-label">Employee Name *</label>
-                    <input className="form-input" value={form.employee_name} onChange={e => setForm(p => ({ ...p, employee_name: e.target.value }))} required />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Employee ID</label>
-                    <input className="form-input" placeholder="EMP-001" value={form.employee_id} onChange={e => setForm(p => ({ ...p, employee_id: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="form-grid" style={{ marginBottom: 16 }}>
-                  <div className="form-group">
-                    <label className="form-label">Period Start *</label>
-                    <input type="date" className="form-input" value={form.pay_period_start} onChange={e => setForm(p => ({ ...p, pay_period_start: e.target.value }))} required />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Period End *</label>
-                    <input type="date" className="form-input" value={form.pay_period_end} onChange={e => setForm(p => ({ ...p, pay_period_end: e.target.value }))} required />
-                  </div>
-                </div>
-                <div className="form-grid" style={{ marginBottom: 16 }}>
-                  <div className="form-group">
-                    <label className="form-label">Base Salary (TTD) *</label>
-                    <input type="number" className="form-input" placeholder="0.00" value={form.base_salary} onChange={e => setForm(p => ({ ...p, base_salary: e.target.value }))} required />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Deductions</label>
-                    <input type="number" className="form-input" placeholder="0.00" value={form.deductions} onChange={e => setForm(p => ({ ...p, deductions: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="form-grid" style={{ marginBottom: 16 }}>
-                  <div className="form-group">
-                    <label className="form-label">Overtime Hours</label>
-                    <input type="number" className="form-input" placeholder="0" value={form.overtime_hours} onChange={e => setForm(p => ({ ...p, overtime_hours: e.target.value }))} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Overtime Rate / hr</label>
-                    <input type="number" className="form-input" placeholder="0.00" value={form.overtime_rate} onChange={e => setForm(p => ({ ...p, overtime_rate: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="form-group" style={{ marginBottom: 16 }}>
-                  <label className="form-label">Department / Segment</label>
-                  <select className="form-select" value={form.segment_id} onChange={e => setForm(p => ({ ...p, segment_id: e.target.value }))}>
-                    <option value="">Select segment…</option>
-                    {SAMPLE_SEGMENTS.map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
-                  </select>
-                </div>
-                <div className="alert alert-info">
-                  💼 Calculated Net Pay: <strong>{fmt(calcNet())}</strong>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Record</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  )
+       <style>{`
+        @keyframes highlight-flash {
+          0% { background-color: rgba(34, 197, 94, 0.4); }
+          100% { background-color: transparent; }
+        }
+        .highlight-flash {
+          animation: highlight-flash 3s ease-out;
+        }
+      `}</style>
+   </div>
+  );
 }
+
+import React from 'react';

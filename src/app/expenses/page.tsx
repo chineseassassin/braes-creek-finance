@@ -1,9 +1,13 @@
-'use client'
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 import Topbar from '@/components/Topbar'
-import { SAMPLE_EXPENSES, SAMPLE_SEGMENTS, SAMPLE_CATEGORIES, SAMPLE_VENDORS } from '@/lib/sample-data'
+import { SAMPLE_SEGMENTS, SAMPLE_CATEGORIES, SAMPLE_VENDORS } from '@/lib/sample-data'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { useDashboardStore } from '@/store/useDashboardStore'
+import { useAppStore } from '@/store/useAppStore'
+import { useWorkflowStore } from '@/store/useWorkflowStore'
+import { toast, Toaster } from 'react-hot-toast'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n)
@@ -16,58 +20,113 @@ const fmtShort = (n: number) => {
 const PAYMENT_METHODS = ['cash', 'bank_transfer', 'check', 'credit_card', 'other']
 
 export default function ExpensesPage() {
+  const searchParams = useSearchParams()
+  const highlightId = searchParams.get('highlight')
+  const { transactions, addTransaction, getTotalExpenses } = useDashboardStore()
+  const { currentUser, emitSystemEvent, switchRole } = useAppStore()
+  const { addApprovalRequest } = useWorkflowStore()
+  
   const [search, setSearch] = useState('')
   const [segFilter, setSegFilter] = useState('all')
   const [showModal, setShowModal] = useState(false)
-  const [expenses, setExpenses] = useState(SAMPLE_EXPENSES)
+
+  useEffect(() => {
+    if (highlightId) {
+      const el = document.getElementById(`row-${highlightId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('highlight-flash');
+      }
+    }
+  }, [highlightId, transactions]);
+  
   const [form, setForm] = useState({
-    date: '', description: '', amount: '', category_id: '', segment_id: '',
-    vendor_id: '', payment_method: 'cash', is_recurring: false,
-    recurring_frequency: 'monthly', notes: ''
+    date: new Date().toISOString().split('T')[0], 
+    description: '', 
+    amount: '', 
+    category_id: '', 
+    segment_id: '',
+    vendor_id: '', 
+    payment_method: 'cash', 
+    is_recurring: false,
+    recurring_frequency: 'monthly', 
+    notes: ''
   })
+
+  const expenses = useMemo(() => transactions.filter(t => t.type === 'expense'), [transactions])
 
   const filtered = expenses.filter(e => {
     const matchSearch = e.description.toLowerCase().includes(search.toLowerCase())
-    const matchSeg = segFilter === 'all' || e.segment_id === segFilter
+    const matchSeg = segFilter === 'all' || (e as any).segment_id === segFilter
     return matchSearch && matchSeg
   })
 
-  const total = filtered.reduce((s, e) => s + e.amount, 0)
+  const totalFiltered = filtered.filter(e => e.status === 'approved').reduce((s, e) => s + e.amount, 0)
 
   // Segment rollup for chart
   const segRollup = SAMPLE_SEGMENTS.map(seg => ({
     name: seg.icon + ' ' + seg.name.split('/')[0].trim(),
-    amount: expenses.filter(e => e.segment_id === seg.id).reduce((s, e) => s + e.amount, 0),
+    amount: expenses.filter(e => (e as any).segment_id === seg.id && e.status === 'approved').reduce((s, e) => s + e.amount, 0),
     color: seg.color,
   })).filter(s => s.amount > 0).sort((a, b) => b.amount - a.amount).slice(0, 8)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const newExp = {
-      id: `exp-${Date.now()}`,
+    const amountNum = parseFloat(form.amount) || 0
+    const isDataEntry = currentUser.role === 'data-entry'
+    const status = isDataEntry ? 'pending' : 'approved'
+
+    // 1. Add to Dashboard Store
+    const newRecord = await addTransaction({
       ...form,
-      amount: parseFloat(form.amount) || 0,
-      is_recurring: form.is_recurring,
-      created_by: 'user-1',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      type: 'expense',
+      amount: amountNum,
+      status: status,
+      created_by: currentUser.id,
+    } as any)
+
+    // 2. If Data Entry, create Approval Request
+    if (isDataEntry && newRecord) {
+       addApprovalRequest({
+          entity_type: 'expense',
+          entity_id: newRecord.id,
+          requester_id: currentUser.id,
+          priority: amountNum > 1000 ? 'high' : 'medium',
+          status: 'pending'
+       })
+       toast.success('Submitted for approval', { icon: '⏳', style: { background: '#101010', color: '#fff' } })
+    } else if (!isDataEntry) {
+       toast.success('Expense recorded and approved', { icon: '✅', style: { background: '#101010', color: '#fff' } })
     }
-    setExpenses(prev => [newExp as any, ...prev])
+
     setShowModal(false)
-    setForm({ date: '', description: '', amount: '', category_id: '', segment_id: '', vendor_id: '', payment_method: 'cash', is_recurring: false, recurring_frequency: 'monthly', notes: '' })
+    setForm({ date: new Date().toISOString().split('T')[0], description: '', amount: '', category_id: '', segment_id: '', vendor_id: '', payment_method: 'cash', is_recurring: false, recurring_frequency: 'monthly', notes: '' })
   }
 
   return (
     <div className="app-shell">
+      <Toaster position="top-right" />
       <Sidebar />
       <div className="main-content">
         <Topbar
           title="Expenses"
           subtitle="Track all operating costs across segments"
           actions={
-            <button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>
-              + Add Expense
-            </button>
+            <div style={{ display: 'flex', gap: 12 }}>
+               {/* Role Switcher for Testing (Phase 3 Requirement) */}
+               <select 
+                className="form-select" 
+                style={{ width: 120, fontSize: 10, padding: 4, height: 32, background: 'rgba(255,255,255,0.05)' }}
+                value={currentUser.role}
+                onChange={(e) => switchRole(e.target.value as any)}
+               >
+                 <option value="admin">Peter (Admin)</option>
+                 <option value="data-entry">Mary (Entry)</option>
+               </select>
+               <button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>
+                 + Add Expense
+               </button>
+            </div>
           }
         />
 
@@ -76,22 +135,22 @@ export default function ExpensesPage() {
           <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
             <div className="kpi-card" style={{ '--kpi-color': '#ef4444' } as any}>
               <div className="kpi-label">Total Expenses</div>
-              <div className="kpi-value">{fmt(expenses.reduce((s, e) => s + e.amount, 0))}</div>
-              <div className="kpi-sub">{expenses.length} transactions</div>
+              <div className="kpi-value">{fmt(getTotalExpenses())}</div>
+              <div className="kpi-sub">{expenses.filter(e => e.status === 'approved').length} verified</div>
             </div>
             <div className="kpi-card" style={{ '--kpi-color': '#f97316' } as any}>
               <div className="kpi-label">Filtered Total</div>
-              <div className="kpi-value">{fmt(total)}</div>
+              <div className="kpi-value">{fmt(totalFiltered)}</div>
               <div className="kpi-sub">{filtered.length} matching</div>
             </div>
             <div className="kpi-card" style={{ '--kpi-color': '#06b6d4' } as any}>
               <div className="kpi-label">Recurring</div>
-              <div className="kpi-value">{expenses.filter(e => e.is_recurring).length}</div>
+              <div className="kpi-value">{expenses.filter(e => e.is_recurring && e.status === 'approved').length}</div>
               <div className="kpi-sub">auto-tracked bills</div>
             </div>
             <div className="kpi-card" style={{ '--kpi-color': '#8b5cf6' } as any}>
               <div className="kpi-label">Avg Transaction</div>
-              <div className="kpi-value">{fmt(total / (filtered.length || 1))}</div>
+              <div className="kpi-value">{fmt(totalFiltered / (filtered.filter(e => e.status === 'approved').length || 1))}</div>
               <div className="kpi-sub">per expense</div>
             </div>
           </div>
@@ -141,7 +200,7 @@ export default function ExpensesPage() {
               </select>
               <button className="btn btn-secondary btn-sm">📥 Export CSV</button>
               <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>
-                {filtered.length} results · {fmt(total)}
+                {filtered.length} results · {fmt(totalFiltered)}
               </span>
             </div>
 
@@ -152,8 +211,7 @@ export default function ExpensesPage() {
                     <th>Date</th>
                     <th>Description</th>
                     <th>Segment</th>
-                    <th>Category</th>
-                    <th>Vendor</th>
+                    <th>Status</th>
                     <th>Payment</th>
                     <th>Recurring</th>
                     <th>Amount</th>
@@ -162,11 +220,10 @@ export default function ExpensesPage() {
                 </thead>
                 <tbody>
                   {filtered.map(exp => {
-                    const seg = SAMPLE_SEGMENTS.find(s => s.id === exp.segment_id)
-                    const cat = SAMPLE_CATEGORIES.find(c => c.id === exp.category_id)
-                    const vendor = SAMPLE_VENDORS.find(v => v.id === exp.vendor_id)
+                    const seg = SAMPLE_SEGMENTS.find(s => s.id === (exp as any).segment_id)
+                    const isPending = exp.status === 'pending'
                     return (
-                      <tr key={exp.id}>
+                      <tr id={`row-${exp.id}`} key={exp.id} style={{ opacity: isPending ? 0.7 : 1 }}>
                         <td style={{ fontFamily: 'monospace', fontSize: 12, whiteSpace: 'nowrap' }}>{exp.date}</td>
                         <td className="primary" style={{ maxWidth: 220 }}>{exp.description}</td>
                         <td>
@@ -175,16 +232,19 @@ export default function ExpensesPage() {
                             <span style={{ color: seg?.color, fontSize: 12 }}>{seg?.name?.split('/')[0].trim()}</span>
                           </span>
                         </td>
-                        <td style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{cat?.name ?? '—'}</td>
-                        <td style={{ fontSize: 12 }}>{vendor?.name ?? '—'}</td>
+                        <td>
+                           <span className={`badge ${isPending ? 'badge-warning' : 'badge-success'}`} style={{ fontSize: 9 }}>
+                              {isPending ? 'PENDING' : 'APPROVED'}
+                           </span>
+                        </td>
                         <td>
                           <span className="badge badge-neutral" style={{ textTransform: 'capitalize' }}>
-                            {exp.payment_method.replace(/_/g, ' ')}
+                            {(exp as any).payment_method?.replace(/_/g, ' ') ?? '—'}
                           </span>
                         </td>
                         <td>
-                          {exp.is_recurring
-                            ? <span className="badge badge-info">🔄 {exp.recurring_frequency}</span>
+                          {(exp as any).is_recurring
+                            ? <span className="badge badge-info">🔄 {(exp as any).recurring_frequency}</span>
                             : <span className="badge badge-neutral">One-time</span>}
                         </td>
                         <td className="amount expense">{fmt(exp.amount)}</td>
@@ -286,6 +346,17 @@ export default function ExpensesPage() {
           </div>
         </div>
       )}
+      <style>{styles}</style>
     </div>
   )
 }
+
+const styles = `
+  @keyframes highlight-flash {
+    0% { background-color: rgba(34, 197, 94, 0.4); }
+    100% { background-color: transparent; }
+  }
+  .highlight-flash {
+    animation: highlight-flash 3s ease-out;
+  }
+`;

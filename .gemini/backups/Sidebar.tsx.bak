@@ -1,0 +1,137 @@
+'use client'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { 
+  LayoutDashboard, 
+  BarChart3, 
+  FileText, 
+  CreditCard, 
+  Banknote, 
+  Users, 
+  PieChart, 
+  HardHat, 
+  Beef, 
+  Sprout, 
+  Package, 
+  Store, 
+  Settings,
+  ChevronRight,
+  Zap
+} from 'lucide-react'
+
+const NAV_SECTIONS = [
+  {
+    label: 'Overview',
+    items: [
+      { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/reports', label: 'Reports', icon: BarChart3 },
+      { href: '/documents', label: 'Documents', icon: FileText },
+    ],
+  },
+  {
+    label: 'Finance',
+    items: [
+      { href: '/expenses', label: 'Expenses', icon: CreditCard },
+      { href: '/loans', label: 'Loans', icon: Banknote, badge: '3' },
+      { href: '/payroll', label: 'Payroll', icon: Users },
+      { href: '/budgets', label: 'Budgets', icon: PieChart },
+    ],
+  },
+  {
+    label: 'Operations',
+    items: [
+      { href: '/labor', label: 'Labor', icon: HardHat },
+      { href: '/livestock', label: 'Livestock', icon: Beef },
+      { href: '/crops', label: 'Crops', icon: Sprout },
+      { href: '/feed-supplies', label: 'Feed & Supplies', icon: Package },
+    ],
+  },
+  {
+    label: 'Management',
+    items: [
+      { href: '/vendors', label: 'Vendors', icon: Store },
+      { href: '/settings', label: 'Settings', icon: Settings },
+    ],
+  },
+]
+
+export default function Sidebar() {
+  const pathname = usePathname()
+
+  return (
+    <aside className="sidebar flex flex-col bg-[#0a0a0a]">
+      {/* Brand Header */}
+      <div className="p-8 pb-10">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-[#bef264] flex items-center justify-center shadow-[0_0_15px_rgba(190,242,100,0.4)]">
+              <Zap className="w-5 h-5 text-black" />
+            </div>
+            <h1 className="text-white font-bold tracking-tight text-lg leading-none font-outfit">BRAES CREEK</h1>
+          </div>
+          <span className="text-[#888888] text-[9px] font-bold tracking-[0.2em] uppercase">Unified Cockpit</span>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-6 space-y-10 custom-scrollbar">
+        {NAV_SECTIONS.map((section) => (
+          <div key={section.label} className="space-y-3">
+            <h3 className="px-3 text-[10px] font-bold text-[#444444] uppercase tracking-[0.25em]">
+              {section.label}
+            </h3>
+            <div className="space-y-1">
+              {section.items.map((item) => {
+                const Icon = item.icon
+                const isActive = item.href === '/'
+                  ? pathname === '/'
+                  : pathname.startsWith(item.href)
+                
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`
+                      group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300
+                      ${isActive 
+                        ? 'bg-[#1a1a1a] text-[#bef264] shadow-lg' 
+                        : 'text-[#888888] hover:text-white hover:bg-[#121212]'
+                      }
+                    `}
+                  >
+                    <Icon className={`w-4 h-4 transition-all ${isActive ? 'text-[#bef264]' : 'group-hover:text-white'}`} />
+                    <span className="text-[13px] font-semibold flex-1 tracking-tight">{item.label}</span>
+                    
+                    {item.badge && (
+                      <span className="bg-[#bef264] text-black text-[10px] font-extrabold px-1.5 py-0.5 rounded-md">
+                        {item.badge}
+                      </span>
+                    )}
+                    
+                    {isActive && (
+                      <div className="w-1 h-1 rounded-full bg-[#bef264] shadow-[0_0_8px_#bef264]" />
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Profile Section */}
+      <div className="p-6 border-t border-white/[0.03]">
+        <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#121212] border border-white/[0.03]">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] flex items-center justify-center text-[11px] font-bold text-white border border-white/5">
+            AD
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-bold text-white truncate">Administrator</p>
+            <p className="text-[9px] text-[#444444] truncate font-bold uppercase tracking-tighter">Active System</p>
+          </div>
+          <div className="w-1.5 h-1.5 rounded-full bg-[#bef264] animate-pulse shadow-[0_0_10px_#bef264]" />
+        </div>
+      </div>
+    </aside>
+  )
+}

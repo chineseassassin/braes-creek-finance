@@ -212,6 +212,7 @@ export interface AuditLog {
   user?: User
 }
 
+
 export interface KPIData {
   totalExpenses: number
   totalPayroll: number
@@ -222,4 +223,49 @@ export interface KPIData {
   monthlyTrend: { month: string; expenses: number; revenue: number }[]
   budgetVsActual: { category: string; budgeted: number; actual: number }[]
   loanStatus: { status: string; count: number; amount: number }[]
+}
+
+// ── Phase 1 Foundation Types ───────────────────────────────────────────
+
+export type WorkflowStatus = 'pending' | 'approved' | 'rejected' | 'escalated' | 'resolved';
+export type EntityType = 'expense' | 'loan' | 'labor' | 'livestock' | 'crop' | 'maintenance' | 'task';
+
+export interface ApprovalRequest {
+  id: string;
+  entity_type: EntityType;
+  entity_id: string;
+  requester_id: string;
+  approver_id?: string;
+  status: WorkflowStatus;
+  comment?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AIRecommendation {
+  id: string;
+  module: string;
+  title: string;
+  what_happening: string;
+  why_it_matters: string;
+  next_steps: string;
+  estimated_impact: string;
+  urgency: 'low' | 'medium' | 'high' | 'critical';
+  confidence: number; // 0-100
+  impact_score: number; // 0-100
+  action_link?: string;
+  status: 'new' | 'dismissed' | 'applied';
+  created_at: string;
+}
+
+export interface SystemEvent {
+  id: string;
+  type: 'creation' | 'update' | 'deletion' | 'approval' | 'rejection' | 'alert' | 'recommendation';
+  severity: 'info' | 'warning' | 'critical' | 'emergency';
+  module: string;
+  message: string;
+  user_id?: string;
+  metadata?: Record<string, any>;
+  timestamp: string;
 }

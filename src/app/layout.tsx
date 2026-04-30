@@ -1,4 +1,5 @@
 import "./globals.css";
+import CommandAssistant from "@/components/CommandAssistant";
 
 export const metadata = {
   title: "Braes Creek Estate",
@@ -12,7 +13,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <CommandAssistant />
+      </body>
     </html>
   );
 }

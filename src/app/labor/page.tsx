@@ -1,269 +1,246 @@
-'use client'
-import { useState } from 'react'
-import Sidebar from '@/components/Sidebar'
-import Topbar from '@/components/Topbar'
-import { SAMPLE_LABOR, SAMPLE_SEGMENTS } from '@/lib/sample-data'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+"use client";
+
+import { useState, useMemo, useEffect } from 'react';
+import Sidebar from "@/components/Sidebar";
+import Topbar from "@/components/Topbar";
+import ThemeToggle from "@/components/ThemeToggle";
+import NotificationCenter from "@/components/NotificationCenter";
+import { useUIStore } from '@/store/useUIStore';
+import { SAMPLE_LABOR, SAMPLE_SEGMENTS } from '@/lib/sample-data';
+import { 
+  Users, Clock, DollarSign, Activity, 
+  TrendingUp, TrendingDown, Sparkles, 
+  Zap, AlertTriangle, CheckCircle2, 
+  ChevronRight, ChevronDown, Filter, 
+  Search, Download, Plus, Star, BarChart3,
+  History, Briefcase, UserCheck, ShieldAlert,
+  ArrowRight, Info, MessageSquare, Send,
+  Target, Scale, LayoutGrid, Timer
+} from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
+  AreaChart, Area, Cell
+} from 'recharts';
+
+const COLORS = {
+  success: '#39C86A',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+  info: '#3b82f6',
+  muted: '#8a8a8e',
+  border: 'rgba(255, 255, 255, 0.08)',
+  accent: '#39C86A'
+};
+
+const TABS = [
+  { id: 'entries', label: 'Labor Entries', icon: History },
+  { id: 'performance', label: 'Worker Performance', icon: UserCheck },
+  { id: 'efficiency',  label: 'Task Efficiency',  icon: Target },
+  { id: 'payroll',     label: 'Payroll Impact',    icon: DollarSign },
+  { id: 'ai',          label: 'AI Recommendations', icon: Sparkles },
+];
 
 const fmt = (n: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n)
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n);
 
-export default function LaborPage() {
-  const [labor, setLabor] = useState(SAMPLE_LABOR)
-  const [showModal, setShowModal] = useState(false)
-  const [search, setSearch] = useState('')
-  const [segFilter, setSegFilter] = useState('all')
-  const [form, setForm] = useState({
-    worker_name: '', task: '', date: '', start_time: '', end_time: '',
-    hourly_rate: '', segment_id: '', notes: ''
-  })
+export default function WorkforceIntelligencePage() {
+  const { sidebarCollapsed } = useUIStore();
+  const [activeTab, setActiveTab] = useState('entries');
+  const [labor, setLabor] = useState(SAMPLE_LABOR);
+  const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState('');
+  const [segFilter, setSegFilter] = useState('all');
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
-  const filtered = labor.filter(l => {
-    const matchSearch =
-      l.worker_name.toLowerCase().includes(search.toLowerCase()) ||
-      l.task.toLowerCase().includes(search.toLowerCase())
-    const matchSeg = segFilter === 'all' || l.segment_id === segFilter
-    return matchSearch && matchSeg
-  })
+  const filtered = useMemo(() => {
+    return labor.filter(l => {
+      const matchSearch = l.worker_name.toLowerCase().includes(search.toLowerCase()) || l.task.toLowerCase().includes(search.toLowerCase());
+      const matchSeg = segFilter === 'all' || l.segment_id === segFilter;
+      return matchSearch && matchSeg;
+    });
+  }, [labor, search, segFilter]);
 
-  const totalHours = filtered.reduce((s, l) => s + l.hours_worked, 0)
-  const totalCost = filtered.reduce((s, l) => s + l.total_cost, 0)
+  const totalHours = filtered.reduce((s, l) => s + l.hours_worked, 0);
+  const totalCost = filtered.reduce((s, l) => s + l.total_cost, 0);
+  const activeWorkers = new Set(labor.map(l => l.worker_name)).size;
 
-  // By worker chart
-  const workerData = Object.entries(
-    labor.reduce((acc, l) => {
-      if (!acc[l.worker_name]) acc[l.worker_name] = { hours: 0, cost: 0 }
-      acc[l.worker_name].hours += l.hours_worked
-      acc[l.worker_name].cost += l.total_cost
-      return acc
-    }, {} as Record<string, { hours: number; cost: number }>)
-  ).map(([name, d]) => ({ name: name.split(' ')[0], hours: d.hours, cost: d.cost }))
+  const taskData = useMemo(() => {
+    const counts = labor.reduce((acc, l) => {
+      acc[l.task] = (acc[l.task] || 0) + l.total_cost;
+      return acc;
+    }, {} as Record<string, number>);
+    return Object.entries(counts).map(([name, cost]) => ({ name, cost })).sort((a,b) => b.cost - a.cost).slice(0, 5);
+  }, [labor]);
 
-  // By segment
-  const segData = Object.entries(
-    labor.reduce((acc, l) => {
-      const seg = SAMPLE_SEGMENTS.find(s => s.id === l.segment_id)
-      const key = seg?.name?.split('/')[0].trim() ?? 'Other'
-      acc[key] = (acc[key] || 0) + l.total_cost
-      return acc
-    }, {} as Record<string, number>)
-  ).map(([name, cost]) => ({ name, cost }))
-
-  const calcHours = (start: string, end: string) => {
-    if (!start || !end) return 0
-    const [sh, sm] = start.split(':').map(Number)
-    const [eh, em] = end.split(':').map(Number)
-    return Math.max(0, (eh * 60 + em - sh * 60 - sm) / 60)
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const hours = calcHours(form.start_time, form.end_time)
-    const rate = parseFloat(form.hourly_rate) || 0
-    const newEntry = {
-      id: `lab-${Date.now()}`,
-      ...form,
-      hours_worked: hours,
-      hourly_rate: rate,
-      total_cost: hours * rate,
-      created_by: 'user-1',
-      created_at: new Date().toISOString(),
-    }
-    setLabor(prev => [newEntry as any, ...prev])
-    setShowModal(false)
-    setForm({ worker_name: '', task: '', date: '', start_time: '', end_time: '', hourly_rate: '', segment_id: '', notes: '' })
-  }
+  const aiRecommendations = useMemo(() => [
+    { type: 'Immediate Action', text: "Labor cost for tomato operations is rising faster than output.", severity: 'HIGH', color: '#f97316' },
+    { type: 'Efficiency Opportunity', text: "Devon Smith shows strong task completion efficiency.", severity: 'LOW', color: COLORS.success },
+    { type: 'Risk Warning', text: "Average cost per hour is above target.", severity: 'CRITICAL', color: COLORS.danger }
+  ], []);
 
   return (
-    <div className="app-shell">
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg-body)' }}>
       <Sidebar />
-      <div className="main-content">
-        <Topbar
-          title="Labor Tracking"
-          subtitle="Worker hours, tasks, and labor costs by department"
-          actions={<button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>+ Log Labor</button>}
-        />
-        <div className="page-container">
 
-          {/* KPIs */}
-          <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-            <div className="kpi-card" style={{ '--kpi-color': '#06b6d4' } as any}>
-              <div className="kpi-label">Total Hours</div>
-              <div className="kpi-value">{totalHours.toFixed(1)}</div>
-              <div className="kpi-sub">across {filtered.length} entries</div>
-            </div>
-            <div className="kpi-card" style={{ '--kpi-color': '#8b5cf6' } as any}>
-              <div className="kpi-label">Total Labor Cost</div>
-              <div className="kpi-value">{fmt(totalCost)}</div>
-              <div className="kpi-sub">filtered period</div>
-            </div>
-            <div className="kpi-card" style={{ '--kpi-color': '#10b981' } as any}>
-              <div className="kpi-label">Avg Hourly Rate</div>
-              <div className="kpi-value">{fmt(totalCost / (totalHours || 1))}</div>
-              <div className="kpi-sub">effective rate</div>
-            </div>
-            <div className="kpi-card" style={{ '--kpi-color': '#f59e0b' } as any}>
-              <div className="kpi-label">Workers Logged</div>
-              <div className="kpi-value">{new Set(labor.map(l => l.worker_name)).size}</div>
-              <div className="kpi-sub">unique workers</div>
-            </div>
+      <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
+        <header style={{ height: 72, background: 'var(--color-bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${COLORS.border}` }}>
+          <div>
+             <h1 style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0 }}>Workforce Intelligence</h1>
+             <p style={{ fontSize: 12, color: COLORS.muted, margin: 0 }}>Monitor labor cost, productivity, and workforce efficiency</p>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <ThemeToggle />
+            <NotificationCenter />
+            <button className="btn-primary" onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+               <Plus size={16} /> Log Labor
+            </button>
+          </div>
+        </header>
 
-          {/* Charts */}
-          <div className="chart-grid">
-            <div className="card">
-              <div className="card-header"><div className="card-title">Labor Hours by Worker</div></div>
-              <div className="card-body" style={{ paddingTop: 0 }}>
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={workerData} margin={{ top: 4, right: 0, left: -16, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                    <XAxis dataKey="name" tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ background: '#1f1f23', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }} />
-                    <Bar dataKey="hours" name="Hours" fill="#06b6d4" radius={[4, 4, 0, 0]} fillOpacity={0.85} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-header"><div className="card-title">Labor Cost by Segment</div></div>
-              <div className="card-body" style={{ paddingTop: 0 }}>
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={segData} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
-                    <XAxis type="number" tick={{ fill: '#71717a', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
-                    <YAxis type="category" dataKey="name" tick={{ fill: '#a1a1aa', fontSize: 10 }} axisLine={false} tickLine={false} width={100} />
-                    <Tooltip formatter={(v: any) => fmt(v)} contentStyle={{ background: '#1f1f23', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }} />
-                    <Bar dataKey="cost" name="Cost" fill="#8b5cf6" radius={[0, 4, 4, 0]} fillOpacity={0.85} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-
-          {/* Table */}
-          <div className="card">
-            <div className="filter-bar">
-              <div className="search-bar">
-                <span className="search-icon">🔍</span>
-                <input className="search-input" placeholder="Search worker or task…" value={search} onChange={e => setSearch(e.target.value)} />
-              </div>
-              <select className="form-select" style={{ width: 'auto', padding: '7px 28px 7px 10px', fontSize: 12 }} value={segFilter} onChange={e => setSegFilter(e.target.value)}>
-                <option value="all">All Segments</option>
-                {SAMPLE_SEGMENTS.map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
-              </select>
-              <button className="btn btn-secondary btn-sm">📥 Export</button>
-              <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>{filtered.length} entries · {totalHours}h · {fmt(totalCost)}</span>
-            </div>
-            <div className="data-table-wrapper">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Worker</th>
-                    <th>Task</th>
-                    <th>Segment</th>
-                    <th>Time</th>
-                    <th>Hours</th>
-                    <th>Rate/hr</th>
-                    <th>Total</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(entry => {
-                    const seg = SAMPLE_SEGMENTS.find(s => s.id === entry.segment_id)
-                    return (
-                      <tr key={entry.id}>
-                        <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{entry.date}</td>
-                        <td className="primary">{entry.worker_name}</td>
-                        <td style={{ fontSize: 12, color: 'var(--text-secondary)', maxWidth: 200 }}>{entry.task}</td>
-                        <td>
-                          <span className="segment-dot">
-                            <span>{seg?.icon}</span>
-                            <span style={{ color: seg?.color, fontSize: 12 }}>{seg?.name?.split('/')[0].trim()}</span>
-                          </span>
-                        </td>
-                        <td style={{ fontSize: 12, fontFamily: 'monospace' }}>{entry.start_time}–{entry.end_time}</td>
-                        <td style={{ fontWeight: 600 }}>{entry.hours_worked}h</td>
-                        <td>{fmt(entry.hourly_rate)}</td>
-                        <td className="amount">{fmt(entry.total_cost)}</td>
-                        <td><button className="btn btn-ghost btn-sm">✏️</button></td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <div style={{ padding: '0 32px', background: 'var(--color-bg-body)', borderBottom: `1px solid ${COLORS.border}`, display: 'flex', gap: 32, position: 'sticky', top: 72, zIndex: 40 }}>
+           {TABS.map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button 
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  style={{
+                    padding: '20px 0',
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: isActive ? `2px solid ${COLORS.success}` : '2px solid transparent',
+                    color: isActive ? COLORS.success : COLORS.muted,
+                    fontSize: 12,
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                   <Icon size={14} /> {tab.label}
+                </button>
+              )
+           })}
         </div>
+
+        <main style={{ padding: '32px', flex: 1, overflowY: 'auto' }}>
+           
+           {activeTab === 'entries' && (
+             <div className="animate-fade-in">
+                <div className="grid-12" style={{ gap: 16, marginBottom: 32 }}>
+                   <div className="col-4 card" style={{ padding: '20px' }}>
+                      <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Total Labor Cost</div>
+                      <div style={{ fontSize: 24, fontWeight: 950, color: '#fff' }}>{fmt(totalCost)}</div>
+                   </div>
+                   <div className="col-4 card" style={{ padding: '20px' }}>
+                      <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Hours Worked</div>
+                      <div style={{ fontSize: 24, fontWeight: 950, color: '#fff' }}>{totalHours.toFixed(1)}h</div>
+                   </div>
+                   <div className="col-4 card" style={{ padding: '20px' }}>
+                      <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Active Workers</div>
+                      <div style={{ fontSize: 24, fontWeight: 950, color: '#fff' }}>{activeWorkers}</div>
+                   </div>
+                </div>
+
+                <div className="card" style={{ padding: '32px' }}>
+                   <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '8px 16px', width: 300 }}>
+                         <Search size={14} color={COLORS.muted} />
+                         <input placeholder="Search records..." value={search} onChange={e => setSearch(e.target.value)} style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 12, width: '100%' }} />
+                      </div>
+                   </div>
+                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                         <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <th style={{ padding: '16px', fontSize: 11, color: COLORS.muted, textTransform: 'uppercase' }}>Worker</th>
+                            <th style={{ padding: '16px', fontSize: 11, color: COLORS.muted, textTransform: 'uppercase' }}>Task</th>
+                            <th style={{ padding: '16px', fontSize: 11, color: COLORS.muted, textTransform: 'uppercase' }}>Hours</th>
+                            <th style={{ padding: '16px', fontSize: 11, color: COLORS.muted, textTransform: 'uppercase' }}>Total</th>
+                         </tr>
+                      </thead>
+                      <tbody>
+                         {filtered.map(entry => (
+                            <tr key={entry.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                               <td style={{ padding: '16px', fontSize: 14, fontWeight: 800 }}>{entry.worker_name}</td>
+                               <td style={{ padding: '16px', fontSize: 13 }}>{entry.task}</td>
+                               <td style={{ padding: '16px', fontSize: 13 }}>{entry.hours_worked}h</td>
+                               <td style={{ padding: '16px', fontSize: 14, fontWeight: 800 }}>{fmt(entry.total_cost)}</td>
+                            </tr>
+                         ))}
+                      </tbody>
+                   </table>
+                </div>
+             </div>
+           )}
+
+           {activeTab === 'performance' && (
+             <div className="animate-fade-in card" style={{ padding: '32px' }}>
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 24 }}>Top Performing Workforce</h3>
+                <div className="grid-12" style={{ gap: 16 }}>
+                   <div className="col-4" style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: COLORS.success, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>D</div>
+                         <span style={{ fontSize: 15, fontWeight: 800 }}>Devon Smith</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: COLORS.success, marginTop: 8 }}>Efficiency: 96%</div>
+                   </div>
+                </div>
+             </div>
+           )}
+
+           {activeTab === 'ai' && (
+             <div className="animate-fade-in card" style={{ padding: '32px', border: '1px solid rgba(139, 92, 246, 0.2)', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(5, 5, 5, 1) 100%)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+                   <Sparkles size={18} color="#a78bfa" />
+                   <h3 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>AI Workforce Recommendations</h3>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                   {aiRecommendations.map((rec, i) => (
+                      <div key={i} style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <span style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase' }}>{rec.type}</span>
+                            <span style={{ fontSize: 9, fontWeight: 900, padding: '2px 8px', borderRadius: 4, background: `${rec.color}15`, color: rec.color }}>{rec.severity}</span>
+                         </div>
+                         <p style={{ fontSize: 12, color: '#fff', margin: 0 }}>{rec.text}</p>
+                      </div>
+                   ))}
+                </div>
+             </div>
+           )}
+
+        </main>
       </div>
 
-      {showModal && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
-          <div className="modal">
-            <div className="modal-header">
-              <div className="modal-title">Log Labor Entry</div>
-              <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body">
-                <div className="form-grid" style={{ marginBottom: 16 }}>
-                  <div className="form-group">
-                    <label className="form-label">Worker Name *</label>
-                    <input className="form-input" placeholder="Full name" value={form.worker_name} onChange={e => setForm(p => ({ ...p, worker_name: e.target.value }))} required />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Date *</label>
-                    <input type="date" className="form-input" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} required />
-                  </div>
-                </div>
-                <div className="form-group" style={{ marginBottom: 16 }}>
-                  <label className="form-label">Task / Description *</label>
-                  <input className="form-input" placeholder="What work was done?" value={form.task} onChange={e => setForm(p => ({ ...p, task: e.target.value }))} required />
-                </div>
-                <div className="form-grid" style={{ marginBottom: 16 }}>
-                  <div className="form-group">
-                    <label className="form-label">Start Time *</label>
-                    <input type="time" className="form-input" value={form.start_time} onChange={e => setForm(p => ({ ...p, start_time: e.target.value }))} required />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">End Time *</label>
-                    <input type="time" className="form-input" value={form.end_time} onChange={e => setForm(p => ({ ...p, end_time: e.target.value }))} required />
-                  </div>
-                </div>
-                <div className="form-grid" style={{ marginBottom: 16 }}>
-                  <div className="form-group">
-                    <label className="form-label">Hourly Rate (TTD) *</label>
-                    <input type="number" className="form-input" placeholder="0.00" value={form.hourly_rate} onChange={e => setForm(p => ({ ...p, hourly_rate: e.target.value }))} required />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Business Segment *</label>
-                    <select className="form-select" value={form.segment_id} onChange={e => setForm(p => ({ ...p, segment_id: e.target.value }))} required>
-                      <option value="">Select segment…</option>
-                      {SAMPLE_SEGMENTS.map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
-                    </select>
-                  </div>
-                </div>
-                {form.start_time && form.end_time && (
-                  <div className="alert alert-info" style={{ marginBottom: 12 }}>
-                    ⏱️ Calculated: <strong>{calcHours(form.start_time, form.end_time).toFixed(1)} hours</strong>
-                    {form.hourly_rate && <> · Cost: <strong>{fmt(calcHours(form.start_time, form.end_time) * parseFloat(form.hourly_rate))}</strong></>}
-                  </div>
-                )}
-                <div className="form-group">
-                  <label className="form-label">Notes</label>
-                  <textarea className="form-textarea" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Entry</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <style jsx>{`
+        .card {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.06);
+          border-radius: 24px;
+        }
+        .btn-primary {
+          background: #39C86A;
+          color: #050505;
+          border: none;
+          border-radius: 12px;
+          padding: 10px 20px;
+          font-weight: 800;
+          font-size: 14px;
+          cursor: pointer;
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
-  )
+  );
 }
+
+import React from 'react';
