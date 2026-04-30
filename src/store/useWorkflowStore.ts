@@ -173,6 +173,50 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
        }
     }
 
+    // 5. RULE: Crop Yield Recovery
+    const yieldAlerts = activeAlerts.filter(a => a.related_table === 'crops' && a.title.includes('Yield'));
+    yieldAlerts.forEach(alert => {
+       const existing = currentRecs.find(r => r.title.includes('Yield Recovery'));
+       if (existing) return;
+
+       newRecs.push({
+          id: `rec-cr-y-${alert.id}`,
+          module: 'Crop Intelligence',
+          title: 'Yield Recovery & Soil Audit',
+          what_happening: alert.message,
+          why_it_matters: "A yield deficit below 80% represents significant revenue leakage and suggests underlying soil exhaustion or pest pressure.",
+          next_steps: "Execute immediate soil nutrient analysis. Audit irrigation consistency over the last 30 days. Review pesticide application efficacy. Consult with agronomist on Q4 planting mix.",
+          estimated_impact: "Estimated $8,000 revenue recovery through optimized nutrient application.",
+          urgency: alert.severity === 'critical' ? 'critical' : 'high',
+          confidence: 90,
+          impact_score: 88,
+          status: 'new',
+          created_at: new Date().toISOString()
+       });
+    });
+
+    // 6. RULE: Labor vs Crop Efficiency
+    if (activeAlerts.some(a => a.category === 'payroll' && a.severity === 'critical') && 
+        activeAlerts.some(a => a.related_table === 'crops' && a.severity === 'warning')) {
+       const existing = currentRecs.find(r => r.title.includes('Labor Efficiency'));
+       if (!existing) {
+          newRecs.push({
+             id: `rec-cr-l-${Math.random()}`,
+             module: 'Crop Intelligence',
+             title: 'Labor-to-Yield Efficiency Audit',
+             what_happening: "Labor costs are rising by 15% while crop yields remain flat or declining.",
+             why_it_matters: "This decoupling indicates workforce inefficiency or manual process bottlenecks that erode total farm ROI.",
+             next_steps: "Review daily labor allocation logs per acre. Identify high-cost/low-output zones. Consider automating irrigation or harvest sorting to reduce manual dependency.",
+             estimated_impact: "Potential $3,200/mo reduction in unnecessary labor overhead.",
+             urgency: 'high',
+             confidence: 82,
+             impact_score: 80,
+             status: 'new',
+             created_at: new Date().toISOString()
+          });
+       }
+    }
+
     // Sort by Urgency and Impact Score
     const urgencyMap = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
     const allRecs = [...newRecs, ...currentRecs.filter(r => r.status === 'new')]

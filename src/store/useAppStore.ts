@@ -119,6 +119,15 @@ export const useAppStore = create<AppState>((set, get) => ({
           }
        }
 
+       // 🧠 PHASE 6B: Trigger Crop Engine if entity_type is crop
+       if (event.metadata?.entity_type === 'crop') {
+          const { crops } = (require('./useDashboardStore')).useDashboardStore.getState();
+          const record = crops.find((r: any) => r.id === event.entity_id);
+          if (record) {
+             useAlertStore.getState().evaluateCropRecord(record, crops);
+          }
+       }
+
        // 🧠 PHASE 5: Trigger AI Engine recalculation
        useWorkflowStore.getState().generateRecommendations();
     }

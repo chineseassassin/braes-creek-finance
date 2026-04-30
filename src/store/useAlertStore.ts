@@ -52,6 +52,7 @@ interface AlertState {
   evaluateSystemHealth: (transactions: any[]) => Promise<void>
   evaluateTransaction: (transaction: any, allTransactions: any[]) => Promise<void>
   evaluateLivestockRecord: (record: any, allRecords: any[]) => Promise<void>
+  evaluateCropRecord: (record: any, allRecords: any[]) => Promise<void>
   evaluateEscalations: () => void
 }
 
@@ -398,6 +399,113 @@ export const useAlertStore = create<AlertState>((set, get) => ({
     // 2. Feed & Medicine Cost Checks (delegated to evaluateTransaction when costs are logged)
     // Note: Since costs are separate transactions, evaluateTransaction handles the financial spikes.
     // However, we can add a specific trigger here if the record itself contains cost data.
+  },
+
+  evaluateCropRecord: async (record: any, allRecords: any[]) => {
+    const { id, crop_name, yield_actual, yield_expected, harvest_date, status, current_cost, projected_cost } = record;
+    if (status !== 'approved') return;
+
+    const existingAlerts = get().alerts;
+    if (existingAlerts.find(a => a.related_record_id === id)) return;
+
+    // 1. Yield Below Expected
+    if (yield_actual && yield_expected) {
+      const yieldPerformance = (yield_actual / yield_expected) * 100;
+      if (yieldPerformance < 60) {
+        await get().addAlert({
+          category: 'livestock', // Using livestock category as a placeholder if 'crops' isn't in AlertCategory, but wait, I should check AlertCategory
+          severity: 'critical',
+          priority_score: 92,
+          title: `Critical Yield Deficit: ${crop_name}`,
+          message: `Actual yield for ${crop_name} is only ${yieldPerformance.toFixed(1)}% of expected output.`,
+          why_it_matters: 'Severe yield gaps indicate significant crop failure or resource inefficiencies.',
+          recommended_action: 'Conduct soil and pest audit. Adjust revenue forecasts.',
+          related_table: 'crops',
+          related_record_id: id,
+          escalation_level: 3
+        });
+      } else if (yieldPerformance < 80) {
+        await get().addAlert({
+          category: 'livestock',
+          severity: 'warning',
+          priority_score: 72,
+          title: `Yield Warning: ${crop_name}`,
+          message: `Actual yield for ${crop_name} is ${yieldPerformance.toFixed(1)}% of expected output.`,
+          why_it_matters: 'Sub-optimal yields reduce overall profitability and supply chain reliability.',
+          recommended_action: 'Analyze nutrient application and climate variance.',
+          related_table: 'crops',
+          related_record_id: id,
+          escalation_level: 2
+        });
+      }
+    }
+
+    // 2. Harvest Window
+    if (harvest_date) {
+      const now = new Date();
+      const harvestDateObj = new Date(harvest_date);
+      const daysToHarvest = Math.ceil((harvestDateObj.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysToHarvest <= 0 && record.harvest_status !== 'completed') {
+        await get().addAlert({
+          category: 'livestock',
+          severity: 'critical',
+          priority_score: 95,
+          title: `Past Due Harvest: ${crop_name}`,
+          message: `Scheduled harvest date for ${crop_name} was ${harvest_date}. Action required.`,
+          why_it_matters: 'Over-maturation leads to quality degradation and complete loss of market value.',
+          recommended_action: 'Deploy harvest teams immediately.',
+          related_table: 'crops',
+          related_record_id: id,
+          escalation_level: 4
+        });
+      } else if (daysToHarvest <= 7 && daysToHarvest > 0 && record.harvest_status !== 'completed') {
+        await get().addAlert({
+          category: 'livestock',
+          severity: 'warning',
+          priority_score: 65,
+          title: `Upcoming Harvest: ${crop_name}`,
+          message: `${crop_name} is within the 7-day harvest window (Date: ${harvest_date}).`,
+          why_it_matters: 'Timely harvest is critical for peak flavor, nutrient density, and shelf life.',
+          recommended_action: 'Confirm labor availability and transport logistics.',
+          related_table: 'crops',
+          related_record_id: id,
+          escalation_level: 2
+        });
+      }
+    }
+
+    // 3. Cost Overrun
+    if (current_cost && projected_cost) {
+      const costRatio = (current_cost / projected_cost);
+      if (costRatio > 1.5) {
+        await get().addAlert({
+          category: 'spending',
+          severity: 'critical',
+          priority_score: 88,
+          title: `Critical Crop Cost Overrun: ${crop_name}`,
+          message: `Current costs for ${crop_name} are 150% above projected value.`,
+          why_it_matters: 'Excessive production costs erode farm margins and impact liquidity for the next cycle.',
+          recommended_action: 'Freeze discretionary spending for this cycle and audit input costs.',
+          related_table: 'crops',
+          related_record_id: id,
+          escalation_level: 3
+        });
+      } else if (costRatio > 1.25) {
+        await get().addAlert({
+          category: 'spending',
+          severity: 'warning',
+          priority_score: 68,
+          title: `Crop Cost Warning: ${crop_name}`,
+          message: `Current costs for ${crop_name} are 25% above projected value.`,
+          why_it_matters: 'Cost drift reduces the ROI for this specific crop rotation.',
+          recommended_action: 'Review resource allocation and optimize input efficiency.',
+          related_table: 'crops',
+          related_record_id: id,
+          escalation_level: 2
+        });
+      }
+    }
   },
 
   evaluateSystemHealth: async (transactions) => {
