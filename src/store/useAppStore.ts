@@ -128,6 +128,15 @@ export const useAppStore = create<AppState>((set, get) => ({
           }
        }
 
+       // 🧠 PHASE 6C: Trigger Inventory Engine if entity_type is inventory
+       if (event.metadata?.entity_type === 'inventory') {
+          const { inventory } = (require('./useDashboardStore')).useDashboardStore.getState();
+          const record = inventory.find((r: any) => r.id === event.entity_id);
+          if (record) {
+             useAlertStore.getState().evaluateInventoryRecord(record, inventory);
+          }
+       }
+
        // 🧠 PHASE 5: Trigger AI Engine recalculation
        useWorkflowStore.getState().generateRecommendations();
     }

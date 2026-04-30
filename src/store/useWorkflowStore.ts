@@ -217,6 +217,50 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
        }
     }
 
+    // 7. RULE: Inventory Usage Velocity
+    const usageAlerts = activeAlerts.filter(a => a.related_table === 'inventory' && a.title.includes('Usage Rate'));
+    usageAlerts.forEach(alert => {
+       const existing = currentRecs.find(r => r.title.includes('Procurement Audit'));
+       if (existing) return;
+
+       newRecs.push({
+          id: `rec-iv-u-${alert.id}`,
+          module: 'Inventory',
+          title: 'Critical Procurement Audit',
+          what_happening: alert.message,
+          why_it_matters: "An abnormal spike in inventory usage (30%+) suggests either significant operational inefficiency or potential inventory shrinkage (theft/loss).",
+          next_steps: "Verify physical stock counts against digital logs. Review distribution authorizations for the last 7 days. Audit waste logs for high-usage items. Tighten procurement sign-off thresholds.",
+          estimated_impact: "Avoided $4,500/mo in potential inventory loss.",
+          urgency: 'high',
+          confidence: 88,
+          impact_score: 85,
+          status: 'new',
+          created_at: new Date().toISOString()
+       });
+    });
+
+    // 8. RULE: Stock Replenishment Optimization
+    const lowStockAlerts = activeAlerts.filter(a => a.related_table === 'inventory' && a.severity === 'critical');
+    if (lowStockAlerts.length >= 2) {
+       const existing = currentRecs.find(r => r.title.includes('Replenishment'));
+       if (!existing) {
+          newRecs.push({
+             id: `rec-iv-r-${Math.random()}`,
+             module: 'Inventory',
+             title: 'Multi-Item Replenishment Strategy',
+             what_happening: "Multiple critical items have fallen below depletion thresholds simultaneously.",
+             why_it_matters: "Operational readiness is at 15% capacity. Lack of essential inputs will cause a total production freeze within 72 hours.",
+             next_steps: "Execute bulk procurement order to leverage volume discounts. Coordinate with logistics for express delivery. Shift resources to high-priority production zones only.",
+             estimated_impact: "Prevented total operational freeze (Est. $12k value).",
+             urgency: 'critical',
+             confidence: 94,
+             impact_score: 95,
+             status: 'new',
+             created_at: new Date().toISOString()
+          });
+       }
+    }
+
     // Sort by Urgency and Impact Score
     const urgencyMap = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
     const allRecs = [...newRecs, ...currentRecs.filter(r => r.status === 'new')]

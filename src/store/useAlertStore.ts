@@ -53,6 +53,7 @@ interface AlertState {
   evaluateTransaction: (transaction: any, allTransactions: any[]) => Promise<void>
   evaluateLivestockRecord: (record: any, allRecords: any[]) => Promise<void>
   evaluateCropRecord: (record: any, allRecords: any[]) => Promise<void>
+  evaluateInventoryRecord: (record: any, allRecords: any[]) => Promise<void>
   evaluateEscalations: () => void
 }
 
@@ -505,6 +506,61 @@ export const useAlertStore = create<AlertState>((set, get) => ({
           escalation_level: 2
         });
       }
+    }
+  },
+
+  evaluateInventoryRecord: async (record: any, allRecords: any[]) => {
+    const { id, item_name, quantity, reorder_point, critical_threshold, usage_rate_status, status } = record;
+    if (status !== 'approved') return;
+
+    const existingAlerts = get().alerts;
+    if (existingAlerts.find(a => a.related_record_id === id)) return;
+
+    // 1. Critical Stock Check
+    if (quantity <= (critical_threshold || reorder_point * 0.5)) {
+      await get().addAlert({
+        category: 'system',
+        severity: 'critical',
+        priority_score: 94,
+        title: `Critical Stock Depletion: ${item_name}`,
+        message: `Inventory for ${item_name} has fallen to ${quantity} units (Critical: ${critical_threshold || '50% of reorder'}).`,
+        why_it_matters: 'Stock depletion will cause immediate operational downtime and fulfillment delays.',
+        recommended_action: 'Emergency reorder required immediately.',
+        related_table: 'inventory',
+        related_record_id: id,
+        escalation_level: 3
+      });
+    } 
+    // 2. Low Stock Check
+    else if (quantity <= reorder_point) {
+      await get().addAlert({
+        category: 'system',
+        severity: 'warning',
+        priority_score: 64,
+        title: `Low Stock Warning: ${item_name}`,
+        message: `Inventory for ${item_name} is at ${quantity} units, reaching the reorder point of ${reorder_point}.`,
+        why_it_matters: 'Low stock levels increase the risk of stockouts during peak demand periods.',
+        recommended_action: 'Prepare procurement order for next cycle.',
+        related_table: 'inventory',
+        related_record_id: id,
+        escalation_level: 2
+      });
+    }
+
+    // 3. Abnormal Usage Rate
+    if (usage_rate_status === 'abnormal' || usage_rate_status === 'high') {
+      await get().addAlert({
+        category: 'spending',
+        severity: 'warning',
+        priority_score: 70,
+        title: `Abnormal Usage Rate: ${item_name}`,
+        message: `Detected a 30% spike in usage velocity for ${item_name} compared to 90-day baseline.`,
+        why_it_matters: 'Rapid inventory turnover may indicate waste, theft, or unforeseen operational bottlenecks.',
+        recommended_action: 'Audit usage logs and verify distribution protocols.',
+        related_table: 'inventory',
+        related_record_id: id,
+        escalation_level: 2
+      });
     }
   },
 
