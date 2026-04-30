@@ -130,6 +130,49 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
        });
     });
 
+    // 3. RULE: Livestock Mortality Crisis
+    const mortalityAlerts = activeAlerts.filter(a => a.category === 'livestock' && a.title.includes('Mortality'));
+    mortalityAlerts.forEach(alert => {
+       const existing = currentRecs.find(r => r.title.includes('Biosecurity'));
+       if (existing) return;
+
+       newRecs.push({
+          id: `rec-ls-m-${alert.id}`,
+          module: 'Livestock Intelligence',
+          title: 'Immediate Biosecurity Protocol',
+          what_happening: alert.message,
+          why_it_matters: "Uncontrolled mortality leads to catastrophic asset loss and potential cross-infection across the farm estate. Early intervention is critical to preserve the core herd/flock.",
+          next_steps: "Activate Level 2 Quarantine. Conduct comprehensive water and feed analysis. Review recent vaccination logs for gaps. Schedule emergency site visit with Senior Vet.",
+          estimated_impact: "Prevents estimated $15,000 in potential additional livestock loss.",
+          urgency: alert.severity === 'critical' ? 'critical' : 'high',
+          confidence: 96,
+          impact_score: 98,
+          status: 'new',
+          created_at: new Date().toISOString()
+       });
+    });
+
+    // 4. RULE: Low Production Output
+    if (activeAlerts.some(a => a.category === 'livestock' && a.message.includes('output'))) {
+       const existing = currentRecs.find(r => r.title.includes('Output Optimization'));
+       if (!existing) {
+          newRecs.push({
+             id: `rec-ls-p-${Math.random()}`,
+             module: 'Livestock Intelligence',
+             title: 'Production Output Optimization',
+             what_happening: "Production yields (eggs/meat) have dropped 12% below the 30-day moving average.",
+             why_it_matters: "Reduced yields impact fulfillment of supply contracts and lower overall revenue efficiency per unit.",
+             next_steps: "Review nutrient density of current feed batch. Check climate control logs for optimal temperature variance. Audit worker shift attendance during collection periods.",
+             estimated_impact: "Restore revenue baseline by $1,200 per week.",
+             urgency: 'medium',
+             confidence: 85,
+             impact_score: 75,
+             status: 'new',
+             created_at: new Date().toISOString()
+          });
+       }
+    }
+
     // Sort by Urgency and Impact Score
     const urgencyMap = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
     const allRecs = [...newRecs, ...currentRecs.filter(r => r.status === 'new')]

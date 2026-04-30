@@ -50,6 +50,8 @@ interface AlertState {
   
   // System Logic
   evaluateSystemHealth: (transactions: any[]) => Promise<void>
+  evaluateTransaction: (transaction: any, allTransactions: any[]) => Promise<void>
+  evaluateLivestockRecord: (record: any, allRecords: any[]) => Promise<void>
   evaluateEscalations: () => void
 }
 
@@ -347,6 +349,55 @@ export const useAlertStore = create<AlertState>((set, get) => ({
         }
       }
     }
+  },
+
+  evaluateLivestockRecord: async (record: any, allRecords: any[]) => {
+    const { id, animal_type, quantity, status } = record;
+    if (status !== 'approved') return;
+
+    const existingAlerts = get().alerts;
+    if (existingAlerts.find(a => a.related_record_id === id)) return;
+
+    // 1. Mortality Spike Check
+    // Assuming 'record' might contain mortality data if it's a health update, 
+    // or we check the total 'deceased' status in allRecords for this type.
+    const deceasedCount = allRecords.filter(r => r.animal_type === animal_type && r.status === 'deceased').length;
+    const totalCount = allRecords.filter(r => r.animal_type === animal_type).length;
+    
+    if (totalCount > 10) {
+      const mortalityRate = (deceasedCount / totalCount) * 100;
+      if (mortalityRate > 10) { // Severe
+        await get().addAlert({
+          category: 'livestock',
+          severity: 'critical',
+          priority_score: 95,
+          title: `Severe Mortality Spike: ${animal_type}`,
+          message: `Mortality rate for ${animal_type} has reached ${mortalityRate.toFixed(1)}%.`,
+          why_it_matters: 'High mortality indicates severe health issues or environmental stress requiring immediate vet intervention.',
+          recommended_action: 'Quarantine affected units and call Veterinary Services.',
+          related_table: 'livestock',
+          related_record_id: id,
+          escalation_level: 3
+        });
+      } else if (mortalityRate > 5) { // Warning
+        await get().addAlert({
+          category: 'livestock',
+          severity: 'warning',
+          priority_score: 75,
+          title: `Mortality Warning: ${animal_type}`,
+          message: `Mortality rate for ${animal_type} is at ${mortalityRate.toFixed(1)}%.`,
+          why_it_matters: 'Rising mortality rates often precede a larger outbreak.',
+          recommended_action: 'Review sanitation protocols and monitor water quality.',
+          related_table: 'livestock',
+          related_record_id: id,
+          escalation_level: 2
+        });
+      }
+    }
+
+    // 2. Feed & Medicine Cost Checks (delegated to evaluateTransaction when costs are logged)
+    // Note: Since costs are separate transactions, evaluateTransaction handles the financial spikes.
+    // However, we can add a specific trigger here if the record itself contains cost data.
   },
 
   evaluateSystemHealth: async (transactions) => {

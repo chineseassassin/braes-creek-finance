@@ -110,6 +110,15 @@ export const useAppStore = create<AppState>((set, get) => ({
           useAlertStore.getState().evaluateTransaction(transaction, transactions);
        }
 
+       // 🧠 PHASE 6A: Trigger Livestock Engine if entity_type is livestock
+       if (event.metadata?.entity_type === 'livestock') {
+          const { livestockUnits } = (require('./useDashboardStore')).useDashboardStore.getState();
+          const record = livestockUnits.find((r: any) => r.id === event.entity_id);
+          if (record) {
+             useAlertStore.getState().evaluateLivestockRecord(record, livestockUnits);
+          }
+       }
+
        // 🧠 PHASE 5: Trigger AI Engine recalculation
        useWorkflowStore.getState().generateRecommendations();
     }
