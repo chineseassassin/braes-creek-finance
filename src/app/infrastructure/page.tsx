@@ -1,524 +1,290 @@
-"use client";
-
-import { useState, useEffect, useMemo } from 'react';
-import Sidebar from "@/components/Sidebar";
-import ThemeToggle from "@/components/ThemeToggle";
-import NotificationCenter from "@/components/NotificationCenter";
-import { useUIStore } from '@/store/useUIStore';
-import { useAppStore } from '@/store/useAppStore';
-import { useInfrastructureStore } from '@/store/useInfrastructureStore';
-import { useVendorStore } from '@/store/useVendorStore';
+'use client'
+import { useState, useMemo, useEffect } from 'react'
+import Sidebar from '@/components/Sidebar'
+import Topbar from '@/components/Topbar'
+import { useInfrastructureStore } from '@/store/useInfrastructureStore'
+import { useVendorStore } from '@/store/useVendorStore'
+import { useAppStore } from '@/store/useAppStore'
 import { 
-  Building2, Tractor, Wrench, Fuel, Sparkles, Plus, 
-  Search, Download, LayoutGrid, Timer, AlertTriangle,
-  CheckCircle2, Activity, Gauge, Battery, Zap,
-  TrendingUp, TrendingDown, History, Info, ArrowUpRight,
-  Settings, PenTool as Tool, Truck, Package, MoreVertical,
-  AlertCircle, ShieldAlert, CheckCircle, Clock, X, Bell,
-  Calendar, DollarSign, User as UserIcon
-} from "lucide-react";
-import { toast, Toaster } from 'react-hot-toast';
+  Wrench, Shield, AlertTriangle, CheckCircle2, 
+  Calendar, MapPin, DollarSign, Clock, 
+  MoreVertical, Plus, Info, Activity, 
+  Truck, Settings, ChevronRight, X
+} from 'lucide-react'
+import { toast, Toaster } from 'react-hot-toast'
+import React from 'react'
 
-import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
+const fmt = (n: number) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n)
 
-export default function InfrastructureOpsPage() {
-  const { sidebarCollapsed } = useUIStore();
-  const { theme, currentUser } = useAppStore();
-  const { assets, maintenanceLogs, addMaintenanceLog } = useInfrastructureStore();
-  const { vendors } = useVendorStore();
-  
-  const isLight = theme === 'light';
-  const [activeTab, setActiveTab] = useState('maintenance');
-  const [showModal, setShowModal] = useState(false);
+const ASSET_TYPES = ['Tractor', 'Pump', 'Generator', 'Irrigation', 'Storage', 'Building', 'Vehicle', 'Other']
 
-  // Form State
-  const [form, setForm] = useState({
-    asset_name: '',
-    maintenance_type: 'Service' as const,
+export default function InfrastructurePage() {
+  const { assets, maintenanceLogs, addAsset, addMaintenanceLog, updateAssetStatus, isLoading } = useInfrastructureStore()
+  const { vendors } = useVendorStore()
+  const { currentUser } = useAppStore()
+
+  const [isAssetModalOpen, setIsAssetModalOpen] = useState(false)
+  const [isMaintModalOpen, setIsMaintModalOpen] = useState(false)
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null)
+
+  const [assetForm, setAssetForm] = useState({
+    name: '', type: 'Tractor' as any, location: '', status: 'active' as any,
+    purchase_value: '', purchase_date: new Date().toISOString().split('T')[0],
+    vendor_name: '', notes: ''
+  })
+
+  const [maintForm, setMaintForm] = useState({
     date: new Date().toISOString().split('T')[0],
-    status: 'Scheduled' as const,
-    vendor_id: '',
+    maintenance_type: 'routine' as any,
+    description: '',
     cost: '',
-    next_due_date: '',
-    notes: ''
-  });
+    vendor_name: '',
+    next_service_date: '',
+    status: 'scheduled' as any
+  })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const vendor = vendors.find(v => v.id === form.vendor_id);
-    
-    await addMaintenanceLog({
-      asset_name: form.asset_name,
-      maintenance_type: form.maintenance_type,
-      date: form.date,
-      status: form.status,
-      vendor_id: form.vendor_id,
-      vendor_name: vendor?.name,
-      cost: form.cost ? parseFloat(form.cost) : undefined,
-      next_due_date: form.next_due_date || undefined,
-      notes: form.notes
-    });
+  // Metrics
+  const approvedAssets = useMemo(() => assets.filter(a => a.workflow_status === 'approved'), [assets])
+  const activeAssets = approvedAssets.filter(a => a.status === 'active').length
+  const criticalAssets = approvedAssets.filter(a => a.status === 'down' || a.status === 'needs_service').length
+  const totalValue = approvedAssets.reduce((s, a) => s + a.purchase_value, 0)
 
-    const isAdmin = currentUser.role === 'admin';
-    if (isAdmin) {
-      toast.success('Maintenance recorded and system alerts updated', {
-        style: { background: '#101010', color: '#fff', border: '1px solid var(--status-success)' }
-      });
-    } else {
-      toast.success('Maintenance log submitted for approval', {
-        style: { background: '#101010', color: '#fff', border: '1px solid var(--border-soft)' }
-      });
+  const handleAddAsset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const payload = {
+      ...assetForm,
+      purchase_value: parseFloat(assetForm.purchase_value) || 0
     }
+    const result = await addAsset(payload)
+    if (result) {
+      toast.success(currentUser.role === 'admin' ? 'Asset added & approved' : 'Asset submitted for approval')
+      setIsAssetModalOpen(false)
+      setAssetForm({ name: '', type: 'Tractor', location: '', status: 'active', purchase_value: '', purchase_date: new Date().toISOString().split('T')[0], vendor_name: '', notes: '' })
+    }
+  }
 
-    setShowModal(false);
-    setForm({
-      asset_name: '',
-      maintenance_type: 'Service',
-      date: new Date().toISOString().split('T')[0],
-      status: 'Scheduled',
-      vendor_id: '',
-      cost: '',
-      next_due_date: '',
-      notes: ''
-    });
-  };
+  const handleAddMaint = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedAssetId) return
+    const payload = {
+      ...maintForm,
+      asset_id: selectedAssetId,
+      cost: parseFloat(maintForm.cost) || 0
+    }
+    const result = await addMaintenanceLog(payload)
+    if (result) {
+      toast.success(currentUser.role === 'admin' ? 'Maintenance recorded' : 'Submitted for approval')
+      setIsMaintModalOpen(false)
+      setMaintForm({ date: new Date().toISOString().split('T')[0], maintenance_type: 'routine', description: '', cost: '', vendor_name: '', next_service_date: '', status: 'scheduled' })
+    }
+  }
 
-  const metrics = useMemo(() => {
-    const avgHealth = assets.reduce((s, a) => s + a.health_score, 0) / assets.length;
-    const criticalCount = assets.filter(a => a.status === 'Critical').length;
-    const mtdCost = maintenanceLogs
-      .filter(l => l.approval_status === 'approved' && l.date.startsWith('2024-04')) // Mock MTD
-      .reduce((s, l) => s + (l.cost || 0), 0);
-    
-    return { avgHealth, criticalCount, mtdCost };
-  }, [assets, maintenanceLogs]);
+  const handleToggleStatus = async (assetId: string, currentStatus: string) => {
+     const newStatus = currentStatus === 'active' ? 'needs_service' : 'active'
+     await updateAssetStatus(assetId, newStatus)
+     toast.success(`Asset marked as ${newStatus.replace('_', ' ')}`)
+  }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)' }}>
+    <div className="app-shell">
       <Toaster position="top-right" />
       <Sidebar />
-
-      <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
-        <header style={{ height: 72, background: 'var(--bg-sidebar)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: '1px solid var(--border-soft)' }}>
-          <div>
-             <h1 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Infrastructure & Operations</h1>
-             <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, fontWeight: 700 }}>Strategic asset management and operational command hub</p>
+      <div className="main-content">
+        <Topbar
+          title="Infrastructure & Operations"
+          subtitle="Equipment maintenance, asset tracking, and facility control"
+          actions={<button className="btn btn-primary btn-sm" onClick={() => setIsAssetModalOpen(true)}>+ Add Asset</button>}
+        />
+        <div className="page-container">
+          <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+            <div className="kpi-card no-hover" style={{ '--kpi-color': 'var(--status-success)' } as any}>
+              <div className="kpi-label">Active Equipment</div>
+              <div className="kpi-value" style={{ color: 'var(--status-success)', textShadow: 'var(--status-success-glow)' }}>{activeAssets}</div>
+              <div className="kpi-sub">fully operational</div>
+            </div>
+            <div className="kpi-card" style={{ '--kpi-color': 'var(--status-critical)' } as any}>
+              <div className="kpi-label">Service Required</div>
+              <div className="kpi-value" style={{ color: 'var(--status-critical)', textShadow: 'var(--status-critical-glow)' }}>{criticalAssets}</div>
+              <div className="kpi-sub">critical or overdue</div>
+            </div>
+            <div className="kpi-card" style={{ '--kpi-color': 'var(--status-info)' } as any}>
+              <div className="kpi-label">Asset Valuation</div>
+              <div className="kpi-value" style={{ color: 'var(--status-info)', textShadow: 'var(--status-info-glow)' }}>{fmt(totalValue)}</div>
+              <div className="kpi-sub">total purchase value</div>
+            </div>
+            <div className="kpi-card" style={{ '--kpi-color': 'var(--status-ai)' } as any}>
+              <div className="kpi-label">MTD Maint. Cost</div>
+              <div className="kpi-value" style={{ color: 'var(--status-ai)', textShadow: 'var(--status-ai-glow)' }}>{fmt(maintenanceLogs.filter(l => l.workflow_status === 'approved').reduce((s, l) => s + l.cost, 0))}</div>
+              <div className="kpi-sub">running repairs cost</div>
+            </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <ThemeToggle />
-            <NotificationCenter />
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--status-success)', color: 'var(--text-inverse)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 13 }}>{currentUser.name.charAt(0)}</div>
-          </div>
-        </header>
 
-        <main style={{ padding: '24px 32px', flex: 1, overflowY: 'auto' }}>
-           
-           {/* TOP HERO BAR (FULL WIDTH) */}
-           <div className="grid-12" style={{ gap: 12, marginBottom: 24 }}>
-              {[
-                { label: 'Equipment Health', val: `${Math.round(metrics.avgHealth)}%`, icon: <Activity size={14}/>, color: 'var(--status-success)' },
-                { label: 'Active Issues', val: metrics.criticalCount.toString().padStart(2, '0'), icon: <AlertTriangle size={14}/>, color: 'var(--status-critical)' },
-                { label: 'Maint. Cost (MTD)', val: `$${metrics.mtdCost.toLocaleString()}`, icon: <TrendingDown size={14}/>, color: 'var(--status-info)' },
-                { label: 'Supply Status', val: 'Optimal', icon: <Package size={14}/>, color: 'var(--status-success)' },
-                { label: 'Vendor Risk', val: 'Low', icon: <ShieldAlert size={14}/>, color: 'var(--status-success)' },
-              ].map((card, i) => (
-                <div key={i} className="col-2-4 card-compact" style={{ 
-                    borderLeft: `2px solid ${card.color}`, 
-                    background: isLight ? `color-mix(in srgb, ${card.color}, transparent 92%)` : 'var(--bg-card)',
-                    boxShadow: isLight ? `0 4px 12px color-mix(in srgb, ${card.color}, transparent 90%)` : `inset 4px 0 10px ${card.color}10`,
-                    transition: 'all 0.2s ease'
-                 }}>
-                   <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {card.icon} {card.label}
-                   </div>
-                   <div style={{ fontSize: 18, fontWeight: 950, color: 'var(--text-primary)' }}>{card.val}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 20 }}>
+            {assets.map(asset => {
+              const isPending = asset.workflow_status === 'pending'
+              const assetLogs = maintenanceLogs.filter(l => l.asset_id === asset.id)
+              const lastMaint = assetLogs.length > 0 ? assetLogs[0] : null
+
+              return (
+                <div key={asset.id} className="card" style={{ opacity: isPending ? 0.8 : 1, borderTop: `3px solid ${asset.status === 'active' ? 'var(--status-success)' : asset.status === 'down' ? 'var(--status-critical)' : 'var(--status-warning)'}` }}>
+                  <div className="card-body">
+                    <div className="flex-between" style={{ marginBottom: 16 }}>
+                      <div className="flex-center">
+                        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--bg-card-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                           <Wrench size={20} color={asset.status === 'active' ? 'var(--status-success)' : 'var(--text-muted)'} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 850, fontSize: 16, color: 'var(--text-primary)' }}>{asset.name}</div>
+                          <div className="label-small" style={{ fontSize: 9 }}>{asset.type.toUpperCase()} • {asset.location}</div>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                         <span className={`badge ${asset.status === 'active' ? 'badge-healthy' : asset.status === 'down' ? 'badge-critical' : 'badge-warning'}`}>
+                           {asset.status.replace('_', ' ')}
+                         </span>
+                         {isPending && <div className="label-small" style={{ color: 'var(--status-warning)', marginTop: 4 }}>PENDING</div>}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                       <div style={{ background: 'var(--bg-card-elevated)', padding: 10, borderRadius: 10, border: '1px solid var(--border-soft)' }}>
+                          <div className="label-small">Purchase Value</div>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{fmt(asset.purchase_value)}</div>
+                       </div>
+                       <div style={{ background: 'var(--bg-card-elevated)', padding: 10, borderRadius: 10, border: '1px solid var(--border-soft)' }}>
+                          <div className="label-small">Commissioned</div>
+                          <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{asset.purchase_date}</div>
+                       </div>
+                    </div>
+
+                    <div style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid var(--border-soft)', marginBottom: 16 }}>
+                       <div className="flex-between" style={{ marginBottom: 8 }}>
+                          <span className="label-small">Latest Maintenance</span>
+                          <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--status-info)' }}>{lastMaint?.date || 'No logs recorded'}</span>
+                       </div>
+                       <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                          {lastMaint ? `${lastMaint.maintenance_type.toUpperCase()}: ${lastMaint.description}` : 'Pending initial inspection'}
+                       </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8 }}>
+                       <button className="btn btn-primary btn-sm" style={{ flex: 1 }} onClick={() => { setSelectedAssetId(asset.id); setIsMaintModalOpen(true); }}>
+                          <Plus size={14} /> Log Maintenance
+                       </button>
+                       <button className="btn btn-secondary btn-sm" onClick={() => handleToggleStatus(asset.id, asset.status)}>
+                          {asset.status === 'active' ? 'Mark Down' : 'Repair Done'}
+                       </button>
+                    </div>
+                  </div>
                 </div>
-              ))}
-           </div>
-
-           <div className="grid-12" style={{ gap: 24, alignItems: 'flex-start' }}>
-              
-              {/* MAIN CONTENT (LEFT — 70%) */}
-              <div className="col-8">
-                 <div className="glass-container">
-                    <div style={{ display: 'flex', borderBottom: '1px solid var(--border-soft)', padding: '0 24px' }}>
-                       {[
-                         { id: 'maintenance', label: 'Maintenance', icon: Tool },
-                         { id: 'feed',        label: 'Feed & Supplies', icon: Package },
-                         { id: 'vendors',     label: 'Vendors',   icon: Truck },
-                         { id: 'alerts',      label: 'Alerts',    icon: Bell },
-                       ].map(tab => {
-                          const Icon = tab.icon;
-                          const isActive = activeTab === tab.id;
-                          return (
-                            <button 
-                              key={tab.id}
-                              onClick={() => setActiveTab(tab.id)}
-                              style={{
-                                padding: '16px 0',
-                                marginRight: 32,
-                                background: 'none',
-                                border: 'none',
-                                borderBottom: isActive ? `2px solid ${COLORS.success}` : '2px solid transparent',
-                                color: isActive ? COLORS.success : COLORS.muted,
-                                fontSize: 12,
-                                fontWeight: 800,
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 8,
-                                transition: 'all 0.2s'
-                              }}
-                            >
-                               <Icon size={14} /> {tab.label}
-                            </button>
-                          )
-                       })}
-                    </div>
-
-                    <div style={{ padding: '24px' }}>
-                       {activeTab === 'maintenance' && (
-                         <div className="animate-fade-in">
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-                               <h4 style={{ fontSize: 14, fontWeight: 800, margin: 0 }}>Active Fleet Maintenance</h4>
-                               <button className="btn-small" onClick={() => setShowModal(true)}><Plus size={12}/> New Log</button>
-                            </div>
-                            <table className="ops-table">
-                               <thead>
-                                  <tr>
-                                     <th>Asset</th>
-                                     <th>Type</th>
-                                     <th>Assigned/Vendor</th>
-                                     <th>Status</th>
-                                     <th>Date</th>
-                                  </tr>
-                               </thead>
-                               <tbody>
-                                  {maintenanceLogs.map(log => (
-                                    <tr key={log.id}>
-                                       <td>
-                                          <div style={{ fontWeight: 700 }}>{log.asset_name}</div>
-                                          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{log.approval_status.toUpperCase()}</div>
-                                       </td>
-                                       <td>{log.maintenance_type}</td>
-                                       <td>{log.vendor_name || 'Internal'}</td>
-                                       <td>
-                                          <span className={log.status === 'Completed' ? "badge-success" : "badge-warning"}>
-                                             {log.status.toUpperCase()}
-                                          </span>
-                                       </td>
-                                       <td style={{ fontSize: 11, color: 'var(--text-muted)' }}>{log.date}</td>
-                                    </tr>
-                                  ))}
-                               </tbody>
-                            </table>
-                         </div>
-                       )}
-
-                       {activeTab === 'feed' && (
-                         <div className="animate-fade-in">
-                            <h4 style={{ fontSize: 14, fontWeight: 800, marginBottom: 20 }}>Inventory & Supply Chains</h4>
-                            <div className="grid-12" style={{ gap: 12 }}>
-                               {[
-                                 { name: 'Poultry Feed', qty: '4,200 kg', level: 85, color: COLORS.success },
-                                 { name: 'Diesel Fuel', qty: '850 L', level: 32, color: COLORS.warning },
-                                 { name: 'Water Treatment', qty: '12 units', level: 92, color: COLORS.success },
-                               ].map((s, i) => (
-                                 <div key={i} className="col-4" style={{ padding: '16px', background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', borderRadius: 12 }}>
-                                    <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 4 }}>{s.name}</div>
-                                    <div style={{ fontSize: 16, fontWeight: 900, marginBottom: 8 }}>{s.qty}</div>
-                                    <div style={{ height: 4, background: 'var(--bg-card-elevated)', borderRadius: 2 }}>
-                                       <div style={{ width: `${s.level}%`, height: '100%', background: s.color, borderRadius: 2 }} />
-                                    </div>
-                                 </div>
-                               ))}
-                            </div>
-                         </div>
-                       )}
-                    </div>
-                 </div>
-              </div>
-
-              {/* SIDE PANEL (RIGHT — 30%) */}
-              <div className="col-4" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                 
-                 {/* LIVE ALERTS */}
-                 <div className="glass-container" style={{ padding: '24px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                       <h3 style={{ fontSize: 14, fontWeight: 900, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <AlertCircle size={16} color={COLORS.danger} /> Live Alerts
-                       </h3>
-                       <span style={{ fontSize: 9, fontWeight: 900, color: COLORS.danger }}>3 ACTIVE</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                       <div className="alert-item">
-                          <Clock size={14} color={COLORS.danger} />
-                          <div>
-                             <div style={{ fontSize: 12, fontWeight: 800 }}>Overdue Maintenance</div>
-                             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Combine S2 is 24h past service.</div>
-                          </div>
-                       </div>
-                       <div className="alert-item">
-                          <Package size={14} color={COLORS.warning} />
-                          <div>
-                             <div style={{ fontSize: 12, fontWeight: 800 }}>Low Supplies</div>
-                             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Diesel fuel at 32% capacity.</div>
-                          </div>
-                       </div>
-                       <div className="alert-item">
-                          <Truck size={14} color={COLORS.warning} />
-                          <div>
-                             <div style={{ fontSize: 12, fontWeight: 800 }}>Vendor Delay</div>
-                             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Seed delivery delayed by 48h.</div>
-                          </div>
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* AI OPERATIONS INSIGHTS */}
-                 <div className="glass-container" style={{ padding: '24px', borderLeft: `3px solid ${COLORS.success}` }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                       <Sparkles size={16} color={COLORS.success} />
-                       <h3 style={{ fontSize: 14, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>AI Operations Insights</h3>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                       {[
-                         { issue: 'Inefficient Irrigation', impact: '22% Waste', action: 'Shift load to 11AM-3PM' },
-                         { issue: 'Tractor Bearing Wear', impact: '$4.5k Risk', action: 'Pre-emptive replacement' },
-                         { issue: 'Feed Supply Lag', impact: 'Yield Drop', action: 'Audit regional logistics' },
-                       ].map((insight, i) => (
-                         <div key={i} style={{ borderBottom: i < 2 ? '1px solid var(--border-soft)' : 'none', paddingBottom: i < 2 ? 16 : 0 }}>
-                            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>{insight.issue}</div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                               <span style={{ fontSize: 10, color: 'var(--status-critical)', fontWeight: 700 }}>{insight.impact} IMPACT</span>
-                               <ArrowUpRight size={12} color={COLORS.success} />
-                            </div>
-                            <div style={{ fontSize: 11, color: COLORS.muted }}>Action: <span style={{ color: 'var(--status-success)' }}>{insight.action}</span></div>
-                         </div>
-                       ))}
-                    </div>
-                 </div>
-
-              </div>
-           </div>
-
-        </main>
+              )
+            })}
+          </div>
+        </div>
       </div>
 
-      {/* NEW MAINTENANCE LOG MODAL */}
-      {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="card" style={{ width: 600, padding: '48px', position: 'relative', background: 'var(--bg-card)', border: '1px solid var(--border-soft)', borderRadius: 24 }}>
-            <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 32, right: 32, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-              <X size={24} />
-            </button>
-            
-            <h2 style={{ fontSize: 24, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>Log Maintenance</h2>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 40 }}>Record technical intervention or schedule upcoming services.</p>
-
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-                <div className="form-group">
-                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Asset / Equipment</label>
-                  <select 
-                    className="form-input"
-                    value={form.asset_name}
-                    onChange={e => setForm({...form, asset_name: e.target.value})}
-                    required
-                  >
-                    <option value="">Select Asset</option>
-                    {assets.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
-                  </select>
+      {/* ASSET MODAL */}
+      {isAssetModalOpen && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setIsAssetModalOpen(false)}>
+          <div className="modal" style={{ maxWidth: 640 }}>
+            <div className="modal-header">
+              <div className="modal-title">Commission New Asset</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setIsAssetModalOpen(false)}>✕</button>
+            </div>
+            <form onSubmit={handleAddAsset}>
+              <div className="modal-body">
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                   <label className="form-label">Asset Name *</label>
+                   <input className="form-input" placeholder="e.g. Irrigation Pump B2" value={assetForm.name} onChange={e => setAssetForm(p => ({ ...p, name: e.target.value }))} required />
+                </div>
+                <div className="form-grid" style={{ marginBottom: 16 }}>
+                  <div className="form-group">
+                    <label className="form-label">Asset Type *</label>
+                    <select className="form-select" value={assetForm.type} onChange={e => setAssetForm(p => ({ ...p, type: e.target.value as any }))}>
+                      {ASSET_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Deployment Location</label>
+                    <input className="form-input" placeholder="e.g. West Fields" value={assetForm.location} onChange={e => setAssetForm(p => ({ ...p, location: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="form-grid" style={{ marginBottom: 16 }}>
+                  <div className="form-group">
+                    <label className="form-label">Purchase Value (TTD) *</label>
+                    <input type="number" className="form-input" placeholder="0.00" value={assetForm.purchase_value} onChange={e => setAssetForm(p => ({ ...p, purchase_value: e.target.value }))} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Purchase Date *</label>
+                    <input type="date" className="form-input" value={assetForm.purchase_date} onChange={e => setAssetForm(p => ({ ...p, purchase_date: e.target.value }))} required />
+                  </div>
                 </div>
                 <div className="form-group">
-                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Maintenance Type</label>
-                  <select 
-                    className="form-input"
-                    value={form.maintenance_type}
-                    onChange={e => setForm({...form, maintenance_type: e.target.value as any})}
-                    required
-                  >
-                    <option value="Service">Routine Service</option>
-                    <option value="Repair">Emergency Repair</option>
-                    <option value="Inspection">Inspection</option>
-                    <option value="Replacement">Replacement</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-                <div className="form-group">
-                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Service Date</label>
-                  <input 
-                    type="date"
-                    className="form-input" 
-                    value={form.date}
-                    onChange={e => setForm({...form, date: e.target.value})}
-                    required 
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Current Status</label>
-                  <select 
-                    className="form-input"
-                    value={form.status}
-                    onChange={e => setForm({...form, status: e.target.value as any})}
-                    required
-                  >
-                    <option value="Completed">Completed</option>
-                    <option value="Scheduled">Scheduled / Pending</option>
-                  </select>
+                   <label className="form-label">Vendor / Supplier</label>
+                   <input className="form-input" placeholder="e.g. Machinery Ltd" value={assetForm.vendor_name} onChange={e => setAssetForm(p => ({ ...p, vendor_name: e.target.value }))} />
                 </div>
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-                <div className="form-group">
-                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Assigned Vendor</label>
-                  <select 
-                    className="form-input"
-                    value={form.vendor_id}
-                    onChange={e => setForm({...form, vendor_id: e.target.value})}
-                  >
-                    <option value="">Internal Staff</option>
-                    {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Estimated Cost (TTD)</label>
-                  <input 
-                    type="number"
-                    className="form-input" 
-                    placeholder="0.00"
-                    value={form.cost}
-                    onChange={e => setForm({...form, cost: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Next Service Due Date</label>
-                <input 
-                  type="date"
-                  className="form-input" 
-                  value={form.next_due_date}
-                  onChange={e => setForm({...form, next_due_date: e.target.value})}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Technical Notes</label>
-                <textarea 
-                  className="form-input" 
-                  placeholder="Describe parts used, issues found, or specialized labor..."
-                  style={{ minHeight: 100, resize: 'none', padding: 16 }}
-                  value={form.notes}
-                  onChange={e => setForm({...form, notes: e.target.value})}
-                />
-              </div>
-
-              <div style={{ marginTop: 16, display: 'flex', gap: 16 }}>
-                <button type="button" className="btn-secondary" onClick={() => setShowModal(false)} style={{ flex: 1, padding: '14px' }}>Cancel</button>
-                <button type="submit" className="btn-primary" style={{ flex: 1, padding: '14px', justifyContent: 'center' }}>
-                   {currentUser.role === 'admin' ? 'Record Maintenance' : 'Submit for Approval'}
-                </button>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setIsAssetModalOpen(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Authorize Asset</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      <style jsx>{`
-        .col-2-4 { width: calc(20% - 10px); }
-        .card-compact {
-          background: var(--bg-card);
-          backdrop-filter: blur(12px);
-          border: 1px solid var(--border-soft);
-          border-radius: 12px;
-          padding: 12px 16px;
-        }
-        .glass-container {
-          background: var(--bg-card);
-          backdrop-filter: blur(12px);
-          border: 1px solid var(--border-soft);
-          border-radius: 20px;
-          overflow: hidden;
-        }
-        .ops-table {
-           width: 100%;
-           border-collapse: collapse;
-        }
-        .ops-table th {
-           text-align: left;
-           font-size: 10px;
-           color: var(--text-muted);
-           text-transform: uppercase;
-           padding: 12px;
-           border-bottom: 1px solid var(--border-soft);
-        }
-        .ops-table td {
-           padding: 16px 12px;
-           font-size: 13px;
-           color: var(--text-primary);
-           border-bottom: 1px solid var(--border-soft);
-        }
-        .alert-item {
-           display: flex;
-           gap: 12px;
-           align-items: center;
-           padding: 12px;
-           background: var(--bg-card-elevated);
-           border-radius: 12px;
-           border: 1px solid var(--border-soft);
-        }
-        .btn-small {
-           background: var(--status-success);
-           color: var(--text-inverse);
-           border: none;
-           padding: 4px 12px;
-           border-radius: 8px;
-           font-size: 11px;
-           font-weight: 800;
-           cursor: pointer;
-           display: flex;
-           align-items: center;
-           gap: 6px;
-        }
-        .badge-success { font-size: 9px; font-weight: 900; background: var(--status-success-glow); color: var(--status-success); padding: 4px 8px; border-radius: 4px; }
-        .badge-warning { font-size: 9px; font-weight: 900; background: var(--status-warning-glow); color: var(--status-warning); padding: 4px 8px; border-radius: 4px; }
-        .badge-danger { font-size: 9px; font-weight: 900; background: var(--status-critical-glow); color: var(--status-critical); padding: 4px 8px; border-radius: 4px; }
-        .animate-fade-in {
-          animation: fadeIn 0.4s ease-out;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .form-input {
-          width: 100%;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid var(--border-soft);
-          border-radius: 12px;
-          padding: 14px 18px;
-          color: var(--text-primary);
-          font-size: 14px;
-          outline: none;
-          transition: all 0.2s;
-        }
-        .form-input:focus {
-          border-color: var(--status-success);
-          background: rgba(255,255,255,0.05);
-        }
-        .label-small {
-          font-size: 9px;
-          font-weight: 950;
-          color: var(--text-muted);
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-        }
-        .btn-primary { background: var(--status-success); color: var(--text-inverse); border: none; border-radius: 10px; padding: 10px 20px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .btn-secondary { background: var(--bg-card-elevated); color: var(--text-primary); border: 1px solid var(--border-soft); border-radius: 12px; padding: 10px 20px; font-weight: 700; font-size: 14px; cursor: pointer; }
-      `}</style>
+      {/* MAINTENANCE MODAL */}
+      {isMaintModalOpen && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setIsMaintModalOpen(false)}>
+          <div className="modal" style={{ maxWidth: 500 }}>
+            <div className="modal-header">
+              <div className="modal-title">Log Maintenance Activity</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setIsMaintModalOpen(false)}>✕</button>
+            </div>
+            <form onSubmit={handleAddMaint}>
+              <div className="modal-body">
+                <div style={{ background: 'var(--bg-card-elevated)', padding: 12, borderRadius: 10, marginBottom: 20, textAlign: 'center' }}>
+                   <span className="label-small">Asset ID:</span> <strong style={{ color: 'var(--text-primary)' }}>{selectedAssetId}</strong>
+                </div>
+                <div className="form-grid" style={{ marginBottom: 16 }}>
+                  <div className="form-group">
+                    <label className="form-label">Log Date *</label>
+                    <input type="date" className="form-input" value={maintForm.date} onChange={e => setMaintForm(p => ({ ...p, date: e.target.value }))} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Log Type *</label>
+                    <select className="form-select" value={maintForm.maintenance_type} onChange={e => setMaintForm(p => ({ ...p, maintenance_type: e.target.value as any }))}>
+                      <option value="routine">Routine</option>
+                      <option value="repair">Repair</option>
+                      <option value="inspection">Inspection</option>
+                      <option value="replacement">Replacement</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label className="form-label">Task Description *</label>
+                  <textarea className="form-textarea" placeholder="Oil change, parts replaced, etc." value={maintForm.description} onChange={e => setMaintForm(p => ({ ...p, description: e.target.value }))} required />
+                </div>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="form-label">Service Cost (TTD) *</label>
+                    <input type="number" className="form-input" placeholder="0.00" value={maintForm.cost} onChange={e => setMaintForm(p => ({ ...p, cost: e.target.value }))} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Next Service Date</label>
+                    <input type="date" className="form-input" value={maintForm.next_service_date} onChange={e => setMaintForm(p => ({ ...p, next_service_date: e.target.value }))} />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setIsMaintModalOpen(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Record Maintenance</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
-  );
+  )
 }
-

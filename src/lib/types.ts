@@ -201,16 +201,34 @@ export interface FeedPurchase {
   segment?: BusinessSegment
 }
 
+export interface InfrastructureAsset {
+  id: string
+  name: string
+  type: 'Tractor' | 'Pump' | 'Generator' | 'Irrigation' | 'Storage' | 'Building' | 'Vehicle' | 'Other'
+  location: string
+  status: 'active' | 'needs_service' | 'down' | 'retired'
+  purchase_value: number
+  purchase_date: string
+  vendor_name?: string
+  notes?: string
+  workflow_status: 'pending' | 'approved' | 'rejected'
+  created_by: string
+  created_at: string
+}
+
 export interface MaintenanceRecord {
   id: string
+  asset_id: string
   date: string
-  equipment_name: string
-  maintenance_type: 'routine' | 'repair' | 'replacement'
+  maintenance_type: 'routine' | 'repair' | 'replacement' | 'inspection'
   description: string
   cost: number
   vendor_id?: string
+  vendor_name?: string
   next_service_date?: string
-  notes?: string
+  status: 'completed' | 'scheduled' | 'pending'
+  workflow_status: 'pending' | 'approved' | 'rejected'
+  created_by: string
   created_at: string
 }
 

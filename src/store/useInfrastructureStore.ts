@@ -1,121 +1,202 @@
 import { create } from 'zustand'
+import { InfrastructureAsset, MaintenanceRecord } from '@/lib/types'
 import { useAppStore } from './useAppStore'
 import { useWorkflowStore } from './useWorkflowStore'
 
-export interface Asset {
-  id: string;
-  name: string;
-  category: 'Equipment' | 'Building' | 'Vehicle' | 'Irrigation' | 'Power';
-  health_score: number;
-  status: 'Nominal' | 'Warning' | 'Critical';
-  last_service: string;
-}
-
-export interface MaintenanceRecord {
-  id: string;
-  asset_name: string;
-  maintenance_type: 'Repair' | 'Service' | 'Inspection' | 'Replacement';
-  vendor_id?: string;
-  vendor_name?: string;
-  date: string;
-  cost?: number;
-  status: 'Completed' | 'Scheduled';
-  next_due_date?: string;
-  notes?: string;
-  created_by: string;
-  approval_status: 'pending' | 'approved';
-}
-
 interface InfrastructureState {
-  assets: Asset[];
-  maintenanceLogs: MaintenanceRecord[];
-  isLoading: boolean;
-
-  // Actions
-  addMaintenanceLog: (log: Omit<MaintenanceRecord, 'id' | 'approval_status' | 'created_by'>) => Promise<void>;
-  updateLogStatus: (id: string, status: 'pending' | 'approved') => void;
+  assets: InfrastructureAsset[]
+  maintenanceLogs: MaintenanceRecord[]
+  isLoading: boolean
+  
+  fetchInfrastructure: () => Promise<void>
+  
+  // Asset Actions
+  addAsset: (asset: Omit<InfrastructureAsset, 'id' | 'workflow_status' | 'created_by' | 'created_at'>) => Promise<InfrastructureAsset | null>
+  updateAssetStatus: (id: string, status: InfrastructureAsset['status']) => Promise<void>
+  approveAsset: (id: string) => Promise<void>
+  deleteAsset: (id: string) => Promise<void>
+  
+  // Maintenance Actions
+  addMaintenanceLog: (log: Omit<MaintenanceRecord, 'id' | 'workflow_status' | 'created_by' | 'created_at'>) => Promise<MaintenanceRecord | null>
+  approveMaintenance: (id: string) => Promise<void>
+  markMaintenanceCompleted: (id: string) => Promise<void>
 }
 
 export const useInfrastructureStore = create<InfrastructureState>((set, get) => ({
   assets: [
-    { id: 'ast-1', name: 'John Deere 8R', category: 'Vehicle', health_score: 92, status: 'Nominal', last_service: '2024-03-15' },
-    { id: 'ast-2', name: 'Combine S2', category: 'Vehicle', health_score: 45, status: 'Critical', last_service: '2023-11-20' },
-    { id: 'ast-3', name: 'Irrigation Pump #2', category: 'Irrigation', health_score: 78, status: 'Warning', last_service: '2024-01-10' },
-    { id: 'ast-4', name: 'Main Broiler House', category: 'Building', health_score: 98, status: 'Nominal', last_service: '2024-02-01' },
-    { id: 'ast-5', name: 'Generator 500kVA', category: 'Power', health_score: 88, status: 'Nominal', last_service: '2024-04-12' },
-  ],
-  maintenanceLogs: [
     { 
-      id: 'log-1', 
-      asset_name: 'John Deere 8R', 
-      maintenance_type: 'Service', 
-      vendor_name: 'John Deere Service', 
-      date: '2024-03-15', 
-      cost: 1200, 
-      status: 'Completed', 
-      approval_status: 'approved',
-      created_by: 'user-admin-1'
+      id: 'ast-1', name: 'John Deere Tractor 5075E', type: 'Tractor', location: 'Barn A', 
+      status: 'active', purchase_value: 45000, purchase_date: '2023-05-15', 
+      workflow_status: 'approved', created_by: 'system', created_at: new Date().toISOString() 
     },
     { 
-      id: 'log-2', 
-      asset_name: 'Combine S2', 
-      maintenance_type: 'Repair', 
-      vendor_name: 'Alex Smith', 
-      date: '2024-04-25', 
-      cost: 4500, 
-      status: 'Scheduled', 
-      approval_status: 'pending',
-      created_by: 'user-de-1'
+      id: 'ast-2', name: 'Backup Generator 50kW', type: 'Generator', location: 'Utility Shed', 
+      status: 'needs_service', purchase_value: 12000, purchase_date: '2022-11-20', 
+      workflow_status: 'approved', created_by: 'system', created_at: new Date().toISOString() 
     }
   ],
+  maintenanceLogs: [],
   isLoading: false,
 
-  addMaintenanceLog: async (log) => {
-    const { currentUser, emitSystemEvent } = useAppStore.getState();
-    const isAdmin = currentUser.role === 'admin';
-    const approvalStatus = isAdmin ? 'approved' : 'pending';
+  fetchInfrastructure: async () => {
+    set({ isLoading: true })
+    set({ isLoading: false })
+  },
 
-    const newLog: MaintenanceRecord = {
-      ...log,
-      id: `log-${Math.random().toString(36).substring(7)}`,
-      approval_status: approvalStatus,
-      created_by: currentUser.id
-    };
+  addAsset: async (asset) => {
+    const { currentUser, emitSystemEvent } = useAppStore.getState()
+    const { addApprovalRequest } = useWorkflowStore.getState()
+    
+    const isAdmin = currentUser.role === 'admin'
+    const status = isAdmin ? 'approved' : 'pending'
 
-    set((state) => ({ maintenanceLogs: [newLog, ...state.maintenanceLogs] }));
+    const newAsset: InfrastructureAsset = { 
+      ...asset, 
+      id: `ast-${Date.now()}`,
+      workflow_status: status,
+      created_by: currentUser.id,
+      created_at: new Date().toISOString()
+    } as InfrastructureAsset
+
+    set((state) => ({ assets: [newAsset, ...state.assets] }))
 
     if (isAdmin) {
-      // Immediate reaction for Admin
       emitSystemEvent({
-        type: 'DATA_APPROVED',
-        severity: 'info',
+        type: 'creation',
+        severity: 'success',
         module: 'Infrastructure',
-        message: `Maintenance recorded for ${log.asset_name} (${log.maintenance_type})`,
-        metadata: { id: newLog.id, entity_type: 'infrastructure' }
-      });
+        message: `New asset commissioned: ${asset.name} (${asset.type})`,
+        metadata: { id: newAsset.id, name: asset.name }
+      })
     } else {
-      // Approval workflow for Data Entry
-      useWorkflowStore.getState().addApprovalRequest({
-        entity_type: 'maintenance',
-        entity_id: newLog.id,
+      addApprovalRequest({
+        entity_type: 'maintenance' as any, // mapping for simplicity in existing request types or add 'asset'
+        entity_id: newAsset.id,
         requester_id: currentUser.id,
-        priority: log.cost && log.cost > 2000 ? 'high' : 'medium',
+        priority: 'medium',
         status: 'pending'
-      });
-
+      })
+      
       emitSystemEvent({
         type: 'creation',
         severity: 'info',
         module: 'Infrastructure',
-        message: `Maintenance log submitted for ${log.asset_name}: Awaiting Approval`,
-        metadata: { id: newLog.id, entity_type: 'infrastructure' }
-      });
+        message: `New asset record submitted for approval: ${asset.name}`,
+        metadata: { id: newAsset.id }
+      })
+    }
+
+    return newAsset
+  },
+
+  updateAssetStatus: async (id, status) => {
+     const { emitSystemEvent } = useAppStore.getState()
+     set((state) => ({
+        assets: state.assets.map(a => a.id === id ? { ...a, status } : a)
+     }))
+     
+     const asset = get().assets.find(a => a.id === id)
+     emitSystemEvent({
+        type: 'update',
+        severity: status === 'down' ? 'critical' : (status === 'needs_service' ? 'warning' : 'info'),
+        module: 'Infrastructure',
+        message: `Asset status changed: ${asset?.name} is now ${status.replace('_', ' ')}`,
+        metadata: { id, status }
+     })
+  },
+
+  approveAsset: async (id) => {
+    set((state) => ({
+      assets: state.assets.map(a => a.id === id ? { ...a, workflow_status: 'approved' } : a)
+    }))
+    
+    const asset = get().assets.find(a => a.id === id)
+    if (asset) {
+       useAppStore.getState().emitSystemEvent({
+          type: 'approval',
+          severity: 'success',
+          module: 'Infrastructure',
+          message: `Asset approved: ${asset.name}`,
+          metadata: { id }
+       })
     }
   },
 
-  updateLogStatus: (id, status) => {
+  deleteAsset: async (id) => {
     set((state) => ({
-      maintenanceLogs: state.maintenanceLogs.map(l => l.id === id ? { ...l, approval_status: status } : l)
-    }));
+      assets: state.assets.filter(a => a.id !== id)
+    }))
+  },
+
+  addMaintenanceLog: async (log) => {
+    const { currentUser, emitSystemEvent } = useAppStore.getState()
+    const { addApprovalRequest } = useWorkflowStore.getState()
+    
+    const isAdmin = currentUser.role === 'admin'
+    const status = isAdmin ? 'approved' : 'pending'
+
+    const newLog: MaintenanceRecord = { 
+      ...log, 
+      id: `maint-${Date.now()}`,
+      workflow_status: status,
+      created_by: currentUser.id,
+      created_at: new Date().toISOString()
+    } as MaintenanceRecord
+
+    set((state) => ({ maintenanceLogs: [newLog, ...state.maintenanceLogs] }))
+
+    if (isAdmin) {
+      emitSystemEvent({
+        type: 'creation',
+        severity: 'success',
+        module: 'Infrastructure',
+        message: `Maintenance recorded for ${get().assets.find(a => a.id === log.asset_id)?.name}`,
+        metadata: { id: newLog.id, asset_id: log.asset_id, cost: log.cost }
+      })
+    } else {
+      addApprovalRequest({
+        entity_type: 'maintenance',
+        entity_id: newLog.id,
+        requester_id: currentUser.id,
+        priority: 'high',
+        status: 'pending'
+      })
+    }
+
+    return newLog
+  },
+
+  approveMaintenance: async (id) => {
+     set((state) => ({
+       maintenanceLogs: state.maintenanceLogs.map(l => l.id === id ? { ...l, workflow_status: 'approved' } : l)
+     }))
+     
+     const log = get().maintenanceLogs.find(l => l.id === id)
+     if (log) {
+        useAppStore.getState().emitSystemEvent({
+           type: 'approval',
+           severity: 'success',
+           module: 'Infrastructure',
+           message: `Maintenance log approved for asset ID: ${log.asset_id}`,
+           metadata: { id, cost: log.cost }
+        })
+     }
+  },
+
+  markMaintenanceCompleted: async (id) => {
+     set((state) => ({
+        maintenanceLogs: state.maintenanceLogs.map(l => l.id === id ? { ...l, status: 'completed' } : l)
+     }))
+     
+     const log = get().maintenanceLogs.find(l => l.id === id)
+     if (log) {
+        useAppStore.getState().emitSystemEvent({
+           type: 'update',
+           severity: 'success',
+           module: 'Infrastructure',
+           message: `Maintenance task completed for asset ID: ${log.asset_id}`,
+           metadata: { id }
+        })
+     }
   }
 }))
