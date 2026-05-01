@@ -6,49 +6,96 @@ import ThemeToggle from "@/components/ThemeToggle";
 import NotificationCenter from "@/components/NotificationCenter";
 import { useUIStore } from '@/store/useUIStore';
 import { useAppStore } from '@/store/useAppStore';
+import { useVendorStore } from '@/store/useVendorStore';
 import { 
   Truck, Search, Plus, Filter, Sparkles, 
   AlertTriangle, CheckCircle2, TrendingUp, 
   TrendingDown, Star, Clock, MoreVertical,
   Mail, Phone, MapPin, User, ChevronRight,
-  ShieldAlert, Activity, DollarSign, Zap
+  ShieldAlert, Activity, DollarSign, Zap, X,
+  Globe, Briefcase, Info
 } from "lucide-react";
-import { SAMPLE_VENDORS, SAMPLE_SEGMENTS } from '@/lib/sample-data';
+import { SAMPLE_SEGMENTS } from '@/lib/sample-data';
+import { toast, Toaster } from 'react-hot-toast';
 
 import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
 export default function VendorIntelligencePage() {
   const { sidebarCollapsed } = useUIStore();
-  const { theme } = useAppStore();
+  const { theme, currentUser } = useAppStore();
+  const { vendors, addVendor } = useVendorStore();
   const isLight = theme === 'light';
-  const [vendors, setVendors] = useState(SAMPLE_VENDORS.map(v => ({
-    ...v,
-    total_spend: Math.floor(Math.random() * 50000) + 5000,
-    reliability: (Math.random() * 2 + 3).toFixed(1),
-    cost_trend: Math.random() > 0.5 ? 'up' : 'down',
-    last_transaction: '2026-04-25',
-    avg_job_cost: Math.floor(Math.random() * 2000) + 500,
-    risk: Math.random() > 0.8 ? 'High' : 'Low'
-  })));
+  
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
+
+  // Form State
+  const [form, setForm] = useState({
+    name: '',
+    category: '',
+    contact_name: '',
+    phone: '',
+    email: '',
+    address: '',
+    notes: '',
+    reliability: '5.0',
+    risk: 'Low'
+  });
 
   const filtered = useMemo(() => {
     return vendors.filter(v => 
       v.name.toLowerCase().includes(search.toLowerCase()) ||
-      (v.contact_name ?? '').toLowerCase().includes(search.toLowerCase())
+      (v.contact_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      (v.notes ?? '').toLowerCase().includes(search.toLowerCase())
     );
   }, [vendors, search]);
 
   const metrics = useMemo(() => {
-    const totalSpend = vendors.reduce((s, v) => s + v.total_spend, 0);
-    const topVendor = [...vendors].sort((a, b) => b.total_spend - a.total_spend)[0];
-    const highRiskCount = vendors.filter(v => v.risk === 'High').length;
+    const totalSpend = vendors.reduce((s, v) => s + (v as any).total_spend || 0, 0);
+    const sorted = [...vendors].sort((a, b) => ((b as any).total_spend || 0) - ((a as any).total_spend || 0));
+    const topVendor = sorted[0] || { name: 'N/A' };
+    const highRiskCount = vendors.filter(v => (v as any).risk === 'High').length;
     return { totalSpend, topVendor, highRiskCount };
   }, [vendors]);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const result = await addVendor({
+      name: form.name,
+      contact_name: form.contact_name,
+      phone: form.phone,
+      email: form.email,
+      address: form.address,
+      notes: form.notes,
+      // @ts-ignore
+      category: form.category,
+      reliability: form.reliability,
+      risk: form.risk
+    });
+
+    if (result) {
+      toast.success('New vendor registered successfully', {
+        style: { background: '#101010', color: '#fff', border: '1px solid var(--status-success)' }
+      });
+      setShowModal(false);
+      setForm({
+        name: '',
+        category: '',
+        contact_name: '',
+        phone: '',
+        email: '',
+        address: '',
+        notes: '',
+        reliability: '5.0',
+        risk: 'Low'
+      });
+    }
+  };
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)' }}>
+      <Toaster position="top-right" />
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
@@ -112,20 +159,20 @@ export default function VendorIntelligencePage() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 16 }}>
                              <div>
                                 <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text-primary)' }}>{v.name}</div>
-                                <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Supply Chain Entity</div>
+                                <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>{(v as any).category || 'Supply Chain Entity'}</div>
                              </div>
-                             {v.risk === 'High' && <span className="risk-badge">HIGH RISK</span>}
+                             {(v as any).risk === 'High' && <span className="risk-badge">HIGH RISK</span>}
                           </div>
 
                           <div className="card-stats">
                              <div className="stat">
                                 <div className="stat-label">Total Spend</div>
-                                <div className="stat-val">${v.total_spend.toLocaleString()}</div>
+                                <div className="stat-val">${((v as any).total_spend || 0).toLocaleString()}</div>
                              </div>
                              <div className="stat">
                                 <div className="stat-label">Reliability</div>
                                 <div className="stat-val" style={{ color: COLORS.success, display: 'flex', alignItems: 'center', gap: 4 }}>
-                                   {v.reliability} <Star size={10} fill={COLORS.success} />
+                                   {(v as any).reliability || '5.0'} <Star size={10} fill={COLORS.success} />
                                 </div>
                              </div>
                           </div>
@@ -133,10 +180,11 @@ export default function VendorIntelligencePage() {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
                              <div className="contact-info"><Mail size={12}/> {v.email || 'N/A'}</div>
                              <div className="contact-info"><Phone size={12}/> {v.phone || 'N/A'}</div>
+                             <div className="contact-info"><MapPin size={12}/> {v.address || 'Location N/A'}</div>
                           </div>
 
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, borderTop: `1px solid ${COLORS.border}` }}>
-                             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Trend: <span style={{ color: v.cost_trend === 'up' ? COLORS.danger : COLORS.success }}>{v.cost_trend.toUpperCase()}</span></div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, borderTop: `1px solid var(--border-soft)` }}>
+                             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Trend: <span style={{ color: (v as any).cost_trend === 'up' ? COLORS.danger : COLORS.success }}>{((v as any).cost_trend || 'stable').toUpperCase()}</span></div>
                              <button className="btn-view">Details <ChevronRight size={12}/></button>
                           </div>
                        </div>
@@ -158,7 +206,7 @@ export default function VendorIntelligencePage() {
                          { title: 'Reliability Warning', desc: 'Vendor X maintenance quality has dropped 12% this quarter.' },
                          { title: 'Usage Alert', desc: 'Vendor Y usage is approaching annual bulk discount threshold.' },
                        ].map((insight, i) => (
-                         <div key={i} style={{ borderBottom: i < 2 ? `1px solid ${COLORS.border}` : 'none', paddingBottom: i < 2 ? 16 : 0 }}>
+                         <div key={i} style={{ borderBottom: i < 2 ? `1px solid var(--border-soft)` : 'none', paddingBottom: i < 2 ? 16 : 0 }}>
                             <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>{insight.title}</div>
                             <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4 }}>{insight.desc}</div>
                          </div>
@@ -188,6 +236,134 @@ export default function VendorIntelligencePage() {
 
         </main>
       </div>
+
+      {/* ADD VENDOR MODAL */}
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="card" style={{ width: 600, padding: '48px', position: 'relative', background: 'var(--bg-card)', border: '1px solid var(--border-soft)', borderRadius: 24 }}>
+            <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 32, right: 32, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+              <X size={24} />
+            </button>
+            
+            <h2 style={{ fontSize: 24, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>Register New Vendor</h2>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 40 }}>Add a new entity to your farm's supply chain intelligence network.</p>
+
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Vendor Name</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="e.g. Island Agri-Chemicals"
+                    value={form.name}
+                    onChange={e => setForm({...form, name: e.target.value})}
+                    required 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Category / Service</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="e.g. Fertilizers"
+                    value={form.category}
+                    onChange={e => setForm({...form, category: e.target.value})}
+                    required 
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Contact Person</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="e.g. Sarah Williams"
+                    value={form.contact_name}
+                    onChange={e => setForm({...form, contact_name: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Phone Number</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="+1-868-..."
+                    value={form.phone}
+                    onChange={e => setForm({...form, phone: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Email Address</label>
+                  <input 
+                    type="email"
+                    className="form-input" 
+                    placeholder="contact@vendor.com"
+                    value={form.email}
+                    onChange={e => setForm({...form, email: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Location / Address</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="e.g. San Fernando, TT"
+                    value={form.address}
+                    onChange={e => setForm({...form, address: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Reliability Assessment</label>
+                  <select 
+                    className="form-input"
+                    value={form.reliability}
+                    onChange={e => setForm({...form, reliability: e.target.value})}
+                  >
+                    <option value="5.0">5.0 - Excellent</option>
+                    <option value="4.0">4.0 - Good</option>
+                    <option value="3.0">3.0 - Fair</option>
+                    <option value="2.0">2.0 - Poor</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Risk Level</label>
+                  <select 
+                    className="form-input"
+                    value={form.risk}
+                    onChange={e => setForm({...form, risk: e.target.value})}
+                  >
+                    <option value="Low">Low Risk</option>
+                    <option value="Medium">Medium Risk</option>
+                    <option value="High">High Risk</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Internal Notes</label>
+                <textarea 
+                  className="form-input" 
+                  placeholder="Payment terms, delivery schedules, etc."
+                  style={{ minHeight: 100, resize: 'none', padding: 16 }}
+                  value={form.notes}
+                  onChange={e => setForm({...form, notes: e.target.value})}
+                />
+              </div>
+
+              <div style={{ marginTop: 16, display: 'flex', gap: 16 }}>
+                <button type="button" className="btn-secondary" onClick={() => setShowModal(false)} style={{ flex: 1, padding: '14px' }}>Cancel</button>
+                <button type="submit" className="btn-primary" style={{ flex: 1, padding: '14px', justifyContent: 'center' }}>
+                   Confirm Registration
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .col-2-4 { width: calc(20% - 10px); }
@@ -241,8 +417,33 @@ export default function VendorIntelligencePage() {
         .contact-info { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); }
         .btn-view { background: none; border: none; color: var(--status-success); font-size: 11px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; }
         .btn-primary { background: var(--status-success); color: var(--text-inverse); border: none; border-radius: 10px; padding: 10px 20px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .btn-secondary { background: var(--bg-card-elevated); color: var(--text-primary); border: 1px solid var(--border-soft); border-radius: 12px; padding: 10px 20px; font-weight: 700; font-size: 14px; cursor: pointer; }
         .btn-filter { background: var(--bg-card-elevated); border: 1px solid var(--border-soft); border-radius: 12px; padding: 10px 16px; color: var(--text-primary); font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        
+        .form-input {
+          width: 100%;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid var(--border-soft);
+          border-radius: 12px;
+          padding: 14px 18px;
+          color: var(--text-primary);
+          font-size: 14px;
+          outline: none;
+          transition: all 0.2s;
+        }
+        .form-input:focus {
+          border-color: var(--status-success);
+          background: rgba(255,255,255,0.05);
+        }
+        .label-small {
+          font-size: 9px;
+          font-weight: 950;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+        }
       `}</style>
     </div>
   );
 }
+
