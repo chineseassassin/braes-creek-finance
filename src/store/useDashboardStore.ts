@@ -11,6 +11,7 @@ interface Transaction {
   date: string
   attachment_url?: string
   status?: 'pending' | 'approved' | 'rejected'
+  metadata?: any
 }
 
 interface DashboardState {
@@ -22,6 +23,7 @@ interface DashboardState {
   fetchTransactions: () => Promise<void>
   addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>
   updateTransactionStatus: (id: string, status: Transaction['status']) => Promise<void>
+  updateTransaction: (id: string, updates: Partial<Transaction>) => Promise<void>
   deleteTransaction: (id: string) => Promise<void>
   
   // Computed (from state)
@@ -115,6 +117,30 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         message: `${transaction.category === 'Payroll' ? 'Payroll' : 'Expense'} entry finalized and approved`,
         entity_id: id,
         metadata: { id, amount: transaction.amount }
+      });
+    }
+  },
+
+  updateTransaction: async (id, updates) => {
+    const old = get().transactions.find(t => t.id === id);
+    set((state) => ({
+      transactions: state.transactions.map(t => t.id === id ? { ...t, ...updates } : t)
+    }))
+
+    const { error } = await supabase
+      .from('transactions')
+      .update(updates)
+      .eq('id', id)
+    
+    if (error) {
+      set({ error: error.message })
+    } else if (old) {
+      useAppStore.getState().emitSystemEvent({
+        type: 'DATA_UPDATED',
+        severity: 'info',
+        module: old.category === 'Payroll' ? 'Payroll' : 'Expenses',
+        message: `Transaction record updated: ${old.description}`,
+        metadata: { id, updates }
       });
     }
   },

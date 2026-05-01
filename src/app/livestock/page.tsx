@@ -94,14 +94,19 @@ export default function LivestockPage() {
                     <Pie data={valuePie} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value">
                       {valuePie.map((e, i) => <Cell key={i} fill={e.color} />)}
                     </Pie>
-                    <Tooltip formatter={(v: any) => fmt(v)} contentStyle={{ background: '#1f1f23', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }} />
+                    <Tooltip 
+                      formatter={(v: any) => fmt(v)} 
+                      contentStyle={{ background: '#1f1f23', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }} 
+                      itemStyle={{ color: 'var(--text-primary)' }}
+                      labelStyle={{ color: 'var(--text-primary)' }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', justifyContent: 'center', marginTop: 8 }}>
                   {valuePie.map((v, i) => (
                     <div key={i} className="segment-dot">
                       <div className="dot" style={{ background: v.color }} />
-                      <span style={{ fontSize: 12, color: '#a1a1aa' }}>{ANIMAL_ICONS[v.name.toLowerCase()] ?? '•'} {v.name}: {fmt(v.value)}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{ANIMAL_ICONS[v.name.toLowerCase()] ?? '•'} {v.name}: {fmt(v.value)}</span>
                     </div>
                   ))}
                 </div>
@@ -113,11 +118,13 @@ export default function LivestockPage() {
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={typeData} margin={{ top: 4, right: 0, left: -16, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                    <XAxis dataKey="name" tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="name" tick={{ fill: 'var(--text-primary)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: 'var(--text-primary)', fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip 
                       cursor={{ fill: 'transparent' }}
                       contentStyle={{ background: '#1f1f23', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }} 
+                      itemStyle={{ color: 'var(--text-primary)' }}
+                      labelStyle={{ color: 'var(--text-primary)' }}
                     />
                     <Bar dataKey="quantity" name="Head Count" radius={[4, 4, 0, 0]}>
                       {typeData.map((e, i) => <Cell key={i} fill={e.color} fillOpacity={0.85} />)}

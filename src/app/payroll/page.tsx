@@ -18,24 +18,31 @@ import {
   AlertCircle, ChevronRight, MoreVertical,
   Zap, CheckCircle2, Wallet, ArrowRight,
   TrendingUp, TrendingDown, Target, Sparkles,
-  PieChart, Activity, X, Trash2, Edit2, Copy
+  PieChart, Activity, X, Trash2, Edit2, Copy,
+  Check, Ban, AlertTriangle
 } from "lucide-react";
+
+import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
 export default function PayrollPage() {
   const searchParams = useSearchParams();
   const highlightId = searchParams.get('highlight');
-  const { transactions, fetchTransactions, addTransaction } = useDashboardStore();
+  const { transactions, fetchTransactions, addTransaction, updateTransaction, updateTransactionStatus, deleteTransaction } = useDashboardStore();
   const { sidebarCollapsed } = useUIStore();
-  const { currentUser, switchRole } = useAppStore();
+  const { theme, currentUser, switchRole } = useAppStore();
   const { addApprovalRequest } = useWorkflowStore();
+  const isLight = theme === 'light';
 
   const [mountedTime, setMountedTime] = useState("");
   
   // States
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [areaFilter, setAreaFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     if (highlightId) {
@@ -49,7 +56,7 @@ export default function PayrollPage() {
 
   // Form State
   const [form, setForm] = useState({
-    name: '', role: '', area: 'Poultry', hours: '', rate: '', overtime: '', date: new Date().toISOString().split('T')[0]
+    name: '', role: '', area: 'Poultry', hours: '', rate: '', overtime: '', date: new Date().toISOString().split('T')[0], notes: ''
   });
 
   useEffect(() => {
@@ -58,24 +65,30 @@ export default function PayrollPage() {
   }, [fetchTransactions]);
 
   const payrollRecords = useMemo(() => {
-    // Merge mock records with live store transactions of category 'Payroll'
     const livePayroll = transactions.filter(t => t.category === 'Payroll' || t.description.toLowerCase().includes('payroll'))
-      .map(t => ({
-        id: t.id,
-        name: t.description.split(' - ')[0] || 'Unknown',
-        role: 'Farm Operator',
-        area: (t as any).segment_id || 'General',
-        hours: 0, rate: 0, overtime: 0,
-        total: t.amount,
-        date: t.date,
-        status: t.status === 'approved' ? 'Paid' : 'Pending'
-      }));
+      .map(t => {
+        const meta = t.metadata || {};
+        return {
+          id: t.id,
+          name: meta.worker_name || t.description.split(' - ')[0] || 'Unknown',
+          role: meta.worker_role || 'Farm Operator',
+          area: meta.area || (t as any).segment_id || 'General',
+          hours: meta.hours || 0, 
+          rate: meta.rate || 0, 
+          overtime: meta.overtime || 0,
+          total: t.amount,
+          date: t.date,
+          status: t.status === 'approved' ? 'Paid' : (t.status === 'rejected' ? 'Rejected' : 'Pending'),
+          notes: meta.notes || ''
+        };
+      });
 
-    const mockRecords = [
-      { id: 'm1', name: 'John Doe', role: 'Farm Manager', area: 'General Labor', hours: 40, rate: 35, overtime: 5, total: 1575, date: '2023-10-24', status: 'Paid' },
-      { id: 'm2', name: 'Jane Smith', role: 'Livestock Specialist', area: 'Poultry', hours: 42, rate: 28, overtime: 8, total: 1512, date: '2023-10-24', status: 'Approved' },
-      { id: 'm3', name: 'Mike Johnson', role: 'Equipment Operator', area: 'Maintenance', hours: 38, rate: 25, overtime: 0, total: 950, date: '2023-10-23', status: 'Pending' },
-    ];
+    // Only show mock if no live data (to keep it clean)
+    const mockRecords = livePayroll.length === 0 ? [
+      { id: 'm1', name: 'John Doe', role: 'Farm Manager', area: 'General Labor', hours: 40, rate: 35, overtime: 5, total: 1575, date: '2023-10-24', status: 'Paid', notes: '' },
+      { id: 'm2', name: 'Jane Smith', role: 'Livestock Specialist', area: 'Poultry', hours: 42, rate: 28, overtime: 8, total: 1512, date: '2023-10-24', status: 'Approved', notes: '' },
+      { id: 'm3', name: 'Mike Johnson', role: 'Equipment Operator', area: 'Maintenance', hours: 38, rate: 25, overtime: 0, total: 950, date: '2023-10-23', status: 'Pending', notes: '' },
+    ] : [];
 
     return [...livePayroll, ...mockRecords];
   }, [transactions]);
@@ -86,7 +99,7 @@ export default function PayrollPage() {
     return payrollRecords.filter(r => {
       const matchSearch = r.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchArea = areaFilter === "All" || r.area === areaFilter;
-      const matchStatus = statusFilter === "All" || r.status === statusFilter;
+      const matchStatus = statusFilter === "All" || (r.status.toLowerCase() === statusFilter.toLowerCase());
       return matchSearch && matchArea && matchStatus;
     });
   }, [payrollRecords, searchTerm, areaFilter, statusFilter]);
@@ -109,30 +122,86 @@ export default function PayrollPage() {
     const isDataEntry = currentUser.role === 'data-entry';
     const status = isDataEntry ? 'pending' : 'approved';
 
-    const newRecord = await addTransaction({
-      type: 'expense',
+    const payload = {
+      type: 'expense' as const,
       category: 'Payroll',
       description: `${form.name} - ${form.role}`,
       amount: totalPay,
       date: form.date,
       status: status,
-    });
+      metadata: {
+        worker_name: form.name,
+        worker_role: form.role,
+        area: form.area,
+        hours: h,
+        rate: r,
+        overtime: o,
+        notes: form.notes
+      }
+    };
 
-    if (isDataEntry && newRecord) {
-       addApprovalRequest({
-         entity_type: 'labor',
-         entity_id: newRecord.id,
-         requester_id: currentUser.id,
-         priority: totalPay > 2000 ? 'high' : 'medium',
-         status: 'pending'
-       });
-       toast.success('Payroll submitted for approval', { icon: '⏳', style: { background: '#101010', color: '#fff' } });
-    } else if (!isDataEntry) {
-       toast.success('Payroll entry approved', { icon: '✅', style: { background: '#101010', color: '#fff' } });
+    if (editingId) {
+      await updateTransaction(editingId, payload);
+      toast.success('Payroll record updated', { style: { background: '#101010', color: '#fff' } });
+    } else {
+      const newRecord = await addTransaction(payload);
+      if (isDataEntry && newRecord) {
+         addApprovalRequest({
+           entity_type: 'labor',
+           entity_id: newRecord.id,
+           requester_id: currentUser.id,
+           priority: totalPay > 2000 ? 'high' : 'medium',
+           status: 'pending'
+         });
+         toast.success('Payroll submitted for approval', { icon: '⏳', style: { background: '#101010', color: '#fff' } });
+      } else if (!isDataEntry) {
+         toast.success('Payroll entry approved', { icon: '✅', style: { background: '#101010', color: '#fff' } });
+      }
     }
 
     setIsModalOpen(false);
-    setForm({ name: '', role: '', area: 'Poultry', hours: '', rate: '', overtime: '', date: new Date().toISOString().split('T')[0] });
+    setEditingId(null);
+    setForm({ name: '', role: '', area: 'Poultry', hours: '', rate: '', overtime: '', date: new Date().toISOString().split('T')[0], notes: '' });
+  };
+
+  const handleEdit = (record: any) => {
+    setEditingId(record.id);
+    setForm({
+      name: record.name,
+      role: record.role,
+      area: record.area,
+      hours: record.hours.toString(),
+      rate: record.rate.toString(),
+      overtime: record.overtime.toString(),
+      date: record.date,
+      notes: record.notes
+    });
+    setIsModalOpen(true);
+    setMenuOpenId(null);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (id.startsWith('m')) {
+      toast.error('Cannot delete mock data');
+      return;
+    }
+    await deleteTransaction(id);
+    toast.success('Entry deleted');
+    setDeleteConfirmId(null);
+  };
+
+  const handleApprove = async (id: string) => {
+    if (id.startsWith('m')) return;
+    await updateTransactionStatus(id, 'approved');
+    toast.success('Payroll entry approved');
+    setMenuOpenId(null);
+  };
+
+  const handleReject = async (id: string) => {
+    if (id.startsWith('m')) return;
+    await updateTransactionStatus(id, 'rejected');
+    toast.success('Payroll entry rejected');
+    setMenuOpenId(null);
   };
 
   const costByArea = [
@@ -175,7 +244,7 @@ export default function PayrollPage() {
 
             <ThemeToggle />
             <NotificationCenter />
-            <button className="btn-primary" onClick={() => setIsModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px' }}>
+            <button className="btn-primary" onClick={() => { setIsModalOpen(true); setEditingId(null); setForm({ name: '', role: '', area: 'Poultry', hours: '', rate: '', overtime: '', date: new Date().toISOString().split('T')[0], notes: '' }); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px' }}>
                <Plus size={16} /> Add Payroll Entry
             </button>
           </div>
@@ -238,7 +307,7 @@ export default function PayrollPage() {
                     { label: 'Overtime Cost', val: `$${stats.ot.toLocaleString()}`, trend: '+12.5%', color: 'var(--color-danger)', insight: 'Critical spike detected' },
                     { label: 'Highest Labor Area', val: 'Poultry', trend: '+14%', color: 'var(--color-warning)', insight: 'Needs efficiency audit' }
                  ].map((card, i) => (
-                    <div key={i} style={{ gridColumn: 'span 2' }} className="card-elevated" style={{ gridColumn: 'span 2', padding: '24px' }}>
+                    <div key={i} className="card-elevated" style={{ gridColumn: 'span 2', padding: '24px' }}>
                        <div className="label-small" style={{ marginBottom: 16 }}>{card.label}</div>
                        <div className="metric-main" style={{ fontSize: 24, marginBottom: 4 }}>{card.val}</div>
                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 900, color: card.color, marginBottom: 12 }}>
@@ -259,10 +328,10 @@ export default function PayrollPage() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--color-surface-input)', border: '1px solid var(--color-border)', borderRadius: 12, padding: '8px 16px' }}>
                              <Search size={14} color="var(--color-text-muted)" />
                              <input 
-                               placeholder="Search worker..." 
-                               value={searchTerm}
-                               onChange={(e) => setSearchTerm(e.target.value)}
-                               style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--color-text-primary)', fontSize: 13, width: 180 }} 
+                                placeholder="Search worker..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--color-text-primary)', fontSize: 13, width: 180 }} 
                              />
                           </div>
                           <button className="btn-secondary" style={{ padding: '8px 16px' }}><Filter size={14} /> Filter</button>
@@ -296,15 +365,39 @@ export default function PayrollPage() {
                                 <td style={{ fontSize: 14, fontWeight: 900, color: 'var(--color-text-primary)' }}>${r.total.toLocaleString()}</td>
                                 <td>
                                    <span className="status-pill" style={{ 
-                                      color: r.status === 'Paid' ? 'var(--color-primary)' : (r.status === 'Flagged' ? 'var(--color-danger)' : 'var(--color-warning)'),
-                                      background: `${r.status === 'Paid' ? 'var(--color-primary)' : (r.status === 'Flagged' ? 'var(--color-danger)' : 'var(--color-warning)')}1a`,
-                                      border: `1px solid ${r.status === 'Paid' ? 'var(--color-primary)' : (r.status === 'Flagged' ? 'var(--color-danger)' : 'var(--color-warning)')}33`
+                                      color: r.status === 'Paid' || r.status === 'Approved' ? 'var(--color-primary)' : (r.status === 'Rejected' ? 'var(--color-danger)' : 'var(--color-warning)'),
+                                      background: `${r.status === 'Paid' || r.status === 'Approved' ? 'var(--color-primary)' : (r.status === 'Rejected' ? 'var(--color-danger)' : 'var(--color-warning)')}1a`,
+                                      border: `1px solid ${r.status === 'Paid' || r.status === 'Approved' ? 'var(--color-primary)' : (r.status === 'Rejected' ? 'var(--color-danger)' : 'var(--color-warning)')}33`
                                    }}>
                                       {r.status.toUpperCase()}
                                    </span>
                                 </td>
-                                <td style={{ textAlign: 'center' }}>
-                                   <button className="btn-secondary" style={{ width: 32, height: 32, padding: 0 }}><MoreVertical size={14} /></button>
+                                <td style={{ textAlign: 'center', position: 'relative' }}>
+                                   <button 
+                                     className="btn-secondary" 
+                                     style={{ width: 32, height: 32, padding: 0 }}
+                                     onClick={() => setMenuOpenId(menuOpenId === r.id ? null : r.id)}
+                                   >
+                                      <MoreVertical size={14} />
+                                   </button>
+
+                                   {menuOpenId === r.id && (
+                                     <div className="card-elevated" style={{ position: 'absolute', right: 40, top: 0, zIndex: 60, width: 160, padding: '8px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                        <button className="menu-item" onClick={() => handleEdit(r)}><Edit2 size={12}/> Edit Entry</button>
+                                        
+                                        {currentUser.role === 'admin' && (r.status === 'Pending' || r.status === 'Rejected') && (
+                                          <>
+                                            <button className="menu-item" style={{ color: 'var(--color-primary)' }} onClick={() => handleApprove(r.id)}><Check size={12}/> Approve</button>
+                                            {r.status !== 'Rejected' && (
+                                              <button className="menu-item" style={{ color: 'var(--color-danger)' }} onClick={() => handleReject(r.id)}><Ban size={12}/> Reject</button>
+                                            )}
+                                          </>
+                                        )}
+
+                                        <div style={{ height: 1, background: 'var(--color-border)', margin: '4px 0' }} />
+                                        <button className="menu-item" style={{ color: 'var(--color-danger)' }} onClick={() => setDeleteConfirmId(r.id)}><Trash2 size={12}/> Delete</button>
+                                     </div>
+                                   )}
                                 </td>
                              </tr>
                           ))}
@@ -314,7 +407,7 @@ export default function PayrollPage() {
                                    <div style={{ marginBottom: 16 }}><Users size={48} opacity={0.1} /></div>
                                    <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--color-text-primary)', marginBottom: 4 }}>No payroll records yet</div>
                                    <div className="label-small" style={{ marginBottom: 24, textTransform: 'none' }}>Start by adding worker hours and rates to activate intelligence.</div>
-                                   <button className="btn-primary" onClick={() => setIsModalOpen(true)}>Add First Payroll Entry</button>
+                                   <button className="btn-primary" onClick={() => { setIsModalOpen(true); setEditingId(null); }}>Add First Payroll Entry</button>
                                 </td>
                              </tr>
                           )}
@@ -335,7 +428,7 @@ export default function PayrollPage() {
                                 </div>
                                 <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
                                    <div style={{ height: '100%', width: `${(area.value / 4500) * 100}%`, background: area.color, borderRadius: 2 }} />
-                                </div>
+                                 </div>
                              </div>
                           ))}
                        </div>
@@ -370,7 +463,7 @@ export default function PayrollPage() {
                        { label: 'Unapproved timesheets pending', severity: 'Med', color: 'var(--color-warning)', desc: '3 records require manager sign-off.' },
                        { label: 'Payroll due in 2 days', severity: 'Low', color: 'var(--color-info)', desc: 'Disbursement scheduled for Oct 31.' }
                     ].map((alert, i) => (
-                       <div key={i} style={{ gridColumn: 'span 3' }} className="card-elevated" style={{ gridColumn: 'span 3', padding: '20px', borderLeft: `4px solid ${alert.color}` }}>
+                       <div key={i} className="card-elevated" style={{ gridColumn: 'span 3', padding: '20px', borderLeft: `4px solid ${alert.color}` }}>
                           <div className="label-small" style={{ color: alert.color, marginBottom: 8 }}>{alert.severity.toUpperCase()} SEVERITY</div>
                           <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--color-text-primary)', marginBottom: 8 }}>{alert.label}</div>
                           <div className="label-small" style={{ textTransform: 'none' }}>{alert.desc}</div>
@@ -382,105 +475,134 @@ export default function PayrollPage() {
            </div>
         </main>
 
-         {/* 3. ADD PAYROLL ENTRY MODAL */}
-         {isModalOpen && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-               <div className="card" style={{ width: 600, padding: '48px', position: 'relative' }}>
-                  <button onClick={() => setIsModalOpen(false)} style={{ position: 'absolute', top: 32, right: 32, background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }}>
-                     <X size={24} />
-                  </button>
-                  <h2 className="section-title" style={{ color: 'var(--color-text-primary)', textTransform: 'none', fontSize: 24, marginBottom: 40 }}>Add Payroll Entry</h2>
-                  
-                  <form onSubmit={handleSubmit}>
-                    <div className="grid-12" style={{ gap: 24 }}>
-                       <div style={{ gridColumn: 'span 6' }}>
-                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Worker Name</label>
-                          <input 
-                            className="card-elevated" 
-                            placeholder="Search worker" 
-                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
-                            value={form.name}
-                            onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))}
-                            required
-                          />
-                       </div>
-                       <div style={{ gridColumn: 'span 6' }}>
-                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Role</label>
-                          <input 
-                            className="card-elevated" 
-                            placeholder="e.g. Field Hand" 
-                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
-                            value={form.role}
-                            onChange={(e) => setForm(p => ({ ...p, role: e.target.value }))}
-                            required
-                          />
-                       </div>
-                       <div style={{ gridColumn: 'span 6' }}>
-                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Farm Area</label>
-                          <select 
-                            className="card-elevated" 
-                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }}
-                            value={form.area}
-                            onChange={(e) => setForm(p => ({ ...p, area: e.target.value }))}
-                          >
-                             {['Poultry', 'Goats', 'Pigs', 'Cattle', 'Crops', 'Maintenance', 'Transport', 'General Labor'].map(area => <option key={area} value={area}>{area}</option>)}
-                          </select>
-                       </div>
-                       <div style={{ gridColumn: 'span 6' }}>
-                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Date</label>
-                          <input 
-                            type="date" 
-                            className="card-elevated" 
-                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
-                            value={form.date}
-                            onChange={(e) => setForm(p => ({ ...p, date: e.target.value }))}
-                            required
-                          />
-                       </div>
-                       <div style={{ gridColumn: 'span 4' }}>
-                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Hours</label>
-                          <input 
-                            type="number" 
-                            placeholder="40" 
-                            className="card-elevated" 
-                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
-                            value={form.hours}
-                            onChange={(e) => setForm(p => ({ ...p, hours: e.target.value }))}
-                            required
-                          />
-                       </div>
-                       <div style={{ gridColumn: 'span 4' }}>
-                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Rate ($)</label>
-                          <input 
-                            type="number" 
-                            placeholder="25" 
-                            className="card-elevated" 
-                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
-                            value={form.rate}
-                            onChange={(e) => setForm(p => ({ ...p, rate: e.target.value }))}
-                            required
-                          />
-                       </div>
-                       <div style={{ gridColumn: 'span 4' }}>
-                          <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Overtime</label>
-                          <input 
-                            type="number" 
-                            placeholder="0" 
-                            className="card-elevated" 
-                            style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
-                            value={form.overtime}
-                            onChange={(e) => setForm(p => ({ ...p, overtime: e.target.value }))}
-                          />
-                       </div>
-                       <div style={{ gridColumn: 'span 12', marginTop: 32, display: 'flex', gap: 16, justifyContent: 'flex-end' }}>
-                          <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary" style={{ padding: '12px 32px' }}>Cancel</button>
-                          <button type="submit" className="btn-primary" style={{ padding: '12px 32px' }}>Save Entry</button>
-                       </div>
-                    </div>
-                  </form>
-               </div>
+          {/* 3. ADD/EDIT PAYROLL ENTRY MODAL */}
+          {isModalOpen && (
+             <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                <div className="card" style={{ width: 600, padding: '48px', position: 'relative' }}>
+                   <button onClick={() => { setIsModalOpen(false); setEditingId(null); }} style={{ position: 'absolute', top: 32, right: 32, background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }}>
+                      <X size={24} />
+                   </button>
+                   <h2 className="section-title" style={{ color: 'var(--color-text-primary)', textTransform: 'none', fontSize: 24, marginBottom: 40 }}>
+                      {editingId ? 'Edit Payroll Entry' : 'Add Payroll Entry'}
+                   </h2>
+                   
+                   <form onSubmit={handleSubmit}>
+                     <div className="grid-12" style={{ gap: 24 }}>
+                        <div style={{ gridColumn: 'span 6' }}>
+                           <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Worker Name</label>
+                           <input 
+                             className="card-elevated" 
+                             placeholder="Search worker" 
+                             style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
+                             value={form.name}
+                             onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))}
+                             required
+                           />
+                        </div>
+                        <div style={{ gridColumn: 'span 6' }}>
+                           <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Role</label>
+                           <input 
+                             className="card-elevated" 
+                             placeholder="e.g. Field Hand" 
+                             style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
+                             value={form.role}
+                             onChange={(e) => setForm(p => ({ ...p, role: e.target.value }))}
+                             required
+                           />
+                        </div>
+                        <div style={{ gridColumn: 'span 6' }}>
+                           <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Farm Area</label>
+                           <select 
+                             className="card-elevated" 
+                             style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }}
+                             value={form.area}
+                             onChange={(e) => setForm(p => ({ ...p, area: e.target.value }))}
+                           >
+                              {['Poultry', 'Goats', 'Pigs', 'Cattle', 'Crops', 'Maintenance', 'Transport', 'General Labor'].map(area => <option key={area} value={area}>{area}</option>)}
+                           </select>
+                        </div>
+                        <div style={{ gridColumn: 'span 6' }}>
+                           <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Date</label>
+                           <input 
+                             type="date" 
+                             className="card-elevated" 
+                             style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
+                             value={form.date}
+                             onChange={(e) => setForm(p => ({ ...p, date: e.target.value }))}
+                             required
+                           />
+                        </div>
+                        <div style={{ gridColumn: 'span 4' }}>
+                           <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Hours</label>
+                           <input 
+                             type="number" 
+                             placeholder="40" 
+                             className="card-elevated" 
+                             style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
+                             value={form.hours}
+                             onChange={(e) => setForm(p => ({ ...p, hours: e.target.value }))}
+                             required
+                           />
+                        </div>
+                        <div style={{ gridColumn: 'span 4' }}>
+                           <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Rate ($)</label>
+                           <input 
+                             type="number" 
+                             placeholder="25" 
+                             className="card-elevated" 
+                             style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
+                             value={form.rate}
+                             onChange={(e) => setForm(p => ({ ...p, rate: e.target.value }))}
+                             required
+                           />
+                        </div>
+                        <div style={{ gridColumn: 'span 4' }}>
+                           <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Overtime</label>
+                           <input 
+                             type="number" 
+                             placeholder="0" 
+                             className="card-elevated" 
+                             style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)' }} 
+                             value={form.overtime}
+                             onChange={(e) => setForm(p => ({ ...p, overtime: e.target.value }))}
+                           />
+                        </div>
+
+                        <div style={{ gridColumn: 'span 12' }}>
+                           <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Notes (Optional)</label>
+                           <textarea 
+                             className="card-elevated" 
+                             placeholder="Work notes, specific tasks, etc." 
+                             style={{ width: '100%', padding: '14px', borderRadius: 12, color: 'var(--color-text-primary)', fontSize: 14, border: '1px solid var(--color-border)', background: 'var(--color-surface-input)', minHeight: 80, resize: 'none' }} 
+                             value={form.notes}
+                             onChange={(e) => setForm(p => ({ ...p, notes: e.target.value }))}
+                           />
+                        </div>
+
+                        <div style={{ gridColumn: 'span 12', marginTop: 32, display: 'flex', gap: 16, justifyContent: 'flex-end' }}>
+                           <button type="button" onClick={() => { setIsModalOpen(false); setEditingId(null); }} className="btn-secondary" style={{ padding: '12px 32px' }}>Cancel</button>
+                           <button type="submit" className="btn-primary" style={{ padding: '12px 32px' }}>{editingId ? 'Update Record' : 'Save Entry'}</button>
+                        </div>
+                     </div>
+                   </form>
+                </div>
+             </div>
+          )}
+
+          {/* DELETE CONFIRMATION MODAL */}
+          {deleteConfirmId && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+              <div className="card" style={{ width: 400, padding: '32px', textAlign: 'center' }}>
+                <AlertTriangle size={48} color="var(--color-danger)" style={{ marginBottom: 20 }} />
+                <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--color-text-primary)', marginBottom: 12 }}>Delete Payroll Entry?</h3>
+                <p className="label-small" style={{ textTransform: 'none', marginBottom: 32 }}>This action is permanent and will remove the record from financial ledgers and audits.</p>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setDeleteConfirmId(null)}>Cancel</button>
+                  <button className="btn-primary" style={{ flex: 1, background: 'var(--color-danger)' }} onClick={() => handleDelete(deleteConfirmId)}>Confirm Delete</button>
+                </div>
+              </div>
             </div>
-         )}
+          )}
 
       </div>
 
@@ -492,8 +614,30 @@ export default function PayrollPage() {
         .highlight-flash {
           animation: highlight-flash 3s ease-out;
         }
+        .menu-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 12px;
+          background: none;
+          border: none;
+          color: var(--color-text-muted);
+          font-size: 11px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          width: 100%;
+          text-align: left;
+          cursor: pointer;
+          border-radius: 8px;
+          transition: all 0.2s;
+        }
+        .menu-item:hover {
+          background: rgba(255,255,255,0.05);
+          color: var(--color-text-primary);
+        }
       `}</style>
-   </div>
+    </div>
   );
 }
 
