@@ -136,13 +136,19 @@ export interface PayrollRecord {
 export interface LivestockUnit {
   id: string
   animal_type: 'broiler' | 'layer' | 'goat' | 'pig' | 'cattle' | 'other'
-  breed?: string
+  batch_name?: string
   quantity: number
+  mortality_count?: number
+  feed_cost?: number
+  medicine_cost?: number
+  production_output?: string // e.g. "500 eggs" or "200kg meat"
   acquisition_date: string
   acquisition_cost: number
   current_value?: number
   status: 'active' | 'sold' | 'deceased'
+  workflow_status?: 'pending' | 'approved' | 'rejected'
   notes?: string
+  created_by?: string
   created_at: string
 }
 
