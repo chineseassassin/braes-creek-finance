@@ -57,6 +57,11 @@ export const SAMPLE_CATEGORIES: ExpenseCategory[] = [
   { id: 'cat-21', name: 'Bell Pepper Production', segment_id: 'seg-6', color: '#ca8a04', created_at: '2024-01-01' },
   { id: 'cat-22', name: 'Sorrel Production', segment_id: 'seg-6', color: '#be185d', created_at: '2024-01-01' },
   { id: 'cat-23', name: 'Scotch Bonnet Production', segment_id: 'seg-6', color: '#b91c1c', created_at: '2024-01-01' },
+  { id: 'cat-24', name: 'Wages & Salaries', segment_id: 'seg-8', color: '#6366f1', created_at: '2024-01-01' },
+  { id: 'cat-25', name: 'General Supplies', segment_id: 'seg-11', color: '#059669', created_at: '2024-01-01' },
+  { id: 'cat-26', name: 'Packaging Materials', segment_id: 'seg-11', color: '#10b981', created_at: '2024-01-01' },
+  { id: 'cat-27', name: 'Uncategorized', segment_id: 'seg-13', color: '#94a3b8', created_at: '2024-01-01' },
+  { id: 'cat-28', name: 'Loan Interest & Fees', segment_id: 'seg-14', color: '#7c3aed', created_at: '2024-01-01' },
 ]
 
 // ── Vendors ────────────────────────────────────────────────────────────────────

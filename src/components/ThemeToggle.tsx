@@ -1,10 +1,19 @@
 "use client";
 
+import { useState, useEffect } from 'react'
 import { useAppStore } from '@/store/useAppStore';
 import { Sun, Moon } from 'lucide-react';
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useAppStore();
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return <div style={{ width: 150, height: 44 }} />;
+
   const isDark = theme === 'dark';
   const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
 
