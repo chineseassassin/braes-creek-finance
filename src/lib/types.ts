@@ -170,6 +170,23 @@ export interface CropType {
   created_at: string
 }
 
+export interface InventoryItem {
+  id: string
+  itemName: string
+  category: 'Feed' | 'Fertilizer' | 'Chemical' | 'Medicine' | 'Building Material' | 'Fuel' | 'Equipment' | 'Other'
+  quantity: number
+  unit: string
+  reorderThreshold: number
+  criticalThreshold: number
+  unitCost: number
+  vendorId?: string
+  vendorName?: string
+  workflow_status: 'pending' | 'approved' | 'rejected'
+  notes?: string
+  created_by: string
+  created_at: string
+}
+
 export interface FeedPurchase {
   id: string
   date: string

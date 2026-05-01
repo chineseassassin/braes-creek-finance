@@ -1,74 +1,94 @@
 "use client";
 
 import { useEffect, useState, useMemo } from 'react';
-import Link from 'next/link';
 import Sidebar from "@/components/Sidebar";
 import NotificationCenter from "@/components/NotificationCenter";
 import ThemeToggle from "@/components/ThemeToggle";
-import { useDashboardStore } from '@/store/useDashboardStore';
+import { useInventoryStore } from '@/store/useInventoryStore';
 import { useUIStore } from '@/store/useUIStore';
+import { useAppStore } from '@/store/useAppStore';
 import { 
   Plus, Search, Filter, Download, 
-  Package, Boxes, Archive, RefreshCw,
-  BarChart3, Calendar, FileText, Banknote,
-  AlertCircle, ChevronRight, MoreVertical,
-  Zap, CheckCircle2, Wallet, ArrowRight,
-  TrendingUp, TrendingDown, Target, Sparkles,
-  Layers, ShoppingCart, Truck, Thermometer,
-  Activity, ShieldAlert, X, Trash2, Edit2, Copy,
-  AlertTriangle, PieChart
+  Package, Boxes, RefreshCw, AlertCircle, 
+  MoreVertical, Sparkles, Activity, X, 
+  PlusCircle, MinusCircle, History, Edit2, Truck
 } from "lucide-react";
+import { toast, Toaster } from 'react-hot-toast';
+import { THEME_COLORS as COLORS } from '@/lib/theme-colors';
 
-import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
-
-const CATEGORY_COLORS = {
-  'Feed': '#39C86A',
-  'Fertilizer': '#3b82f6',
-  'Chemicals': '#f59e0b',
-  'Medicine': '#ef4444',
-  'Materials': '#8b5cf6'
-};
+const CATEGORIES = ['Feed', 'Fertilizer', 'Chemical', 'Medicine', 'Building Material', 'Fuel', 'Equipment', 'Other'];
 
 export default function InventoryPage() {
   const { sidebarCollapsed } = useUIStore();
-  const [mountedTime, setMountedTime] = useState("");
+  const { currentUser } = useAppStore();
+  const { items, isLoading, addItem, updateStock } = useInventoryStore();
   
-  // States
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [stockAction, setStockAction] = useState<'add' | 'use'>('add');
+  const [stockAmount, setStockAmount] = useState('');
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
 
-  useEffect(() => {
-    setMountedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-  }, []);
-
-  const [inventoryItems, setInventoryItems] = useState([
-    { id: 1, name: 'Poultry Feed (Standard)', category: 'Feed', qty: 450, unit: 'kg', usage: 120, days: 5, value: 5400, status: 'Critical' },
-    { id: 2, name: 'Diesel Fuel (Tractor)', category: 'Materials', qty: 85, unit: 'L', usage: 15, days: 6, value: 1200, status: 'Low' },
-    { id: 3, name: 'Corn Seeds (Hybrid)', category: 'Materials', qty: 0, unit: 'bags', usage: 0, days: 0, value: 0, status: 'Critical' },
-    { id: 4, name: 'Nitrogen Fertilizer', category: 'Fertilizer', qty: 1200, unit: 'kg', usage: 200, days: 42, value: 8400, status: 'Healthy' },
-    { id: 5, name: 'Livestock Antibiotics', category: 'Medicine', qty: 24, unit: 'vials', usage: 2, days: 84, value: 2880, status: 'Healthy' },
-    { id: 6, name: 'Herbicides', category: 'Chemicals', qty: 50, unit: 'L', usage: 5, days: 70, value: 1500, status: 'Overstocked' },
-  ]);
-
-  const hasData = inventoryItems.length > 0;
+  const [form, setForm] = useState({
+    itemName: '', category: 'Feed' as any, quantity: '', unit: '',
+    reorderThreshold: '', criticalThreshold: '', unitCost: '',
+    vendorName: '', notes: ''
+  });
 
   const filteredItems = useMemo(() => {
-    return inventoryItems.filter(item => {
-      const matchSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return items.filter(item => {
+      const matchSearch = item.itemName.toLowerCase().includes(searchTerm.toLowerCase());
       const matchCategory = categoryFilter === "All" || item.category === categoryFilter;
       return matchSearch && matchCategory;
     });
-  }, [inventoryItems, searchTerm, categoryFilter]);
+  }, [items, searchTerm, categoryFilter]);
 
-  const totalValue = useMemo(() => inventoryItems.reduce((sum, item) => sum + item.value, 0), [inventoryItems]);
-  const lowStockCount = inventoryItems.filter(item => item.status === 'Low' || item.status === 'Critical').length;
-  const criticalItem = inventoryItems.find(item => item.status === 'Critical');
+  const approvedItems = useMemo(() => items.filter(i => i.workflow_status === 'approved'), [items]);
+  const totalValue = useMemo(() => approvedItems.reduce((sum, item) => sum + (item.quantity * item.unitCost), 0), [approvedItems]);
+  const lowStockCount = approvedItems.filter(item => item.quantity <= item.reorderThreshold).length;
+  const criticalCount = approvedItems.filter(item => item.quantity <= item.criticalThreshold).length;
+  const criticalItem = approvedItems.find(item => item.quantity <= item.criticalThreshold);
 
-  const categories = ['Feed', 'Fertilizer', 'Chemicals', 'Medicine', 'Materials'];
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const payload = {
+      ...form,
+      quantity: parseFloat(form.quantity) || 0,
+      reorderThreshold: parseFloat(form.reorderThreshold) || 0,
+      criticalThreshold: parseFloat(form.criticalThreshold) || 0,
+      unitCost: parseFloat(form.unitCost) || 0,
+    };
+
+    const result = await addItem(payload);
+    if (result) {
+      if (currentUser.role === 'admin') {
+        toast.success('Inventory item saved & approved');
+      } else {
+        toast.success('Submitted for approval');
+      }
+      setIsModalOpen(false);
+      setForm({
+        itemName: '', category: 'Feed', quantity: '', unit: '',
+        reorderThreshold: '', criticalThreshold: '', unitCost: '',
+        vendorName: '', notes: ''
+      });
+    }
+  };
+
+  const handleStockUpdate = async () => {
+    if (!selectedItem || !stockAmount) return;
+    await updateStock(selectedItem.id, parseFloat(stockAmount), stockAction);
+    toast.success(`Stock ${stockAction === 'add' ? 'added' : 'reduced'} successfully`);
+    setIsStockModalOpen(false);
+    setStockAmount('');
+  };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg-body)' }}>
+      <Toaster position="top-right" />
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
@@ -80,9 +100,6 @@ export default function InventoryPage() {
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <div style={{ fontSize: 12, color: COLORS.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <RefreshCw size={14} /> Logistics Synced: {mountedTime}
-            </div>
             <ThemeToggle />
             <NotificationCenter />
             <button className="btn-primary" onClick={() => setIsModalOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px' }}>
@@ -93,236 +110,273 @@ export default function InventoryPage() {
 
         <main style={{ padding: '32px', flex: 1, overflowY: 'auto' }}>
           
-          {/* 1. INVENTORY STATUS HERO */}
+          {/* INVENTORY STATUS HERO */}
           <div style={{ marginBottom: 32, background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-elevated) 100%)', border: `1px solid var(--border-soft)`, borderRadius: 24, padding: '32px', position: 'relative', overflow: 'hidden' }}>
-             <div style={{ position: 'absolute', top: -40, right: -40, width: 300, height: 300, background: 'rgba(57, 200, 106, 0.05)', borderRadius: '50%', filter: 'blur(80px)' }} />
-             
              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ flex: 1 }}>
                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                      <span style={{ fontSize: 12, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '1px' }}>Inventory Health:</span>
-                      <span style={{ fontSize: 13, fontWeight: 900, color: lowStockCount > 2 ? COLORS.danger : (lowStockCount > 0 ? COLORS.warning : COLORS.success), background: 'rgba(255,255,255,0.03)', padding: '4px 12px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.1)' }}>
-                        {lowStockCount > 2 ? 'CRITICAL' : (lowStockCount > 0 ? 'AT RISK' : 'HEALTHY')}
+                      <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Inventory Health:</span>
+                      <span className={`badge ${criticalCount > 0 ? 'badge-critical' : (lowStockCount > 0 ? 'badge-warning' : 'badge-healthy')}`}>
+                        {criticalCount > 0 ? 'CRITICAL' : (lowStockCount > 0 ? 'AT RISK' : 'HEALTHY')}
                       </span>
                    </div>
                    
                    <div style={{ display: 'flex', gap: 64, marginBottom: 32 }}>
                       <div>
-                         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Total Inventory Value</div>
-                         <div style={{ fontSize: 40, fontWeight: 950, color: 'var(--text-primary)' }}>${totalValue.toLocaleString()}</div>
+                         <div className="label-small">Total Asset Value</div>
+                         <div className="metric-main">{fmt(totalValue)}</div>
                       </div>
                       <div>
-                         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Low Stock Items</div>
-                         <div style={{ fontSize: 40, fontWeight: 950, color: lowStockCount > 0 ? COLORS.warning : '#fff' }}>{lowStockCount}</div>
+                         <div className="label-small">Shortage Alerts</div>
+                         <div className="metric-main" style={{ color: criticalCount > 0 ? 'var(--status-critical)' : 'var(--text-primary)' }}>{criticalCount + lowStockCount}</div>
                       </div>
                       <div>
-                         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>Next Critical Shortage</div>
-                         <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--text-primary)', marginTop: 8 }}>{criticalItem ? criticalItem.name : 'None'}</div>
+                         <div className="label-small">Active SKUs</div>
+                         <div className="metric-main" style={{ fontSize: 24 }}>{approvedItems.length} items</div>
                       </div>
                    </div>
 
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: 'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)', maxWidth: 800 }}>
-                      <Sparkles size={18} color={COLORS.warning} />
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', background: 'var(--status-ai-glow)', borderRadius: 16, border: '1px solid var(--border-soft)', maxWidth: 800 }}>
+                      <Sparkles size={18} color="var(--status-ai)" />
                       <div style={{ fontSize: 14, color: 'var(--text-primary)' }}>
-                         <span style={{ fontWeight: 800 }}>AI Message:</span> {hasData ? `Poultry feed will run out in ${criticalItem?.days || 5} days based on current usage.` : "Add income and expenses to activate cash flow tracking"}
+                         <span style={{ fontWeight: 800 }}>AI Insight:</span> {criticalItem ? `${criticalItem.itemName} is below critical threshold. Reorder immediately from ${criticalItem.vendorName || 'primary vendor'}.` : "All supplies are within healthy operational thresholds."}
                       </div>
                    </div>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                   <button className="btn-ghost" style={{ padding: '12px 24px', fontSize: 12, width: 160, justifyContent: 'center' }}>Stock Audit</button>
-                   <button className="btn-primary" style={{ padding: '12px 24px', fontSize: 12, width: 160, justifyContent: 'center' }}>Rapid Reorder</button>
-                </div>
-             </div>
-          </div>
-
-          {/* 2. LOW STOCK ALERTS */}
-          <div className="grid-12" style={{ gap: 24, marginBottom: 32 }}>
-             <div className="col-12">
-                <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 20 }}>Active Stock Alerts</h3>
-                <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 8 }}>
-                   {hasData ? (
-                      inventoryItems.filter(i => i.status === 'Critical' || i.status === 'Low').map((item, i) => (
-                         <div key={i} className="card" style={{ minWidth: 280, padding: '20px', borderLeft: `4px solid ${item.status === 'Critical' ? COLORS.danger : COLORS.warning}` }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-                               <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{item.category}</span>
-                               <AlertCircle size={14} color={item.status === 'Critical' ? COLORS.danger : COLORS.warning} />
-                            </div>
-                            <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>{item.name}</div>
-                            <div style={{ fontSize: 12, color: item.status === 'Critical' ? COLORS.danger : COLORS.warning, fontWeight: 700 }}>
-                               {item.days} days remaining ({item.qty}{item.unit} left)
-                            </div>
-                         </div>
-                      ))
-                   ) : (
-                      <div style={{ width: '100%', height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: 20, border: '1px dashed rgba(255,255,255,0.05)' }}>
-                         <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Inventory alerts will activate once stock is added.</div>
-                      </div>
-                   )}
+                   <button className="btn-secondary" style={{ width: 160 }}>Log Supply Audit</button>
+                   <button className="btn-primary" style={{ width: 160 }}>Bulk Reorder</button>
                 </div>
              </div>
           </div>
 
           <div className="grid-12" style={{ gap: 24, marginBottom: 32 }}>
-             {/* 3. INVENTORY TABLE */}
-             <div className="col-8 card" style={{ padding: '32px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                   <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Stock Asset Ledger</h3>
+             <div className="col-8 card" style={{ padding: 0, overflow: 'hidden' }}>
+                <div style={{ padding: '24px', borderBottom: '1px solid var(--border-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <h3 className="card-title">Stock Asset Ledger</h3>
                    <div style={{ display: 'flex', gap: 12 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', borderRadius: 12, padding: '8px 16px' }}>
-                         <Search size={14} color={COLORS.muted} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', borderRadius: 12, padding: '0 16px', height: 40 }}>
+                         <Search size={14} color="var(--text-muted)" />
                          <input 
-                           placeholder="Search inventory..." 
+                           placeholder="Filter ledger..." 
                            value={searchTerm}
                            onChange={(e) => setSearchTerm(e.target.value)}
                            style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 13, width: 180 }} 
                          />
                       </div>
-                      <button className="btn-ghost" style={{ fontSize: 12 }}><Filter size={14} /> Filter</button>
+                      <select 
+                        className="saas-input" 
+                        style={{ height: 40, padding: '0 12px' }}
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                      >
+                         <option value="All">All Categories</option>
+                         {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                      </select>
                    </div>
                 </div>
 
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <table className="saas-table">
                    <thead>
-                      <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-soft)' }}>
-                         <th style={{ padding: '16px', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Item Name</th>
-                         <th style={{ padding: '16px', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Category</th>
-                         <th style={{ padding: '16px', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Quantity</th>
-                         <th style={{ padding: '16px', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Days Left</th>
-                         <th style={{ padding: '16px', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Status</th>
-                         <th style={{ width: 40 }}></th>
+                      <tr>
+                         <th>Item & Category</th>
+                         <th>In Stock</th>
+                         <th>Valuation</th>
+                         <th>Status</th>
+                         <th>Actions</th>
                       </tr>
                    </thead>
                    <tbody>
-                      {filteredItems.map((item) => (
-                         <tr key={item.id} className="row-hover" style={{ borderBottom: '1px solid var(--border-soft)' }}>
-                            <td style={{ padding: '16px' }}>
-                               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{item.name}</div>
-                            </td>
-                            <td style={{ padding: '16px' }}>
-                               <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>{item.category.toUpperCase()}</span>
-                            </td>
-                            <td style={{ padding: '16px' }}>
-                               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{item.qty} {item.unit}</div>
-                               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.usage}{item.unit}/week usage</div>
-                            </td>
-                            <td style={{ padding: '16px', fontSize: 13, fontWeight: 700, color: item.days < 7 ? COLORS.danger : '#fff' }}>
-                               {item.days} days
-                            </td>
-                            <td style={{ padding: '16px' }}>
-                               <span style={{ 
-                                  fontSize: 10, 
-                                  fontWeight: 900, 
-                                  padding: '4px 10px', 
-                                  borderRadius: 6, 
-                                  background: item.status === 'Healthy' ? 'rgba(57, 200, 106, 0.1)' : (item.status === 'Critical' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)'), 
-                                  color: item.status === 'Healthy' ? COLORS.success : (item.status === 'Critical' ? COLORS.danger : COLORS.warning)
-                               }}>
-                                  {item.status.toUpperCase()}
-                               </span>
-                            </td>
-                            <td style={{ textAlign: 'center' }}>
-                               <button className="btn-ghost-small"><MoreVertical size={14} /></button>
-                            </td>
-                         </tr>
-                      ))}
-                      {!hasData && (
-                         <tr>
-                            <td colSpan={6} style={{ textAlign: 'center', padding: '80px 0' }}>
-                               <div style={{ marginBottom: 16 }}><Boxes size={48} opacity={0.1} /></div>
-                               <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>No inventory data yet</div>
-                               <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>Start by adding feed, fertilizer, or supplies to unlock monitoring.</div>
-                               <button className="btn-primary" onClick={() => setIsModalOpen(true)}>Add First Item</button>
-                            </td>
-                         </tr>
+                      {filteredItems.map((item) => {
+                         const isCritical = item.quantity <= item.criticalThreshold;
+                         const isLow = item.quantity <= item.reorderThreshold;
+                         const isPending = item.workflow_status === 'pending';
+
+                         return (
+                            <tr key={item.id} style={{ opacity: isPending ? 0.7 : 1 }}>
+                               <td>
+                                  <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: 14 }}>{item.itemName}</div>
+                                  <div className="label-small" style={{ fontSize: 9 }}>{item.category.toUpperCase()}</div>
+                               </td>
+                               <td>
+                                  <div style={{ fontSize: 15, fontWeight: 900, color: isCritical ? 'var(--status-critical)' : 'var(--text-primary)' }}>
+                                     {item.quantity} <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>{item.unit}</span>
+                                  </div>
+                               </td>
+                               <td>
+                                  <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{fmt(item.quantity * item.unitCost)}</div>
+                                  <div className="label-small" style={{ fontSize: 9 }}>{fmt(item.unitCost)} / {item.unit}</div>
+                               </td>
+                               <td>
+                                  {isPending ? (
+                                    <span className="badge badge-warning">PENDING</span>
+                                  ) : (
+                                    <span className={`badge ${isCritical ? 'badge-critical' : (isLow ? 'badge-warning' : 'badge-healthy')}`}>
+                                       {isCritical ? 'CRITICAL' : (isLow ? 'LOW STOCK' : 'HEALTHY')}
+                                    </span>
+                                  )}
+                               </td>
+                               <td>
+                                  <div style={{ display: 'flex', gap: 6 }}>
+                                     <button className="btn-ghost-small" title="Add Stock" onClick={() => { setSelectedItem(item); setStockAction('add'); setIsStockModalOpen(true); }}><PlusCircle size={14} /></button>
+                                     <button className="btn-ghost-small" title="Use Stock" onClick={() => { setSelectedItem(item); setStockAction('use'); setIsStockModalOpen(true); }}><MinusCircle size={14} /></button>
+                                     <button className="btn-ghost-small"><MoreVertical size={14} /></button>
+                                  </div>
+                               </td>
+                            </tr>
+                         )
+                      })}
+                      {filteredItems.length === 0 && (
+                        <tr>
+                           <td colSpan={5} style={{ textAlign: 'center', padding: '60px 0' }}>
+                              <Boxes size={48} color="var(--text-muted)" style={{ opacity: 0.2, marginBottom: 16, marginInline: 'auto' }} />
+                              <div style={{ fontWeight: 800, color: 'var(--text-muted)' }}>No matching inventory found</div>
+                           </td>
+                        </tr>
                       )}
                    </tbody>
                 </table>
              </div>
 
              <div className="col-4">
-                {/* 5. INVENTORY VALUE & BREAKDOWN */}
-                <div className="card" style={{ padding: '32px', marginBottom: 24 }}>
-                   <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 24 }}>Value Breakdown</h3>
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      {categories.map((cat, i) => {
-                         const val = inventoryItems.filter(item => item.category === cat).reduce((sum, item) => sum + item.value, 0);
-                         return (
-                            <div key={i}>
-                               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 8 }}>
-                                  <span style={{ fontWeight: 700 }}>{cat}</span>
-                                  <span style={{ fontWeight: 900, color: 'var(--text-primary)' }}>${val.toLocaleString()} <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500 }}>({((val / totalValue) * 100).toFixed(0)}%)</span></span>
-                               </div>
-                               <div style={{ height: 6, background: 'var(--bg-card-elevated)', borderRadius: 3 }}>
-                                  <div style={{ height: '100%', width: `${(val / totalValue) * 100}%`, background: CATEGORY_COLORS[cat as keyof typeof CATEGORY_COLORS] || COLORS.info, borderRadius: 3 }} />
-                               </div>
-                            </div>
-                         );
-                      })}
+                <div className="card" style={{ padding: '24px', marginBottom: 24 }}>
+                   <h3 className="card-title" style={{ marginBottom: 20 }}>Operational Alerts</h3>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {approvedItems.filter(i => i.quantity <= i.reorderThreshold).map(item => (
+                        <div key={item.id} style={{ padding: '16px', borderRadius: 16, background: 'var(--bg-card-elevated)', border: `1px solid ${item.quantity <= item.criticalThreshold ? 'var(--status-critical)' : 'var(--status-warning)'}`, display: 'flex', gap: 12 }}>
+                           <AlertTriangle size={18} color={item.quantity <= item.criticalThreshold ? 'var(--status-critical)' : 'var(--status-warning)'} />
+                           <div>
+                              <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--text-primary)' }}>{item.itemName}</div>
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Currently at {item.quantity} {item.unit}. Minimum {item.reorderThreshold} recommended.</div>
+                           </div>
+                        </div>
+                      ))}
+                      {lowStockCount === 0 && (
+                        <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>
+                           <CheckCircle2 size={32} style={{ opacity: 0.2, marginBottom: 12, marginInline: 'auto' }} />
+                           <div style={{ fontSize: 13 }}>All stock levels are optimal</div>
+                        </div>
+                      )}
                    </div>
                 </div>
 
-                {/* 6. AI INSIGHTS */}
-                <div className="card" style={{ padding: '32px' }}>
-                   <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 24 }}>Inventory Intelligence</h3>
+                <div className="card" style={{ padding: '24px' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+                      <Activity size={18} color="var(--status-ai)" />
+                      <h3 className="card-title">Inventory Intelligence</h3>
+                   </div>
                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                       {[
-                         { text: "Feed usage increased 15% this week; audit livestock consumption.", type: "warning" },
-                         { text: "You are currently overstocked on herbicides; delay upcoming purchase.", type: "info" },
-                         { text: "Current seed levels may not last until the next expected planting cycle.", type: "danger" }
+                        { icon: <Truck size={16}/>, text: "Supply chain report: Fuel prices expected to rise 8% next month." },
+                        { icon: <History size={16}/>, text: "Unusual consumption detected for Layer Mash (+15% vs avg)." }
                       ].map((insight, i) => (
-                         <div key={i} style={{ padding: '16px', background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', borderRadius: 16, display: 'flex', gap: 12 }}>
-                            <Sparkles size={16} color={insight.type === 'warning' ? 'var(--status-warning)' : (insight.type === 'danger' ? 'var(--status-critical)' : 'var(--status-info)')} style={{ flexShrink: 0 }} />
-                            <div style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.4 }}>{insight.text}</div>
-                         </div>
+                        <div key={i} style={{ display: 'flex', gap: 12, padding: '12px', background: 'var(--bg-card-elevated)', borderRadius: 12 }}>
+                           <div style={{ color: 'var(--status-ai)' }}>{insight.icon}</div>
+                           <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4 }}>{insight.text}</div>
+                        </div>
                       ))}
                    </div>
                 </div>
              </div>
           </div>
-
         </main>
 
-        {/* 7. ADD INVENTORY MODAL */}
+        {/* MODAL: ADD ITEM */}
         {isModalOpen && (
-           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-              <div className="card" style={{ width: 600, padding: '48px', position: 'relative' }}>
-                 <button onClick={() => setIsModalOpen(false)} style={{ position: 'absolute', top: 24, right: 24, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                    <X size={24} />
-                 </button>
-                 <h2 style={{ fontSize: 24, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 32 }}>Add New Stock Item</h2>
-                 
-                 <div className="grid-12" style={{ gap: 20 }}>
-                    <div className="col-12">
-                       <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Item Name</label>
-                       <input placeholder="e.g. Poultry Feed (Premium)" style={{ width: '100%', padding: '14px', background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', color: 'var(--text-primary)', fontSize: 14 }} />
+           <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setIsModalOpen(false)}>
+              <div className="modal" style={{ maxWidth: 640 }}>
+                 <div className="modal-header">
+                    <h2 className="modal-title">Provision New Stock Item</h2>
+                    <button className="btn-ghost-small" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
+                 </div>
+                 <form onSubmit={handleSubmit}>
+                    <div className="modal-body">
+                       <div className="form-group" style={{ marginBottom: 16 }}>
+                          <label className="form-label">Item Name *</label>
+                          <input className="form-input" placeholder="e.g. Premium Layer Mash" value={form.itemName} onChange={e => setForm(p => ({ ...p, itemName: e.target.value }))} required />
+                       </div>
+                       <div className="form-grid" style={{ marginBottom: 16 }}>
+                          <div className="form-group">
+                             <label className="form-label">Category *</label>
+                             <select className="form-select" value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value as any }))}>
+                                {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                             </select>
+                          </div>
+                          <div className="form-group">
+                             <label className="form-label">Vendor / Supplier</label>
+                             <input className="form-input" placeholder="e.g. AgroCorp" value={form.vendorName} onChange={e => setForm(p => ({ ...p, vendorName: e.target.value }))} />
+                          </div>
+                       </div>
+                       <div className="form-grid" style={{ marginBottom: 16 }}>
+                          <div className="form-group">
+                             <label className="form-label">Initial Quantity *</label>
+                             <input type="number" className="form-input" placeholder="0" value={form.quantity} onChange={e => setForm(p => ({ ...p, quantity: e.target.value }))} required />
+                          </div>
+                          <div className="form-group">
+                             <label className="form-label">Unit *</label>
+                             <input className="form-input" placeholder="e.g. bags, kg, liters" value={form.unit} onChange={e => setForm(p => ({ ...p, unit: e.target.value }))} required />
+                          </div>
+                       </div>
+                       <div className="form-grid" style={{ marginBottom: 16 }}>
+                          <div className="form-group">
+                             <label className="form-label">Reorder Level (Warning) *</label>
+                             <input type="number" className="form-input" placeholder="50" value={form.reorderThreshold} onChange={e => setForm(p => ({ ...p, reorderThreshold: e.target.value }))} required />
+                          </div>
+                          <div className="form-group">
+                             <label className="form-label">Critical Level (Alert) *</label>
+                             <input type="number" className="form-input" placeholder="20" value={form.criticalThreshold} onChange={e => setForm(p => ({ ...p, criticalThreshold: e.target.value }))} required />
+                          </div>
+                       </div>
+                       <div className="form-group" style={{ marginBottom: 16 }}>
+                          <label className="form-label">Unit Cost (TTD) *</label>
+                          <input type="number" className="form-input" placeholder="0.00" value={form.unitCost} onChange={e => setForm(p => ({ ...p, unitCost: e.target.value }))} required />
+                       </div>
+                       <div className="form-group">
+                          <label className="form-label">Notes</label>
+                          <textarea className="form-textarea" placeholder="Storage instructions, expiry warnings, etc." value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
+                       </div>
                     </div>
-                    <div className="col-6">
-                       <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Category</label>
-                       <select style={{ width: '100%', padding: '14px', background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', color: 'var(--text-primary)', fontSize: 14 }}>
-                          {categories.map(cat => <option key={cat}>{cat}</option>)}
-                       </select>
+                    <div className="modal-footer">
+                       <button type="button" className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                       <button type="submit" className="btn btn-primary" disabled={isLoading}>{isLoading ? 'Provisioning...' : 'Add Item to Ledger'}</button>
                     </div>
-                    <div className="col-3">
-                       <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Quantity</label>
-                       <input type="number" placeholder="500" style={{ width: '100%', padding: '14px', background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', color: 'var(--text-primary)', fontSize: 14 }} />
+                 </form>
+              </div>
+           </div>
+        )}
+
+        {/* MODAL: ADJUST STOCK */}
+        {isStockModalOpen && (
+           <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setIsStockModalOpen(false)}>
+              <div className="modal" style={{ maxWidth: 400 }}>
+                 <div className="modal-header">
+                    <h2 className="modal-title">{stockAction === 'add' ? 'Increase' : 'Decrease'} Inventory Stock</h2>
+                    <button className="btn-ghost-small" onClick={() => setIsStockModalOpen(false)}><X size={20} /></button>
+                 </div>
+                 <div className="modal-body">
+                    <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4 }}>Adjusting Ledger For:</div>
+                       <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)' }}>{selectedItem?.itemName}</div>
+                       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Currently: {selectedItem?.quantity} {selectedItem?.unit}</div>
                     </div>
-                    <div className="col-3">
-                       <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Unit</label>
-                       <input placeholder="kg/L/bag" style={{ width: '100%', padding: '14px', background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', color: 'var(--text-primary)', fontSize: 14 }} />
+
+                    <div className="form-group">
+                       <label className="form-label">Amount to {stockAction === 'add' ? 'Add' : 'Use'} ({selectedItem?.unit}) *</label>
+                       <input 
+                         type="number" 
+                         className="saas-input" 
+                         style={{ height: 50, fontSize: 18, fontWeight: 800, textAlign: 'center' }} 
+                         placeholder="0"
+                         value={stockAmount}
+                         onChange={(e) => setStockAmount(e.target.value)}
+                         autoFocus
+                       />
                     </div>
-                    <div className="col-6">
-                       <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Unit Cost ($)</label>
-                       <input type="number" placeholder="12.50" style={{ width: '100%', padding: '14px', background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', color: 'var(--text-primary)', fontSize: 14 }} />
-                    </div>
-                    <div className="col-12">
-                       <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Notes</label>
-                       <textarea placeholder="Vendor details or storage location..." rows={3} style={{ width: '100%', padding: '14px', background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', color: 'var(--text-primary)', fontSize: 14, resize: 'none' }} />
-                    </div>
-                    <div className="col-12" style={{ marginTop: 24, display: 'flex', gap: 16, justifyContent: 'flex-end' }}>
-                       <button onClick={() => setIsModalOpen(false)} className="btn-ghost" style={{ padding: '14px 40px' }}>Cancel</button>
-                       <button className="btn-primary" style={{ padding: '14px 40px' }}>Add First Item</button>
-                    </div>
+                 </div>
+                 <div className="modal-footer">
+                    <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setIsStockModalOpen(false)}>Cancel</button>
+                    <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleStockUpdate}>Confirm Adjustment</button>
                  </div>
               </div>
            </div>
@@ -330,48 +384,7 @@ export default function InventoryPage() {
 
       </div>
 
-      <style jsx>{`
-        .card {
-          background: var(--bg-card);
-          backdrop-filter: blur(12px);
-          border: 1px solid var(--border-soft);
-          border-radius: 24px;
-        }
-        .row-hover:hover td {
-           background: var(--bg-card-elevated);
-        }
-        .btn-primary {
-          background: var(--status-success);
-          color: var(--text-inverse);
-          border: none;
-          border-radius: 12px;
-          padding: 10px 20px;
-          font-weight: 700;
-          font-size: 14px;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .btn-primary:hover {
-          opacity: 0.9;
-          transform: scale(1.02);
-        }
-        .btn-ghost {
-          background: var(--bg-card-elevated);
-          color: var(--text-primary);
-          border: 1px solid var(--border-soft);
-          border-radius: 10px;
-          padding: 8px 12px;
-          font-weight: 600;
-          font-size: 13px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          transition: all 0.2s;
-        }
-        .btn-ghost:hover {
-          background: var(--border-soft);
-        }
+      <style jsx global>{`
         .btn-ghost-small {
           background: var(--bg-card-elevated);
           color: var(--text-muted);
@@ -380,12 +393,18 @@ export default function InventoryPage() {
           padding: 8px;
           cursor: pointer;
           transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
         .btn-ghost-small:hover {
-          background: var(--border-strong);
+          background: var(--border-soft);
           color: var(--text-primary);
         }
       `}</style>
     </div>
   );
 }
+
+const fmt = (n: number) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n);
