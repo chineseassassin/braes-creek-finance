@@ -217,7 +217,17 @@ export default function Home() {
                         </div>
                      </div>
                      <div style={{ display: 'flex', gap: 8 }}>
-                        <div className="badge-info" style={{ background: 'var(--status-info-glow)', color: 'var(--status-info)', border: '1px solid var(--status-info)' }}>{activeRecs.length} RECOMMENDATIONS</div>
+                         <div className="badge-info" style={{ 
+                            background: 'var(--status-info-glow)', 
+                            color: 'var(--status-info)', 
+                            border: '1px solid var(--status-info)',
+                            padding: '6px 14px',
+                            borderRadius: '30px',
+                            fontSize: '10px',
+                            fontWeight: 900,
+                            letterSpacing: '0.05em',
+                            height: 'fit-content'
+                         }}>{activeRecs.length} RECOMMENDATIONS</div>
                      </div>
                   </div>
 
@@ -317,7 +327,17 @@ export default function Home() {
                  <div style={{ gridColumn: 'span 8' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                        <h3 className="section-title">Operational Action Center</h3>
-                       <div className="badge-info">6 ACTIVE SECTORS</div>
+                       <div className="badge-info" style={{ 
+                           background: 'var(--status-info-glow)', 
+                           color: 'var(--status-info)', 
+                           border: '1px solid var(--status-info)', 
+                           padding: '6px 14px',
+                           borderRadius: '30px',
+                           fontSize: '10px',
+                           fontWeight: 900,
+                           letterSpacing: '0.05em',
+                           height: 'fit-content'
+                        }}>6 ACTIVE SECTORS</div>
                     </div>
                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                         {ACTIONS.map((act, i) => (

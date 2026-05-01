@@ -31,7 +31,7 @@ export default function AlertHub() {
   const filteredAlerts = useMemo(() => {
     if (activeTab === 'All') return alerts.filter(a => a.status !== 'resolved');
     if (activeTab === 'Resolved') return alerts.filter(a => a.status === 'resolved');
-    if (activeTab === 'Urgent') return alerts.filter(a => a.severity === 'urgent' && a.status !== 'resolved');
+    if (activeTab === 'Urgent') return alerts.filter(a => a.severity === 'emergency' && a.status !== 'resolved');
     if (activeTab === 'Critical') return alerts.filter(a => a.severity === 'critical' && a.status !== 'resolved');
     return alerts.filter(a => a.category === activeTab.toLowerCase() && a.status !== 'resolved');
   }, [alerts, activeTab]);
@@ -40,7 +40,7 @@ export default function AlertHub() {
     const active = alerts.filter(a => a.status !== 'resolved');
     return {
       total: active.length,
-      urgent: active.filter(a => (a.severity === 'urgent' || a.severity === 'critical')).length,
+      urgent: active.filter(a => (a.severity === 'emergency' || a.severity === 'critical')).length,
       loans: active.filter(a => a.category === 'loans').length,
       ops: active.filter(a => a.category === 'livestock' || a.category === 'system').length,
     }
@@ -48,7 +48,7 @@ export default function AlertHub() {
 
   const getSeverityColor = (sev: AlertSeverity) => {
     switch (sev) {
-      case 'urgent':
+      case 'emergency':
       case 'critical': return 'var(--color-danger)';
       case 'warning': return 'var(--color-warning)';
       case 'info': return 'var(--color-info)';
