@@ -6,25 +6,96 @@ import ThemeToggle from "@/components/ThemeToggle";
 import NotificationCenter from "@/components/NotificationCenter";
 import { useUIStore } from '@/store/useUIStore';
 import { useAppStore } from '@/store/useAppStore';
+import { useInfrastructureStore } from '@/store/useInfrastructureStore';
+import { useVendorStore } from '@/store/useVendorStore';
 import { 
   Building2, Tractor, Wrench, Fuel, Sparkles, Plus, 
   Search, Download, LayoutGrid, Timer, AlertTriangle,
   CheckCircle2, Activity, Gauge, Battery, Zap,
   TrendingUp, TrendingDown, History, Info, ArrowUpRight,
   Settings, PenTool as Tool, Truck, Package, MoreVertical,
-  AlertCircle, ShieldAlert, CheckCircle, Clock
+  AlertCircle, ShieldAlert, CheckCircle, Clock, X, Bell,
+  Calendar, DollarSign, User as UserIcon
 } from "lucide-react";
+import { toast, Toaster } from 'react-hot-toast';
 
 import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
 export default function InfrastructureOpsPage() {
   const { sidebarCollapsed } = useUIStore();
-  const { theme } = useAppStore();
+  const { theme, currentUser } = useAppStore();
+  const { assets, maintenanceLogs, addMaintenanceLog } = useInfrastructureStore();
+  const { vendors } = useVendorStore();
+  
   const isLight = theme === 'light';
   const [activeTab, setActiveTab] = useState('maintenance');
+  const [showModal, setShowModal] = useState(false);
+
+  // Form State
+  const [form, setForm] = useState({
+    asset_name: '',
+    maintenance_type: 'Service' as const,
+    date: new Date().toISOString().split('T')[0],
+    status: 'Scheduled' as const,
+    vendor_id: '',
+    cost: '',
+    next_due_date: '',
+    notes: ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const vendor = vendors.find(v => v.id === form.vendor_id);
+    
+    await addMaintenanceLog({
+      asset_name: form.asset_name,
+      maintenance_type: form.maintenance_type,
+      date: form.date,
+      status: form.status,
+      vendor_id: form.vendor_id,
+      vendor_name: vendor?.name,
+      cost: form.cost ? parseFloat(form.cost) : undefined,
+      next_due_date: form.next_due_date || undefined,
+      notes: form.notes
+    });
+
+    const isAdmin = currentUser.role === 'admin';
+    if (isAdmin) {
+      toast.success('Maintenance recorded and system alerts updated', {
+        style: { background: '#101010', color: '#fff', border: '1px solid var(--status-success)' }
+      });
+    } else {
+      toast.success('Maintenance log submitted for approval', {
+        style: { background: '#101010', color: '#fff', border: '1px solid var(--border-soft)' }
+      });
+    }
+
+    setShowModal(false);
+    setForm({
+      asset_name: '',
+      maintenance_type: 'Service',
+      date: new Date().toISOString().split('T')[0],
+      status: 'Scheduled',
+      vendor_id: '',
+      cost: '',
+      next_due_date: '',
+      notes: ''
+    });
+  };
+
+  const metrics = useMemo(() => {
+    const avgHealth = assets.reduce((s, a) => s + a.health_score, 0) / assets.length;
+    const criticalCount = assets.filter(a => a.status === 'Critical').length;
+    const mtdCost = maintenanceLogs
+      .filter(l => l.approval_status === 'approved' && l.date.startsWith('2024-04')) // Mock MTD
+      .reduce((s, l) => s + (l.cost || 0), 0);
+    
+    return { avgHealth, criticalCount, mtdCost };
+  }, [assets, maintenanceLogs]);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)' }}>
+      <Toaster position="top-right" />
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
@@ -36,7 +107,7 @@ export default function InfrastructureOpsPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <ThemeToggle />
             <NotificationCenter />
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--status-success)', color: 'var(--text-inverse)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 13 }}>I</div>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--status-success)', color: 'var(--text-inverse)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 13 }}>{currentUser.name.charAt(0)}</div>
           </div>
         </header>
 
@@ -45,9 +116,9 @@ export default function InfrastructureOpsPage() {
            {/* TOP HERO BAR (FULL WIDTH) */}
            <div className="grid-12" style={{ gap: 12, marginBottom: 24 }}>
               {[
-                { label: 'Equipment Health', val: '94%', icon: <Activity size={14}/>, color: 'var(--status-success)' },
-                { label: 'Active Issues', val: '03', icon: <AlertTriangle size={14}/>, color: 'var(--status-critical)' },
-                { label: 'Maint. Cost (MTD)', val: '$4,280', icon: <TrendingDown size={14}/>, color: 'var(--status-info)' },
+                { label: 'Equipment Health', val: `${Math.round(metrics.avgHealth)}%`, icon: <Activity size={14}/>, color: 'var(--status-success)' },
+                { label: 'Active Issues', val: metrics.criticalCount.toString().padStart(2, '0'), icon: <AlertTriangle size={14}/>, color: 'var(--status-critical)' },
+                { label: 'Maint. Cost (MTD)', val: `$${metrics.mtdCost.toLocaleString()}`, icon: <TrendingDown size={14}/>, color: 'var(--status-info)' },
                 { label: 'Supply Status', val: 'Optimal', icon: <Package size={14}/>, color: 'var(--status-success)' },
                 { label: 'Vendor Risk', val: 'Low', icon: <ShieldAlert size={14}/>, color: 'var(--status-success)' },
               ].map((card, i) => (
@@ -110,30 +181,35 @@ export default function InfrastructureOpsPage() {
                          <div className="animate-fade-in">
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
                                <h4 style={{ fontSize: 14, fontWeight: 800, margin: 0 }}>Active Fleet Maintenance</h4>
-                               <button className="btn-small"><Plus size={12}/> New Log</button>
+                               <button className="btn-small" onClick={() => setShowModal(true)}><Plus size={12}/> New Log</button>
                             </div>
                             <table className="ops-table">
                                <thead>
                                   <tr>
                                      <th>Asset</th>
-                                     <th>Schedule</th>
-                                     <th>Assigned</th>
+                                     <th>Type</th>
+                                     <th>Assigned/Vendor</th>
                                      <th>Status</th>
+                                     <th>Date</th>
                                   </tr>
                                </thead>
                                <tbody>
-                                  <tr>
-                                     <td><div style={{ fontWeight: 700 }}>John Deere 8R</div><div style={{ fontSize: 10, color: 'var(--text-muted)' }}>EQ-001</div></td>
-                                     <td>48h Rem.</td>
-                                     <td>John Doe</td>
-                                     <td><span className="badge-warning">PENDING</span></td>
-                                  </tr>
-                                  <tr>
-                                     <td><div style={{ fontWeight: 700 }}>Combine S2</div><div style={{ fontSize: 10, color: 'var(--text-muted)' }}>EQ-042</div></td>
-                                     <td>Overdue</td>
-                                     <td>Alex Smith</td>
-                                     <td><span className="badge-danger">CRITICAL</span></td>
-                                  </tr>
+                                  {maintenanceLogs.map(log => (
+                                    <tr key={log.id}>
+                                       <td>
+                                          <div style={{ fontWeight: 700 }}>{log.asset_name}</div>
+                                          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{log.approval_status.toUpperCase()}</div>
+                                       </td>
+                                       <td>{log.maintenance_type}</td>
+                                       <td>{log.vendor_name || 'Internal'}</td>
+                                       <td>
+                                          <span className={log.status === 'Completed' ? "badge-success" : "badge-warning"}>
+                                             {log.status.toUpperCase()}
+                                          </span>
+                                       </td>
+                                       <td style={{ fontSize: 11, color: 'var(--text-muted)' }}>{log.date}</td>
+                                    </tr>
+                                  ))}
                                </tbody>
                             </table>
                          </div>
@@ -229,6 +305,128 @@ export default function InfrastructureOpsPage() {
         </main>
       </div>
 
+      {/* NEW MAINTENANCE LOG MODAL */}
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="card" style={{ width: 600, padding: '48px', position: 'relative', background: 'var(--bg-card)', border: '1px solid var(--border-soft)', borderRadius: 24 }}>
+            <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: 32, right: 32, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+              <X size={24} />
+            </button>
+            
+            <h2 style={{ fontSize: 24, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>Log Maintenance</h2>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 40 }}>Record technical intervention or schedule upcoming services.</p>
+
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Asset / Equipment</label>
+                  <select 
+                    className="form-input"
+                    value={form.asset_name}
+                    onChange={e => setForm({...form, asset_name: e.target.value})}
+                    required
+                  >
+                    <option value="">Select Asset</option>
+                    {assets.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Maintenance Type</label>
+                  <select 
+                    className="form-input"
+                    value={form.maintenance_type}
+                    onChange={e => setForm({...form, maintenance_type: e.target.value as any})}
+                    required
+                  >
+                    <option value="Service">Routine Service</option>
+                    <option value="Repair">Emergency Repair</option>
+                    <option value="Inspection">Inspection</option>
+                    <option value="Replacement">Replacement</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Service Date</label>
+                  <input 
+                    type="date"
+                    className="form-input" 
+                    value={form.date}
+                    onChange={e => setForm({...form, date: e.target.value})}
+                    required 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Current Status</label>
+                  <select 
+                    className="form-input"
+                    value={form.status}
+                    onChange={e => setForm({...form, status: e.target.value as any})}
+                    required
+                  >
+                    <option value="Completed">Completed</option>
+                    <option value="Scheduled">Scheduled / Pending</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Assigned Vendor</label>
+                  <select 
+                    className="form-input"
+                    value={form.vendor_id}
+                    onChange={e => setForm({...form, vendor_id: e.target.value})}
+                  >
+                    <option value="">Internal Staff</option>
+                    {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Estimated Cost (TTD)</label>
+                  <input 
+                    type="number"
+                    className="form-input" 
+                    placeholder="0.00"
+                    value={form.cost}
+                    onChange={e => setForm({...form, cost: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Next Service Due Date</label>
+                <input 
+                  type="date"
+                  className="form-input" 
+                  value={form.next_due_date}
+                  onChange={e => setForm({...form, next_due_date: e.target.value})}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="label-small" style={{ display: 'block', marginBottom: 10 }}>Technical Notes</label>
+                <textarea 
+                  className="form-input" 
+                  placeholder="Describe parts used, issues found, or specialized labor..."
+                  style={{ minHeight: 100, resize: 'none', padding: 16 }}
+                  value={form.notes}
+                  onChange={e => setForm({...form, notes: e.target.value})}
+                />
+              </div>
+
+              <div style={{ marginTop: 16, display: 'flex', gap: 16 }}>
+                <button type="button" className="btn-secondary" onClick={() => setShowModal(false)} style={{ flex: 1, padding: '14px' }}>Cancel</button>
+                <button type="submit" className="btn-primary" style={{ flex: 1, padding: '14px', justifyContent: 'center' }}>
+                   {currentUser.role === 'admin' ? 'Record Maintenance' : 'Submit for Approval'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         .col-2-4 { width: calc(20% - 10px); }
         .card-compact {
@@ -285,6 +483,7 @@ export default function InfrastructureOpsPage() {
            align-items: center;
            gap: 6px;
         }
+        .badge-success { font-size: 9px; font-weight: 900; background: var(--status-success-glow); color: var(--status-success); padding: 4px 8px; border-radius: 4px; }
         .badge-warning { font-size: 9px; font-weight: 900; background: var(--status-warning-glow); color: var(--status-warning); padding: 4px 8px; border-radius: 4px; }
         .badge-danger { font-size: 9px; font-weight: 900; background: var(--status-critical-glow); color: var(--status-critical); padding: 4px 8px; border-radius: 4px; }
         .animate-fade-in {
@@ -294,13 +493,32 @@ export default function InfrastructureOpsPage() {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
+        .form-input {
+          width: 100%;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid var(--border-soft);
+          border-radius: 12px;
+          padding: 14px 18px;
+          color: var(--text-primary);
+          font-size: 14px;
+          outline: none;
+          transition: all 0.2s;
         }
+        .form-input:focus {
+          border-color: var(--status-success);
+          background: rgba(255,255,255,0.05);
+        }
+        .label-small {
+          font-size: 9px;
+          font-weight: 950;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+        }
+        .btn-primary { background: var(--status-success); color: var(--text-inverse); border: none; border-radius: 10px; padding: 10px 20px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .btn-secondary { background: var(--bg-card-elevated); color: var(--text-primary); border: 1px solid var(--border-soft); border-radius: 12px; padding: 10px 20px; font-weight: 700; font-size: 14px; cursor: pointer; }
       `}</style>
     </div>
   );
 }
 
-import { Bell } from "lucide-react";
-import React from 'react';
