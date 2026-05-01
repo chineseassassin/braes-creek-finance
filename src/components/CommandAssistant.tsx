@@ -11,15 +11,15 @@ import {
 } from 'lucide-react';
 
 const COLORS = {
-  success: '#39C86A',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  info: '#3b82f6',
-  muted: '#8a8a8e',
-  border: 'rgba(255, 255, 255, 0.08)',
-  accent: '#39C86A',
-  bg: '#0a0a0a',
-  glass: 'rgba(15, 15, 15, 0.85)'
+  success: 'var(--status-success)',
+  warning: 'var(--status-warning)',
+  danger: 'var(--status-critical)',
+  info: 'var(--status-ai)',
+  muted: 'var(--text-muted)',
+  border: 'var(--border-soft)',
+  accent: 'var(--status-success)',
+  bg: 'var(--bg-surface)',
+  glass: 'var(--bg-surface)'
 };
 
 const SHORTCUTS = [
@@ -97,7 +97,7 @@ export default function CommandAssistant() {
         style={{
           position: 'fixed', bottom: 24, right: 24, zIndex: 1000,
           width: 56, height: 56, borderRadius: '50%',
-          background: COLORS.success, color: '#050505',
+          background: 'var(--status-success)', color: 'var(--text-inverse)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', boxShadow: '0 8px 32px rgba(57, 200, 106, 0.3)',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -113,21 +113,21 @@ export default function CommandAssistant() {
         <div style={{
           position: 'fixed', bottom: 92, right: 24, zIndex: 1000,
           width: 380, height: 600, maxHeight: 'calc(100vh - 120px)',
-          background: COLORS.glass, backdropFilter: 'blur(20px)',
-          border: `1px solid ${COLORS.border}`, borderRadius: 24,
-          boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+           background: 'var(--bg-surface)', backdropFilter: 'blur(30px)',
+           border: `1px solid var(--border-soft)`, borderRadius: 24,
+           boxShadow: 'var(--shadow-strong)',
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
           animation: 'slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
         }}>
           {/* Header */}
-          <div style={{ padding: '24px', borderBottom: `1px solid ${COLORS.border}`, background: 'rgba(255,255,255,0.02)' }}>
+          <div style={{ padding: '24px', borderBottom: `1px solid var(--border-soft)`, background: 'var(--bg-card-elevated)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-               <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(57, 200, 106, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Sparkles size={16} color={COLORS.success} />
+               <div style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--status-success-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Sparkles size={16} color="var(--status-success)" />
                </div>
-               <h3 style={{ fontSize: 16, fontWeight: 900, color: '#fff', margin: 0 }}>Command Assistant</h3>
+               <h3 style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Command Assistant</h3>
             </div>
-            <p style={{ fontSize: 11, color: COLORS.muted, margin: 0 }}>Braes Creek Estate Advisor</p>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, fontWeight: 700 }}>Braes Creek Estate Advisor</p>
           </div>
 
           {/* Messages Area */}
@@ -138,10 +138,10 @@ export default function CommandAssistant() {
                  maxWidth: '85%',
                  padding: '12px 16px',
                  borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                 background: m.role === 'user' ? COLORS.success : 'rgba(255,255,255,0.04)',
-                 color: m.role === 'user' ? '#050505' : '#fff',
+                 background: m.role === 'user' ? 'var(--status-success)' : 'var(--bg-card-elevated)',
+                 color: m.role === 'user' ? 'var(--text-inverse)' : 'var(--text-primary)',
                  fontSize: 13, lineHeight: 1.5,
-                 border: m.role === 'assistant' ? `1px solid ${COLORS.border}` : 'none'
+                 border: m.role === 'assistant' ? `1px solid var(--border-soft)` : 'none'
                }}>
                   {m.content}
                   {m.actions && m.actions.length > 0 && (
@@ -179,8 +179,8 @@ export default function CommandAssistant() {
                     key={cmd.id}
                     onClick={() => handleAction(cmd.id)}
                     style={{
-                      padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${COLORS.border}`,
-                      borderRadius: 10, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                      padding: '10px 12px', background: 'var(--bg-card-elevated)', border: `1px solid var(--border-soft)`,
+                      borderRadius: 10, color: 'var(--text-primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer',
                       textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s'
                     }}
                   >
@@ -199,8 +199,8 @@ export default function CommandAssistant() {
                     key={s.label}
                     onClick={() => router.push(s.href)}
                     style={{
-                      padding: '10px 12px', background: 'rgba(255,255,255,0.05)', 
-                      border: `1px solid ${COLORS.border}`, borderRadius: 12, color: '#fff', 
+                      padding: '10px 12px', background: 'var(--bg-card-elevated)', 
+                      border: `1px solid var(--border-soft)`, borderRadius: 12, color: 'var(--text-primary)', 
                       fontSize: 10, fontWeight: 800, cursor: 'pointer', display: 'flex', 
                       alignItems: 'center', gap: 8, transition: 'all 0.2s'
                     }}

@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import ThemeToggle from "@/components/ThemeToggle";
 import NotificationCenter from "@/components/NotificationCenter";
 import { useUIStore } from '@/store/useUIStore';
+import { useAppStore } from '@/store/useAppStore';
 import { 
   Building2, Tractor, Wrench, Fuel, Sparkles, Plus, 
   Search, Download, LayoutGrid, Timer, AlertTriangle,
@@ -14,36 +15,28 @@ import {
   AlertCircle, ShieldAlert, CheckCircle, Clock
 } from "lucide-react";
 
-const COLORS = {
-  success: '#39C86A',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  info: '#3b82f6',
-  muted: '#8a8a8e',
-  border: 'rgba(255, 255, 255, 0.08)',
-  accent: '#39C86A',
-  bg: 'var(--color-bg-body)',
-  glass: 'rgba(255, 255, 255, 0.03)'
-};
+import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
 export default function InfrastructureOpsPage() {
   const { sidebarCollapsed } = useUIStore();
+  const { theme } = useAppStore();
+  const isLight = theme === 'light';
   const [activeTab, setActiveTab] = useState('maintenance');
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: COLORS.bg }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)' }}>
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
-        <header style={{ height: 72, background: COLORS.bg, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${COLORS.border}` }}>
+        <header style={{ height: 72, background: 'var(--bg-sidebar)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: '1px solid var(--border-soft)' }}>
           <div>
-             <h1 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>Infrastructure & Operations</h1>
-             <p style={{ fontSize: 11, color: COLORS.muted, margin: 0 }}>Strategic asset management and operational command hub</p>
+             <h1 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Infrastructure & Operations</h1>
+             <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, fontWeight: 700 }}>Strategic asset management and operational command hub</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <ThemeToggle />
             <NotificationCenter />
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: COLORS.primary, color: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 13 }}>I</div>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--status-success)', color: 'var(--text-inverse)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 13 }}>I</div>
           </div>
         </header>
 
@@ -52,17 +45,22 @@ export default function InfrastructureOpsPage() {
            {/* TOP HERO BAR (FULL WIDTH) */}
            <div className="grid-12" style={{ gap: 12, marginBottom: 24 }}>
               {[
-                { label: 'Equipment Health', val: '94%', icon: <Activity size={14}/>, color: COLORS.success },
-                { label: 'Active Issues', val: '03', icon: <AlertTriangle size={14}/>, color: COLORS.danger },
-                { label: 'Maint. Cost (MTD)', val: '$4,280', icon: <TrendingDown size={14}/>, color: COLORS.info },
-                { label: 'Supply Status', val: 'Optimal', icon: <Package size={14}/>, color: COLORS.success },
-                { label: 'Vendor Risk', val: 'Low', icon: <ShieldAlert size={14}/>, color: COLORS.success },
+                { label: 'Equipment Health', val: '94%', icon: <Activity size={14}/>, color: 'var(--status-success)' },
+                { label: 'Active Issues', val: '03', icon: <AlertTriangle size={14}/>, color: 'var(--status-critical)' },
+                { label: 'Maint. Cost (MTD)', val: '$4,280', icon: <TrendingDown size={14}/>, color: 'var(--status-info)' },
+                { label: 'Supply Status', val: 'Optimal', icon: <Package size={14}/>, color: 'var(--status-success)' },
+                { label: 'Vendor Risk', val: 'Low', icon: <ShieldAlert size={14}/>, color: 'var(--status-success)' },
               ].map((card, i) => (
-                <div key={i} className="col-2-4 card-compact" style={{ borderLeft: `2px solid ${card.color}`, boxShadow: `inset 4px 0 10px ${card.color}10` }}>
-                   <div style={{ fontSize: 9, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div key={i} className="col-2-4 card-compact" style={{ 
+                    borderLeft: `2px solid ${card.color}`, 
+                    background: isLight ? `color-mix(in srgb, ${card.color}, transparent 92%)` : 'var(--bg-card)',
+                    boxShadow: isLight ? `0 4px 12px color-mix(in srgb, ${card.color}, transparent 90%)` : `inset 4px 0 10px ${card.color}10`,
+                    transition: 'all 0.2s ease'
+                 }}>
+                   <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
                       {card.icon} {card.label}
                    </div>
-                   <div style={{ fontSize: 18, fontWeight: 950, color: '#fff' }}>{card.val}</div>
+                   <div style={{ fontSize: 18, fontWeight: 950, color: 'var(--text-primary)' }}>{card.val}</div>
                 </div>
               ))}
            </div>
@@ -72,7 +70,7 @@ export default function InfrastructureOpsPage() {
               {/* MAIN CONTENT (LEFT — 70%) */}
               <div className="col-8">
                  <div className="glass-container">
-                    <div style={{ display: 'flex', borderBottom: `1px solid ${COLORS.border}`, padding: '0 24px' }}>
+                    <div style={{ display: 'flex', borderBottom: '1px solid var(--border-soft)', padding: '0 24px' }}>
                        {[
                          { id: 'maintenance', label: 'Maintenance', icon: Tool },
                          { id: 'feed',        label: 'Feed & Supplies', icon: Package },
@@ -125,13 +123,13 @@ export default function InfrastructureOpsPage() {
                                </thead>
                                <tbody>
                                   <tr>
-                                     <td><div style={{ fontWeight: 700 }}>John Deere 8R</div><div style={{ fontSize: 10, color: COLORS.muted }}>EQ-001</div></td>
+                                     <td><div style={{ fontWeight: 700 }}>John Deere 8R</div><div style={{ fontSize: 10, color: 'var(--text-muted)' }}>EQ-001</div></td>
                                      <td>48h Rem.</td>
                                      <td>John Doe</td>
                                      <td><span className="badge-warning">PENDING</span></td>
                                   </tr>
                                   <tr>
-                                     <td><div style={{ fontWeight: 700 }}>Combine S2</div><div style={{ fontSize: 10, color: COLORS.muted }}>EQ-042</div></td>
+                                     <td><div style={{ fontWeight: 700 }}>Combine S2</div><div style={{ fontSize: 10, color: 'var(--text-muted)' }}>EQ-042</div></td>
                                      <td>Overdue</td>
                                      <td>Alex Smith</td>
                                      <td><span className="badge-danger">CRITICAL</span></td>
@@ -150,10 +148,10 @@ export default function InfrastructureOpsPage() {
                                  { name: 'Diesel Fuel', qty: '850 L', level: 32, color: COLORS.warning },
                                  { name: 'Water Treatment', qty: '12 units', level: 92, color: COLORS.success },
                                ].map((s, i) => (
-                                 <div key={i} className="col-4" style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
+                                 <div key={i} className="col-4" style={{ padding: '16px', background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', borderRadius: 12 }}>
                                     <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 4 }}>{s.name}</div>
                                     <div style={{ fontSize: 16, fontWeight: 900, marginBottom: 8 }}>{s.qty}</div>
-                                    <div style={{ height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+                                    <div style={{ height: 4, background: 'var(--bg-card-elevated)', borderRadius: 2 }}>
                                        <div style={{ width: `${s.level}%`, height: '100%', background: s.color, borderRadius: 2 }} />
                                     </div>
                                  </div>
@@ -171,7 +169,7 @@ export default function InfrastructureOpsPage() {
                  {/* LIVE ALERTS */}
                  <div className="glass-container" style={{ padding: '24px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                       <h3 style={{ fontSize: 14, fontWeight: 900, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                       <h3 style={{ fontSize: 14, fontWeight: 900, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
                           <AlertCircle size={16} color={COLORS.danger} /> Live Alerts
                        </h3>
                        <span style={{ fontSize: 9, fontWeight: 900, color: COLORS.danger }}>3 ACTIVE</span>
@@ -181,21 +179,21 @@ export default function InfrastructureOpsPage() {
                           <Clock size={14} color={COLORS.danger} />
                           <div>
                              <div style={{ fontSize: 12, fontWeight: 800 }}>Overdue Maintenance</div>
-                             <div style={{ fontSize: 11, color: COLORS.muted }}>Combine S2 is 24h past service.</div>
+                             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Combine S2 is 24h past service.</div>
                           </div>
                        </div>
                        <div className="alert-item">
                           <Package size={14} color={COLORS.warning} />
                           <div>
                              <div style={{ fontSize: 12, fontWeight: 800 }}>Low Supplies</div>
-                             <div style={{ fontSize: 11, color: COLORS.muted }}>Diesel fuel at 32% capacity.</div>
+                             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Diesel fuel at 32% capacity.</div>
                           </div>
                        </div>
                        <div className="alert-item">
                           <Truck size={14} color={COLORS.warning} />
                           <div>
                              <div style={{ fontSize: 12, fontWeight: 800 }}>Vendor Delay</div>
-                             <div style={{ fontSize: 11, color: COLORS.muted }}>Seed delivery delayed by 48h.</div>
+                             <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Seed delivery delayed by 48h.</div>
                           </div>
                        </div>
                     </div>
@@ -205,7 +203,7 @@ export default function InfrastructureOpsPage() {
                  <div className="glass-container" style={{ padding: '24px', borderLeft: `3px solid ${COLORS.success}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                        <Sparkles size={16} color={COLORS.success} />
-                       <h3 style={{ fontSize: 14, fontWeight: 900, color: '#fff', margin: 0 }}>AI Operations Insights</h3>
+                       <h3 style={{ fontSize: 14, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>AI Operations Insights</h3>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                        {[
@@ -213,13 +211,13 @@ export default function InfrastructureOpsPage() {
                          { issue: 'Tractor Bearing Wear', impact: '$4.5k Risk', action: 'Pre-emptive replacement' },
                          { issue: 'Feed Supply Lag', impact: 'Yield Drop', action: 'Audit regional logistics' },
                        ].map((insight, i) => (
-                         <div key={i} style={{ borderBottom: i < 2 ? `1px solid ${COLORS.border}` : 'none', paddingBottom: i < 2 ? 16 : 0 }}>
-                            <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', marginBottom: 4 }}>{insight.issue}</div>
+                         <div key={i} style={{ borderBottom: i < 2 ? '1px solid var(--border-soft)' : 'none', paddingBottom: i < 2 ? 16 : 0 }}>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>{insight.issue}</div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                               <span style={{ fontSize: 10, color: COLORS.danger, fontWeight: 700 }}>{insight.impact} IMPACT</span>
+                               <span style={{ fontSize: 10, color: 'var(--status-critical)', fontWeight: 700 }}>{insight.impact} IMPACT</span>
                                <ArrowUpRight size={12} color={COLORS.success} />
                             </div>
-                            <div style={{ fontSize: 11, color: COLORS.muted }}>Action: <span style={{ color: COLORS.success }}>{insight.action}</span></div>
+                            <div style={{ fontSize: 11, color: COLORS.muted }}>Action: <span style={{ color: 'var(--status-success)' }}>{insight.action}</span></div>
                          </div>
                        ))}
                     </div>
@@ -234,16 +232,16 @@ export default function InfrastructureOpsPage() {
       <style jsx>{`
         .col-2-4 { width: calc(20% - 10px); }
         .card-compact {
-          background: ${COLORS.glass};
+          background: var(--bg-card);
           backdrop-filter: blur(12px);
-          border: 1px solid ${COLORS.border};
+          border: 1px solid var(--border-soft);
           border-radius: 12px;
           padding: 12px 16px;
         }
         .glass-container {
-          background: ${COLORS.glass};
+          background: var(--bg-card);
           backdrop-filter: blur(12px);
-          border: 1px solid ${COLORS.border};
+          border: 1px solid var(--border-soft);
           border-radius: 20px;
           overflow: hidden;
         }
@@ -254,29 +252,29 @@ export default function InfrastructureOpsPage() {
         .ops-table th {
            text-align: left;
            font-size: 10px;
-           color: ${COLORS.muted};
+           color: var(--text-muted);
            text-transform: uppercase;
            padding: 12px;
-           border-bottom: 1px solid ${COLORS.border};
+           border-bottom: 1px solid var(--border-soft);
         }
         .ops-table td {
            padding: 16px 12px;
            font-size: 13px;
-           color: #fff;
-           border-bottom: 1px solid rgba(255,255,255,0.02);
+           color: var(--text-primary);
+           border-bottom: 1px solid var(--border-soft);
         }
         .alert-item {
            display: flex;
            gap: 12px;
            align-items: center;
            padding: 12px;
-           background: rgba(255,255,255,0.02);
+           background: var(--bg-card-elevated);
            border-radius: 12px;
-           border: 1px solid rgba(255,255,255,0.05);
+           border: 1px solid var(--border-soft);
         }
         .btn-small {
-           background: ${COLORS.success};
-           color: #050505;
+           background: var(--status-success);
+           color: var(--text-inverse);
            border: none;
            padding: 4px 12px;
            border-radius: 8px;
@@ -287,8 +285,8 @@ export default function InfrastructureOpsPage() {
            align-items: center;
            gap: 6px;
         }
-        .badge-warning { font-size: 9px; font-weight: 900; background: rgba(245, 158, 11, 0.1); color: ${COLORS.warning}; padding: 4px 8px; border-radius: 4px; }
-        .badge-danger { font-size: 9px; font-weight: 900; background: rgba(239, 68, 68, 0.1); color: ${COLORS.danger}; padding: 4px 8px; border-radius: 4px; }
+        .badge-warning { font-size: 9px; font-weight: 900; background: var(--status-warning-glow); color: var(--status-warning); padding: 4px 8px; border-radius: 4px; }
+        .badge-danger { font-size: 9px; font-weight: 900; background: var(--status-critical-glow); color: var(--status-critical); padding: 4px 8px; border-radius: 4px; }
         .animate-fade-in {
           animation: fadeIn 0.4s ease-out;
         }

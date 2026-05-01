@@ -79,18 +79,18 @@ export default function ApprovalsPage() {
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
             <div>
-              <h2 style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.02em', color: 'var(--color-text-primary)', marginBottom: 8 }}>Pending Approvals</h2>
-              <p style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>Review and approve employee submissions before they impact analytics and AI models.</p>
+              <h2 style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.02em', color: 'var(--text-primary)', marginBottom: 8 }}>Pending Approvals</h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Review and approve employee submissions before they impact analytics and AI models.</p>
             </div>
-            <div style={{ display: 'flex', gap: 8, background: 'rgba(255,255,255,0.05)', padding: 6, borderRadius: 12 }}>
+            <div style={{ display: 'flex', gap: 8, background: 'var(--bg-card-elevated)', padding: 6, borderRadius: 12, border: '1px solid var(--border-soft)' }}>
               {['Pending', 'Approved', 'Rejected'].map(t => (
                 <button 
                   key={t}
                   onClick={() => setActiveTab(t)}
                   style={{
                     padding: '8px 16px', fontSize: 13, fontWeight: activeTab === t ? 700 : 500,
-                    background: activeTab === t ? 'var(--color-primary)' : 'transparent',
-                    color: activeTab === t ? '#101010' : 'var(--color-text-muted)',
+                    background: activeTab === t ? 'var(--status-success)' : 'transparent',
+                    color: activeTab === t ? 'var(--text-inverse)' : 'var(--text-muted)',
                     borderRadius: 8, border: 'none', cursor: 'pointer', transition: 'all 0.2s'
                   }}
                 >
@@ -117,27 +117,27 @@ export default function ApprovalsPage() {
                const Icon = getIcon(r.entity_type);
                const userName = r.requester_id.split('-')[1] || 'User';
                return (
-                <div key={r.id} style={{ background: 'var(--color-surface-card)', border: '1px solid var(--color-border)', borderRadius: 16, padding: 24, transition: 'all 0.2s', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div key={r.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-soft)', borderRadius: 16, padding: 24, transition: 'all 0.2s', display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                      <div style={{ display: 'flex', gap: 16 }}>
-                        <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                           <Icon size={20} color="var(--color-text-primary)" />
+                        <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                           <Icon size={20} color="var(--text-primary)" />
                         </div>
                         <div>
                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-                              <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-text-primary)', textTransform: 'capitalize' }}>{r.entity_type} Submission</span>
+                              <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'capitalize' }}>{r.entity_type} Submission</span>
                               <span style={{ 
-                                fontSize: 10, padding: '4px 8px', 
-                                background: r.status === 'pending' ? 'rgba(234, 179, 8, 0.1)' : (r.status === 'approved' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'), 
-                                color: r.status === 'pending' ? '#eab308' : (r.status === 'approved' ? '#4ade80' : '#f87171'), 
-                                borderRadius: 6, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' 
-                              }}>
+                                 fontSize: 10, padding: '4px 10px', 
+                                 background: r.status === 'pending' ? 'var(--status-warning-glow)' : (r.status === 'approved' ? 'var(--status-success-glow)' : 'var(--status-critical-glow)'), 
+                                 color: r.status === 'pending' ? 'var(--status-warning)' : (r.status === 'approved' ? 'var(--status-success)' : 'var(--status-critical)'), 
+                                 borderRadius: 6, fontWeight: 950, textTransform: 'uppercase', letterSpacing: '0.05em', border: `1px solid ${r.status === 'pending' ? 'rgba(217, 119, 6, 0.2)' : (r.status === 'approved' ? 'rgba(21, 128, 61, 0.2)' : 'rgba(220, 38, 38, 0.2)')}`
+                               }}>
                                 {r.status}
                               </span>
                            </div>
                            <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 8 }}>
-                              <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>Batch Record #{r.entity_id}</span> 
-                              <span style={{ margin: '0 8px' }}>•</span> Priority: <span style={{ fontWeight: 800, color: r.priority === 'urgent' ? '#ef4444' : '#fbbf24' }}>{r.priority}</span>
+                              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Batch Record #{r.entity_id}</span> 
+                              <span style={{ margin: '0 8px' }}>•</span> Priority: <span style={{ fontWeight: 900, color: r.priority === 'urgent' ? 'var(--status-critical)' : 'var(--status-warning)' }}>{r.priority}</span>
                            </div>
                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: 'var(--color-text-muted)' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -151,11 +151,11 @@ export default function ApprovalsPage() {
                         </div>
                      </div>
                      {r.status === 'pending' && (
-                       <div style={{ display: 'flex', gap: 8 }}>
-                          <button onClick={() => setSelectedRequest(r)} className="btn btn-secondary btn-sm" style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.05)' }}><Eye size={14} /> View</button>
-                          <button onClick={() => handleReject(r.id)} className="btn btn-secondary btn-sm" style={{ padding: '8px 12px', color: '#f87171', borderColor: 'rgba(248, 113, 113, 0.3)', background: 'transparent' }}><XCircle size={14} /> Reject</button>
-                          <button onClick={() => handleApprove(r.id)} className="btn btn-primary btn-sm" style={{ padding: '8px 16px', background: '#22c55e', color: '#101010', fontWeight: 800, border: 'none' }}><CheckCircle size={14} /> Approve</button>
-                       </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                           <button onClick={() => setSelectedRequest(r)} className="btn btn-secondary btn-sm" style={{ padding: '8px 12px', background: 'var(--bg-card-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-soft)', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}><Eye size={14} /> View</button>
+                           <button onClick={() => handleReject(r.id)} className="btn btn-secondary btn-sm" style={{ padding: '8px 12px', color: 'var(--status-critical)', borderColor: 'var(--status-critical-glow)', background: 'var(--status-critical-glow)', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}><XCircle size={14} /> Reject</button>
+                           <button onClick={() => handleApprove(r.id)} className="btn btn-primary btn-sm" style={{ padding: '8px 16px', background: 'var(--status-success)', color: 'var(--text-inverse)', fontWeight: 800, border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}><CheckCircle size={14} /> Approve</button>
+                        </div>
                      )}
                   </div>
                 </div>
@@ -179,7 +179,7 @@ export default function ApprovalsPage() {
                     </div>
                     <div>
                       <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Priority</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: selectedRequest.priority === 'urgent' ? '#ef4444' : '#fbbf24' }}>{selectedRequest.priority.toUpperCase()}</div>
+                      <div style={{ fontSize: 14, fontWeight: 900, color: selectedRequest.priority === 'urgent' ? 'var(--status-critical)' : 'var(--status-warning)' }}>{selectedRequest.priority.toUpperCase()}</div>
                     </div>
                     <div>
                       <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Reference ID</div>
@@ -187,7 +187,7 @@ export default function ApprovalsPage() {
                     </div>
                     <div>
                       <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Status</div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#eab308' }}>PENDING REVIEW</div>
+                      <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--status-warning)' }}>PENDING REVIEW</div>
                     </div>
                   </div>
                   

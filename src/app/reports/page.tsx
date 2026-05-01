@@ -54,6 +54,53 @@ export default function ReportsPage() {
     }, {} as Record<string, { hours: number; cost: number }>)
   ).map(([name, data]) => ({ name: name.split(' ')[0], ...data }))
 
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const reportContent = document.querySelector('.page-container')?.innerHTML || '';
+    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map(s => s.outerHTML)
+      .join('');
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Braes Creek Report - ${REPORT_TYPES.find(r => r.id === activeReport)?.label}</title>
+          ${styles}
+          <style>
+            body { background: white !important; color: black !important; padding: 40px !important; }
+            .card { background: white !important; border: 1px solid #eee !important; box-shadow: none !important; margin-bottom: 20px !important; break-inside: avoid; }
+            .kpi-card { background: #f9f9f9 !important; border: 1px solid #eee !important; }
+            .btn, .sidebar, .topbar, .pulse-dot { display: none !important; }
+            canvas, .recharts-responsive-container { max-width: 100% !important; height: auto !important; }
+            @media print {
+              .card { break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div style="margin-bottom: 30px; border-bottom: 2px solid #22c55e; padding-bottom: 15px;">
+            <h1 style="margin: 0; color: #166534;">Braes Creek Financial Intelligence</h1>
+            <p style="margin: 5px 0 0; color: #666;">Tactical Report: ${REPORT_TYPES.find(r => r.id === activeReport)?.label} | Generated: ${new Date().toLocaleDateString()}</p>
+          </div>
+          <div class="page-container">
+            ${reportContent}
+          </div>
+          <script>
+            window.onload = () => {
+              setTimeout(() => {
+                window.print();
+                window.close();
+              }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  }
+
   return (
     <div className="app-shell">
       <Sidebar />
@@ -63,8 +110,9 @@ export default function ReportsPage() {
           subtitle="Business intelligence and financial reporting"
           actions={
             <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-secondary btn-sm" onClick={handlePrint}>🖨️ Print Report</button>
               <button className="btn btn-secondary btn-sm">📥 Export CSV</button>
-              <button className="btn btn-primary btn-sm">🖨️ Export PDF</button>
+              <button className="btn btn-primary btn-sm">📈 Export PDF</button>
             </div>
           }
         />
@@ -85,7 +133,7 @@ export default function ReportsPage() {
                 }}
               >
                 <div style={{ fontSize: 22, marginBottom: 4 }}>{r.icon}</div>
-                <div style={{ fontWeight: 700, fontSize: 13, color: activeReport === r.id ? '#4ade80' : 'var(--text-primary)' }}>{r.label}</div>
+                <div style={{ fontWeight: 700, fontSize: 13, color: activeReport === r.id ? 'var(--status-success)' : 'var(--text-primary)' }}>{r.label}</div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{r.desc}</div>
               </div>
             ))}
@@ -97,16 +145,16 @@ export default function ReportsPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ 
-                    background: 'rgba(34,197,94,0.12)', 
+                    background: 'var(--status-success-glow)', 
                     width: 42, 
                     height: 42, 
                     borderRadius: 12, 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center',
-                    border: '1px solid rgba(34,197,94,0.2)'
+                    border: '1px solid var(--status-success-glow)'
                   }}>
-                     <Calendar size={20} color="#FFFFFF" strokeWidth={2.5} />
+                     <Calendar size={20} color="var(--status-success)" strokeWidth={2.5} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                      <span style={{ fontSize: 10, fontWeight: 900, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Intelligence Period</span>
@@ -182,10 +230,10 @@ export default function ReportsPage() {
                   <table className="data-table">
                     <thead><tr><th>Category</th><th>Amount (TTD)</th><th>% of Expenses</th></tr></thead>
                     <tbody>
-                      <tr><td colSpan={3} style={{ background: 'rgba(34,197,94,0.05)', color: '#4ade80', fontWeight: 700, fontSize: 12, padding: '8px 16px' }}>REVENUE</td></tr>
+                      <tr><td colSpan={3} style={{ background: 'var(--status-success-glow)', color: 'var(--status-success)', fontWeight: 800, fontSize: 12, padding: '8px 16px' }}>REVENUE</td></tr>
                       <tr><td className="primary">Estimated Sales & Operations</td><td className="amount income">{fmt(estimatedRevenue)}</td><td>—</td></tr>
                       <tr><td colSpan={3} style={{ height: 1, background: 'var(--border-subtle)' }} /></tr>
-                      <tr><td colSpan={3} style={{ background: 'rgba(239,68,68,0.05)', color: '#f87171', fontWeight: 700, fontSize: 12, padding: '8px 16px' }}>OPERATING EXPENSES</td></tr>
+                      <tr><td colSpan={3} style={{ background: 'var(--status-critical-glow)', color: 'var(--status-critical)', fontWeight: 800, fontSize: 12, padding: '8px 16px' }}>OPERATING EXPENSES</td></tr>
                       {segExpenses.map(s => (
                         <tr key={s.name}>
                           <td><span className="segment-dot"><div className="dot" style={{ background: s.color }} /><span>{s.name}</span></span></td>
@@ -193,18 +241,18 @@ export default function ReportsPage() {
                           <td style={{ color: 'var(--text-muted)', fontSize: 12 }}>{((s.amount / totalExpenses) * 100).toFixed(1)}%</td>
                         </tr>
                       ))}
-                      <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
+                      <tr style={{ background: 'var(--bg-card-elevated)', borderTop: '1px solid var(--border-soft)' }}>
                         <td style={{ fontWeight: 700 }}>Total Payroll</td>
                         <td className="amount expense">{fmt(totalPayroll)}</td><td>—</td>
                       </tr>
-                      <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
+                      <tr style={{ background: 'var(--bg-card-elevated)' }}>
                         <td style={{ fontWeight: 700 }}>Total Labor</td>
                         <td className="amount expense">{fmt(totalLaborCost)}</td><td>—</td>
                       </tr>
-                      <tr><td colSpan={3} style={{ height: 1, background: 'var(--border-subtle)' }} /></tr>
-                      <tr style={{ background: 'rgba(59,130,246,0.06)' }}>
-                        <td style={{ fontWeight: 800, color: '#f4f4f5', fontSize: 14 }}>NET INCOME</td>
-                        <td style={{ fontWeight: 800, fontSize: 16, fontFamily: 'Outfit, sans-serif', color: estimatedRevenue - totalExpenses - totalPayroll > 0 ? '#4ade80' : '#f87171' }}>
+                      <tr><td colSpan={3} style={{ height: 1, background: 'var(--border-soft)' }} /></tr>
+                      <tr style={{ background: 'var(--status-ai-glow)' }}>
+                        <td style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: 14 }}>NET INCOME</td>
+                        <td style={{ fontWeight: 900, fontSize: 16, fontFamily: 'Outfit, sans-serif', color: estimatedRevenue - totalExpenses - totalPayroll > 0 ? 'var(--status-success)' : 'var(--status-critical)' }}>
                           {fmt(estimatedRevenue - totalExpenses - totalPayroll)}
                         </td>
                         <td />
@@ -236,9 +284,9 @@ export default function ReportsPage() {
                   {MONTHLY_TREND.slice(-4).map(m => {
                     const net = m.revenue - m.expenses
                     return (
-                      <div key={m.month} style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: 8, textAlign: 'center' }}>
+                      <div key={m.month} style={{ background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', padding: '12px', borderRadius: 8, textAlign: 'center' }}>
                         <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>{m.month}</div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: net > 0 ? '#4ade80' : '#f87171' }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: net > 0 ? 'var(--status-success)' : 'var(--status-critical)' }}>
                           {net > 0 ? '+' : ''}{fmt(net)}
                         </div>
                       </div>
@@ -260,7 +308,7 @@ export default function ReportsPage() {
                     { label: 'Total Repaid', val: fmt(totalRepaid), color: '#22c55e' },
                     { label: 'Balance Outstanding', val: fmt(totalLoanBalance), color: '#ef4444' },
                   ].map(item => (
-                    <div key={item.label} style={{ background: 'rgba(255,255,255,0.03)', padding: 16, borderRadius: 10, borderLeft: `4px solid ${item.color}` }}>
+                    <div key={item.label} style={{ background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', padding: 16, borderRadius: 10, borderLeft: `4px solid ${item.color}` }}>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>{item.label}</div>
                       <div style={{ fontSize: 22, fontWeight: 800, color: item.color, fontFamily: 'Outfit, sans-serif', marginTop: 4 }}>{item.val}</div>
                     </div>

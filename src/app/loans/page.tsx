@@ -16,17 +16,8 @@ import {
   MessageSquare, Target, TrendingUp, TrendingDown, Skull, ArrowRightLeft
 } from "lucide-react";
 import React from 'react';
+import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
-const COLORS = {
-  success: '#39C86A',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  info: '#3b82f6',
-  muted: '#8a8a8e',
-  border: 'rgba(255, 255, 255, 0.08)',
-  accent: '#39C86A',
-  bg: '#050505'
-};
 
 interface Loan {
   id: string;
@@ -78,13 +69,13 @@ export default function LoansCommandCenter() {
   }, [loans]);
 
   const getStatus = (loan: Loan) => {
-    if (loan.status === 'overdue') return { label: 'Overdue', color: COLORS.danger };
+    if (loan.status === 'overdue') return { label: 'Overdue', color: 'var(--status-critical)' };
     const dueDate = new Date(loan.due_date);
     const today = new Date();
     const diff = (dueDate.getTime() - today.getTime()) / (1000 * 3600 * 24);
-    if (diff < 0) return { label: 'Critical', color: COLORS.danger };
-    if (diff < 7) return { label: 'Upcoming', color: COLORS.warning };
-    return { label: 'Healthy', color: COLORS.success };
+    if (diff < 0) return { label: 'Critical', color: 'var(--status-critical)' };
+    if (diff < 7) return { label: 'Upcoming', color: 'var(--status-warning)' };
+    return { label: 'Healthy', color: 'var(--status-success)' };
   };
 
   return (
@@ -94,8 +85,8 @@ export default function LoansCommandCenter() {
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease', overflow: 'hidden' }}>
         <header style={{ height: 72, background: 'var(--color-bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${COLORS.border}` }}>
           <div>
-             <h1 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>Debt Command Center</h1>
-             <p style={{ fontSize: 11, color: COLORS.muted, margin: 0, fontWeight: 600 }}>Autonomous liability tracking and optimization engine</p>
+             <h1 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Debt Command Center</h1>
+             <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, fontWeight: 700 }}>Autonomous liability tracking and optimization engine</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <ThemeToggle />
@@ -110,13 +101,13 @@ export default function LoansCommandCenter() {
            {metrics.overdueLoans.length > 0 && (
              <div className="animate-alert-entrance" style={{ marginBottom: 32, padding: '16px 24px', background: 'linear-gradient(90deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%)', border: '1px solid rgba(239, 68, 68, 0.6)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 0 40px rgba(239, 68, 68, 0.1)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                   <div style={{ background: '#ef4444', color: '#fff', padding: '6px 12px', borderRadius: 6, fontWeight: 950, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>CRITICAL BREACH</div>
+                   <div style={{ background: 'var(--status-critical)', color: 'var(--text-inverse)', padding: '6px 12px', borderRadius: 6, fontWeight: 950, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>CRITICAL BREACH</div>
                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 900, color: '#fff', marginBottom: 2 }}>{metrics.overdueLoans.length} Loans Past Due</div>
-                      <div style={{ fontSize: 13, color: '#fca5a5', fontWeight: 600 }}>Accumulating late fees of $42/day. Immediate verification of {metrics.overdueLoans[0].lender_name} required.</div>
+                      <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 2 }}>{metrics.overdueLoans.length} Loans Past Due</div>
+                      <div style={{ fontSize: 13, color: 'var(--status-critical)', fontWeight: 700 }}>Accumulating late fees of $42/day. Immediate verification of {metrics.overdueLoans[0].lender_name} required.</div>
                    </div>
                 </div>
-                <button className="btn-resolve-hover" style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 900, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button className="btn-resolve-hover" style={{ background: TC.danger, color: TC.textInverse, border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 900, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                    RESOLVE NOW <ArrowRight size={16} />
                 </button>
              </div>
@@ -126,19 +117,19 @@ export default function LoansCommandCenter() {
            <div className="card-elevated" style={{ marginBottom: 40, padding: '32px 40px', background: 'rgba(255,255,255,0.02)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle at top right, rgba(34, 197, 94, 0.05), transparent 60%)', pointerEvents: 'none' }} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                 <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(34, 197, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                    <BrainCircuit size={20} color={COLORS.success} />
+                 <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--status-success-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--status-success-glow)' }}>
+                    <BrainCircuit size={20} color='var(--status-success)' />
                  </div>
                  <div>
-                    <h3 style={{ fontSize: 16, fontWeight: 950, color: '#fff', margin: 0 }}>Debt Intelligence Strategy</h3>
-                    <p style={{ fontSize: 12, color: COLORS.muted, margin: 0 }}>Real-time audit of liability structures and market rates</p>
+                    <h3 style={{ fontSize: 16, fontWeight: 950, color: 'var(--text-primary)', margin: 0 }}>Debt Intelligence Strategy</h3>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>Real-time audit of liability structures and market rates</p>
                  </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 48 }}>
                  <div style={{ borderRight: `1px solid ${COLORS.border}`, paddingRight: 48 }}>
                     <div className="label-small" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}><MessageSquare size={12}/> <span>What is happening</span></div>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: '#fff', lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.5 }}>
                        {metrics.overdueLoans.length > 0 
                          ? `Credit rating at risk. ${metrics.overdueLoans.length} accounts are currently non-compliant with standard repayment terms.`
                          : "Capital structure is stable. Interest rates are locked and no immediate default threats detected."}
@@ -146,7 +137,7 @@ export default function LoansCommandCenter() {
                  </div>
                  <div style={{ borderRight: `1px solid ${COLORS.border}`, paddingRight: 48 }}>
                     <div className="label-small" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}><Target size={12}/> <span>Why it matters</span></div>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: '#fff', lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.5 }}>
                        {metrics.overdueLoans.length > 0
                          ? "Late fees are eroding operating margins. Continuous delinquency will trigger asset seizure protocols on equipment liens."
                          : "Low debt-to-equity ratio provides $45k in untapped borrowing capacity for the upcoming planting season."}
@@ -154,7 +145,7 @@ export default function LoansCommandCenter() {
                  </div>
                  <div>
                     <div className="label-small" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}><Zap size={12}/> <span>What to do next</span></div>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: '#fff', lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.5 }}>
                        {metrics.overdueLoans.length > 0
                          ? `Prioritize $${metrics.totalOverdue.toLocaleString()} injection into ${metrics.overdueLoans[0].lender_name} to stabilize credit score.`
                          : "Refinance Equipment Loan B with Tier 1 lender to reduce annual interest by an estimated $2,400."}
@@ -171,7 +162,7 @@ export default function LoansCommandCenter() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
                  {[
-                   { label: 'DUE TODAY', count: metrics.overdueLoans.length, color: COLORS.danger, desc: 'Immediate attention' },
+                   { label: 'DUE TODAY', count: metrics.overdueLoans.length, color: 'var(--status-critical)', desc: 'Immediate attention' },
                    { label: 'NEXT 3 DAYS', count: 1, color: COLORS.warning, desc: 'Awaiting funds' },
                    { label: 'NEXT 7 DAYS', count: 2, color: COLORS.info, desc: 'Projected cashflow' },
                    { label: 'NEXT 14 DAYS', count: 4, color: COLORS.muted, desc: 'Scheduled' },
@@ -181,7 +172,7 @@ export default function LoansCommandCenter() {
                           <span style={{ fontSize: 10, fontWeight: 900, color: step.color }}>{step.label}</span>
                           <Clock size={14} color={step.color} />
                        </div>
-                       <div style={{ fontSize: 24, fontWeight: 950, color: '#fff', marginBottom: 4 }}>{step.count} <span style={{ fontSize: 13, color: COLORS.muted, fontWeight: 600 }}>Payables</span></div>
+                       <div style={{ fontSize: 24, fontWeight: 950, color: 'var(--text-primary)', marginBottom: 4 }}>{step.count} <span style={{ fontSize: 13, color: COLORS.muted, fontWeight: 600 }}>Payables</span></div>
                        <div style={{ fontSize: 11, color: COLORS.muted, fontWeight: 600 }}>{step.desc}</div>
                     </div>
                  ))}
@@ -219,11 +210,11 @@ export default function LoansCommandCenter() {
                                <React.Fragment key={loan.id}>
                                   <tr className={isExpanded ? 'active' : ''} style={{ borderLeft: loan.status === 'overdue' ? `4px solid ${COLORS.danger}` : '4px solid transparent' }}>
                                      <td>
-                                        <div style={{ fontWeight: 800, color: '#fff', fontSize: 14 }}>{loan.lender_name}</div>
+                                        <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: 14 }}>{loan.lender_name}</div>
                                         <div style={{ fontSize: 11, color: COLORS.muted, fontWeight: 600 }}>Infrastructure Credit Line</div>
                                      </td>
                                      <td style={{ fontWeight: 800, fontSize: 15 }}>${loan.remaining_balance.toLocaleString()}</td>
-                                     <td style={{ fontWeight: 700, color: loan.interest_rate > 10 ? COLORS.danger : '#fff' }}>{loan.interest_rate}%</td>
+                                     <td style={{ fontWeight: 700, color: loan.interest_rate > 10 ? 'var(--status-critical)' : 'var(--text-primary)' }}>{loan.interest_rate}%</td>
                                      <td style={{ color: COLORS.muted }}>${(loan.monthly_payment || 1200).toLocaleString()}</td>
                                      <td>
                                         <div style={{ 
@@ -247,32 +238,32 @@ export default function LoansCommandCenter() {
                                   </tr>
                                   {isExpanded && (
                                     <tr>
-                                       <td colSpan={6} style={{ background: 'rgba(255,255,255,0.01)', padding: '32px' }}>
+                                       <td colSpan={6} style={{ background: 'var(--bg-card-elevated)', padding: '32px' }}>
                                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 32 }}>
                                              <div>
                                                 <div className="label-small" style={{ marginBottom: 12 }}>AMORTIZATION</div>
-                                                <div style={{ fontSize: 13, color: '#fff' }}>24 Payments Remaining</div>
+                                                <div style={{ fontSize: 13, color: 'var(--text-primary)' }}>24 Payments Remaining</div>
                                                 <div style={{ fontSize: 12, color: COLORS.muted }}>Ends June 2026</div>
                                              </div>
                                              <div>
                                                 <div className="label-small" style={{ marginBottom: 12 }}>COST AUDIT</div>
-                                                <div style={{ fontSize: 13, color: COLORS.danger, fontWeight: 800 }}>$12,400 Projected Interest</div>
+                                                <div style={{ fontSize: 13, color: 'var(--status-critical)', fontWeight: 800 }}>$12,400 Projected Interest</div>
                                                 <div style={{ fontSize: 12, color: COLORS.muted }}>No early payoff penalty</div>
                                              </div>
                                              <div>
                                                 <div className="label-small" style={{ marginBottom: 12 }}>CONSEQUENCE INSIGHT</div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: COLORS.danger }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--status-critical)' }}>
                                                    <Skull size={14} />
                                                    <span style={{ fontSize: 12, fontWeight: 700 }}>Default Risk: Medium</span>
                                                 </div>
                                                 <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 4 }}>Failure to pay within 15 days will trigger lien notification.</div>
                                              </div>
-                                             <div style={{ background: 'rgba(255,255,255,0.03)', padding: 16, borderRadius: 12, border: `1px solid ${COLORS.border}` }}>
+                                             <div style={{ background: 'var(--bg-card-elevated)', padding: 16, borderRadius: 12, border: '1px solid var(--border-soft)' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                                                   <Sparkles size={14} color={COLORS.success} />
-                                                   <span style={{ fontSize: 10, fontWeight: 950, color: COLORS.success }}>STRATEGY</span>
+                                                   <Sparkles size={14} color='var(--status-success)' />
+                                                   <span style={{ fontSize: 10, fontWeight: 950, color: 'var(--status-success)' }}>STRATEGY</span>
                                                 </div>
-                                                <div style={{ fontSize: 12, color: '#fff', lineHeight: 1.4 }}>Transfer to Lower Rate Facility A to save $140/mo.</div>
+                                                <div style={{ fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.4 }}>Transfer to Lower Rate Facility A to save $140/mo.</div>
                                              </div>
                                           </div>
                                        </td>
@@ -290,14 +281,14 @@ export default function LoansCommandCenter() {
                  <div className="card" style={{ padding: '24px', height: '100%' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
                        <Target size={18} color={COLORS.success} />
-                       <h3 style={{ fontSize: 14, fontWeight: 900, color: '#fff', margin: 0 }}>Smart Payment Priority</h3>
+                       <h3 style={{ fontSize: 14, fontWeight: 900, color: TC.textPrimary, margin: 0 }}>Smart Payment Priority</h3>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                        {sortedLoans.slice(0, 4).map((loan, i) => (
                           <div key={loan.id} style={{ display: 'flex', alignItems: 'center', gap: 16, paddingBottom: 16, borderBottom: i !== 3 ? `1px solid ${COLORS.border}` : 'none' }}>
-                             <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: COLORS.muted }}>{i + 1}</div>
+                             <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--bg-card-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: COLORS.muted }}>{i + 1}</div>
                              <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{loan.lender_name}</div>
+                                <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>{loan.lender_name}</div>
                                 <div style={{ fontSize: 11, color: loan.status === 'overdue' ? COLORS.danger : COLORS.muted, fontWeight: 600 }}>
                                    {loan.status === 'overdue' ? 'URGENT: OVERDUE' : `Due in ${Math.round((new Date(loan.due_date).getTime() - new Date().getTime()) / (1000 * 3600 * 24))} Days`}
                                 </div>
@@ -306,7 +297,7 @@ export default function LoansCommandCenter() {
                           </div>
                        ))}
                     </div>
-                    <button style={{ width: '100%', marginTop: 24, background: 'rgba(255,255,255,0.05)', border: `1px solid ${COLORS.border}`, color: '#fff', padding: '12px', borderRadius: 8, fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>VIEW FULL STRATEGY</button>
+                    <button style={{ width: '100%', marginTop: 24, background: 'rgba(255,255,255,0.05)', border: `1px solid ${COLORS.border}`, color: 'var(--text-primary)', padding: '12px', borderRadius: 8, fontWeight: 800, fontSize: 12, cursor: 'pointer' }}>VIEW FULL STRATEGY</button>
                  </div>
               </div>
 
@@ -317,14 +308,14 @@ export default function LoansCommandCenter() {
 
       <style jsx>{`
         .card-elevated {
-          background: #121212;
-          border: 1px solid ${COLORS.border};
+          background: var(--bg-card-elevated);
+          border: 1px solid var(--border-soft);
           border-radius: 24px;
           box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
         .card-compact {
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid ${COLORS.border};
+          background: var(--bg-card);
+          border: 1px solid var(--border-soft);
           border-radius: 16px;
           transition: all 0.3s ease;
         }
@@ -334,20 +325,20 @@ export default function LoansCommandCenter() {
           border-color: rgba(255, 255, 255, 0.15);
         }
         .card {
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid ${COLORS.border};
+          background: var(--bg-card);
+          border: 1px solid var(--border-soft);
           border-radius: 20px;
         }
         .loan-table { width: 100%; border-collapse: collapse; }
-        .loan-table th { text-align: left; font-size: 10px; color: COLORS.muted; text-transform: uppercase; padding: 20px 32px; border-bottom: 1px solid ${COLORS.border}; letter-spacing: 0.1em; }
-        .loan-table td { padding: 24px 32px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
-        .loan-table tr:hover { background: rgba(255,255,255,0.01); }
-        .loan-table tr.active { background: rgba(34, 197, 94, 0.02); }
-        .btn-table { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 6px 12px; color: #fff; font-size: 11px; cursor: pointer; transition: all 0.2s; }
-        .btn-table:hover { background: rgba(255,255,255,0.1); }
-        .btn-primary { background: ${COLORS.success}; color: #050505; border: none; border-radius: 12px; padding: 8px 20px; font-weight: 950; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
-        .btn-secondary { background: rgba(255,255,255,0.03); color: #fff; border: 1px solid ${COLORS.border}; border-radius: 10px; padding: 6px 14px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .label-small { font-size: 9px; font-weight: 950; color: ${COLORS.muted}; text-transform: uppercase; letter-spacing: 0.15em; }
+        .loan-table th { text-align: left; font-size: 10px; color: var(--text-muted); text-transform: uppercase; padding: 20px 32px; border-bottom: 1px solid var(--border-soft); letter-spacing: 0.1em; }
+        .loan-table td { padding: 24px 32px; font-size: 14px; color: var(--text-primary); border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+        .loan-table tr:hover { background: var(--bg-card-elevated); }
+        .loan-table tr.active { background: var(--status-success-glow); }
+        .btn-table { background: var(--bg-card-elevated); border: 1px solid var(--border-soft); border-radius: 8px; padding: 6px 12px; color: var(--text-primary); font-size: 11px; cursor: pointer; transition: all 0.2s; }
+        .btn-table:hover { background: var(--border-soft); }
+        .btn-primary { background: var(--status-success); color: var(--text-inverse); border: none; border-radius: 12px; padding: 8px 20px; font-weight: 950; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 0 20px var(--status-success-glow); }
+        .btn-secondary { background: var(--button-secondary-bg); color: var(--button-secondary-text); border: 1px solid var(--border-soft); border-radius: 10px; padding: 6px 14px; font-weight: 800; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .label-small { font-size: 9px; font-weight: 950; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; }
         .animate-alert-entrance {
           animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }

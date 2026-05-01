@@ -26,6 +26,7 @@ interface AppState {
   isInitialized: boolean;
   systemStatus: 'nominal' | 'degraded' | 'critical';
   currentUser: UserIdentity;
+  theme: 'dark' | 'light';
   
   // Foundation Actions (Phase 1)
   initializeEngine: () => void;
@@ -33,6 +34,7 @@ interface AppState {
   
   // Phase 3 Actions
   switchRole: (role: 'admin' | 'data-entry' | 'viewer') => void;
+  setTheme: (theme: 'dark' | 'light') => void;
   
   // Placeholder Wiring for future phases
   requestApproval: (entityType: string, entityId: string, metadata?: any) => void;
@@ -48,6 +50,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     name: 'Peter Admin',
     role: 'admin'
   },
+  theme: (typeof window !== 'undefined' && localStorage.getItem('braes-creek-theme') as 'dark' | 'light') || 'dark',
 
   switchRole: (role) => {
     const identities = {
@@ -58,8 +61,25 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ currentUser: identities[role] });
   },
 
+  setTheme: (theme) => {
+    set({ theme });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('braes-creek-theme', theme);
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+  },
+
   initializeEngine: () => {
     console.log("[Foundation] Initializing Braes Creek Coordination Engine...");
+    
+    // Restore theme from localStorage or state
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('braes-creek-theme') as 'dark' | 'light';
+      const currentTheme = savedTheme || get().theme;
+      document.documentElement.setAttribute('data-theme', currentTheme);
+      if (savedTheme) set({ theme: savedTheme });
+    }
+
     // Future: Connect to Supabase Realtime / WebSocket
     set({ isInitialized: true });
   },
@@ -137,9 +157,21 @@ export const useAppStore = create<AppState>((set, get) => ({
           }
        }
 
-       // 🧠 PHASE 5: Trigger AI Engine recalculation
-       useWorkflowStore.getState().generateRecommendations();
-    }
+       // 🧠 PHASE 6D: Trigger Infrastructure Engine if entity_type is infrastructure
+        if (event.metadata?.entity_type === 'infrastructure') {
+           const { infrastructure } = (require('./useDashboardStore')).useDashboardStore.getState();
+           const record = infrastructure.find((r: any) => r.id === event.entity_id);
+           if (record) {
+              useAlertStore.getState().evaluateInfrastructureRecord(record, infrastructure);
+           }
+        }
+
+        // 🧠 PHASE 7: Run Predictive Intelligence Engine
+        useAlertStore.getState().runPredictiveAudit();
+
+        // 🧠 PHASE 5: Trigger AI Engine recalculation
+        useWorkflowStore.getState().generateRecommendations();
+     }
 
     if (event.type === 'ALERT_CREATED') {
        // Future: Trigger high-priority mobile notifications or sound alerts

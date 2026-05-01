@@ -22,15 +22,7 @@ import {
   AreaChart, Area, Cell
 } from 'recharts';
 
-const COLORS = {
-  success: '#39C86A',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  info: '#3b82f6',
-  muted: '#8a8a8e',
-  border: 'rgba(255, 255, 255, 0.08)',
-  accent: '#39C86A'
-};
+import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
 const TABS = [
   { id: 'entries', label: 'Labor Entries', icon: History },
@@ -79,14 +71,14 @@ export default function WorkforceIntelligencePage() {
   ], []);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg-body)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)' }}>
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
-        <header style={{ height: 72, background: 'var(--color-bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${COLORS.border}` }}>
+        <header style={{ height: 72, background: 'var(--bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid var(--border-soft)` }}>
           <div>
-             <h1 style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0 }}>Workforce Intelligence</h1>
-             <p style={{ fontSize: 12, color: COLORS.muted, margin: 0 }}>Monitor labor cost, productivity, and workforce efficiency</p>
+             <h1 style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Workforce Intelligence</h1>
+             <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>Monitor labor cost, productivity, and workforce efficiency</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <ThemeToggle />
@@ -97,7 +89,7 @@ export default function WorkforceIntelligencePage() {
           </div>
         </header>
 
-        <div style={{ padding: '0 32px', background: 'var(--color-bg-body)', borderBottom: `1px solid ${COLORS.border}`, display: 'flex', gap: 32, position: 'sticky', top: 72, zIndex: 40 }}>
+        <div style={{ padding: '0 32px', background: 'var(--bg-body)', borderBottom: `1px solid var(--border-soft)`, display: 'flex', gap: 32, position: 'sticky', top: 72, zIndex: 40 }}>
            {TABS.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -109,8 +101,8 @@ export default function WorkforceIntelligencePage() {
                     padding: '20px 0',
                     background: 'none',
                     border: 'none',
-                    borderBottom: isActive ? `2px solid ${COLORS.success}` : '2px solid transparent',
-                    color: isActive ? COLORS.success : COLORS.muted,
+                    borderBottom: isActive ? `2px solid var(--status-success)` : '2px solid transparent',
+                    color: isActive ? 'var(--status-success)' : 'var(--text-muted)',
                     fontSize: 12,
                     fontWeight: 800,
                     cursor: 'pointer',
@@ -133,15 +125,15 @@ export default function WorkforceIntelligencePage() {
                 <div className="grid-12" style={{ gap: 16, marginBottom: 32 }}>
                    <div className="col-4 card" style={{ padding: '20px' }}>
                       <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Total Labor Cost</div>
-                      <div style={{ fontSize: 24, fontWeight: 950, color: '#fff' }}>{fmt(totalCost)}</div>
+                      <div style={{ fontSize: 24, fontWeight: 950, color: 'var(--text-primary)' }}>{fmt(totalCost)}</div>
                    </div>
                    <div className="col-4 card" style={{ padding: '20px' }}>
                       <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Hours Worked</div>
-                      <div style={{ fontSize: 24, fontWeight: 950, color: '#fff' }}>{totalHours.toFixed(1)}h</div>
+                      <div style={{ fontSize: 24, fontWeight: 950, color: 'var(--text-primary)' }}>{totalHours.toFixed(1)}h</div>
                    </div>
                    <div className="col-4 card" style={{ padding: '20px' }}>
                       <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Active Workers</div>
-                      <div style={{ fontSize: 24, fontWeight: 950, color: '#fff' }}>{activeWorkers}</div>
+                      <div style={{ fontSize: 24, fontWeight: 950, color: 'var(--text-primary)' }}>{activeWorkers}</div>
                    </div>
                 </div>
 
@@ -149,7 +141,7 @@ export default function WorkforceIntelligencePage() {
                    <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '8px 16px', width: 300 }}>
                          <Search size={14} color={COLORS.muted} />
-                         <input placeholder="Search records..." value={search} onChange={e => setSearch(e.target.value)} style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 12, width: '100%' }} />
+                         <input placeholder="Search records..." value={search} onChange={e => setSearch(e.target.value)} style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 12, width: '100%' }} />
                       </div>
                    </div>
                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -178,14 +170,14 @@ export default function WorkforceIntelligencePage() {
 
            {activeTab === 'performance' && (
              <div className="animate-fade-in card" style={{ padding: '32px' }}>
-                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 24 }}>Top Performing Workforce</h3>
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 24 }}>Top Performing Workforce</h3>
                 <div className="grid-12" style={{ gap: 16 }}>
                    <div className="col-4" style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: COLORS.success, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>D</div>
+                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800 }}>D</div>
                          <span style={{ fontSize: 15, fontWeight: 800 }}>Devon Smith</span>
                       </div>
-                      <div style={{ fontSize: 11, color: COLORS.success, marginTop: 8 }}>Efficiency: 96%</div>
+                      <div style={{ fontSize: 11, color: 'var(--status-success)', marginTop: 8 }}>Efficiency: 96%</div>
                    </div>
                 </div>
              </div>
@@ -195,7 +187,7 @@ export default function WorkforceIntelligencePage() {
              <div className="animate-fade-in card" style={{ padding: '32px', border: '1px solid rgba(139, 92, 246, 0.2)', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(5, 5, 5, 1) 100%)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                    <Sparkles size={18} color="#a78bfa" />
-                   <h3 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>AI Workforce Recommendations</h3>
+                   <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>AI Workforce Recommendations</h3>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                    {aiRecommendations.map((rec, i) => (
@@ -204,7 +196,7 @@ export default function WorkforceIntelligencePage() {
                             <span style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase' }}>{rec.type}</span>
                             <span style={{ fontSize: 9, fontWeight: 900, padding: '2px 8px', borderRadius: 4, background: `${rec.color}15`, color: rec.color }}>{rec.severity}</span>
                          </div>
-                         <p style={{ fontSize: 12, color: '#fff', margin: 0 }}>{rec.text}</p>
+                         <p style={{ fontSize: 12, color: 'var(--text-primary)', margin: 0 }}>{rec.text}</p>
                       </div>
                    ))}
                 </div>
@@ -216,14 +208,14 @@ export default function WorkforceIntelligencePage() {
 
       <style jsx>{`
         .card {
-          background: rgba(255, 255, 255, 0.03);
+          background: var(--bg-card);
           backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          border: 1px solid var(--border-soft);
           border-radius: 24px;
         }
         .btn-primary {
-          background: #39C86A;
-          color: #050505;
+          background: var(--status-success);
+          color: var(--text-inverse);
           border: none;
           border-radius: 12px;
           padding: 10px 20px;

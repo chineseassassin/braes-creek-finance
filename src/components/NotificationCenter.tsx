@@ -39,18 +39,18 @@ export default function NotificationCenter() {
   };
 
   const priorityColors = {
-    critical: '#ef4444',
-    warning: '#f59e0b',
-    info: '#3b82f6',
-    task: '#39C86A'
+    critical: 'var(--status-critical)',
+    warning: 'var(--status-warning)',
+    info: 'var(--status-info)',
+    task: 'var(--status-success)'
   };
 
   return (
     <>
-      <button onClick={togglePanel} style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: '#f59e0b', display: 'flex', padding: 8, borderRadius: '50%', background: '#222222' }}>
+      <button onClick={togglePanel} style={{ position: 'relative', background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', cursor: 'pointer', color: 'var(--status-warning)', display: 'flex', padding: 8, borderRadius: '50%' }}>
         <Bell size={18} />
         {unreadCount > 0 && (
-          <span style={{ position: 'absolute', top: -2, right: -2, background: '#ef4444', color: '#fff', fontSize: 9, fontWeight: 700, borderRadius: 10, padding: '2px 5px', border: '2px solid #222' }}>
+          <span style={{ position: 'absolute', top: -2, right: -2, background: 'var(--status-critical)', color: 'var(--text-inverse)', fontSize: 9, fontWeight: 700, borderRadius: 10, padding: '2px 5px', border: '2px solid var(--bg-body)' }}>
             {unreadCount}
           </span>
         )}
@@ -64,24 +64,24 @@ export default function NotificationCenter() {
           
           {/* Panel */}
           <div className="notification-panel" style={{ 
-            position: 'absolute', top: 0, right: 0, bottom: 0, width: 400, background: '#141414', borderLeft: '1px solid #333', 
-            boxShadow: '-10px 0 40px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column',
+            position: 'absolute', top: 0, right: 0, bottom: 0, width: 400, background: 'var(--bg-card)', borderLeft: '1px solid var(--border-soft)', 
+            boxShadow: 'var(--shadow-strong)', display: 'flex', flexDirection: 'column',
             animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
           }}>
              {/* Header */}
-             <div style={{ padding: '24px', borderBottom: '1px solid #222', display: 'flex', flexDirection: 'column', gap: 16 }}>
+             <div style={{ padding: '24px', borderBottom: '1px solid var(--border-soft)', display: 'flex', flexDirection: 'column', gap: 16 }}>
                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                  <div>
-                   <h2 style={{ fontSize: 20, fontWeight: 600, color: '#fff', margin: 0 }}>Notifications</h2>
-                   <p style={{ fontSize: 12, color: '#8a8a8e', margin: '4px 0 0 0' }}>Business alerts, reminders, and upcoming actions</p>
+                   <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Notifications</h2>
+                   <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '4px 0 0 0' }}>Business alerts, reminders, and upcoming actions</p>
                  </div>
-                 <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', color: '#8a8a8e', cursor: 'pointer', padding: 4 }}><X size={20}/></button>
+                 <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 4 }}><X size={20}/></button>
                </div>
                
                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                  <button onClick={() => setIsAddModalOpen(true)} className="btn-primary" style={{ padding: '6px 14px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}><Plus size={14}/> Add Notification</button>
                  {notifications.length > 0 && (
-                   <button onClick={() => { if(window.confirm('Clear all notifications?')) clearAll(); }} style={{ background: 'none', border: 'none', color: '#8a8a8e', fontSize: 12, cursor: 'pointer', fontWeight: 500 }}>Clear All</button>
+                   <button onClick={() => { if(window.confirm('Clear all notifications?')) clearAll(); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 12, cursor: 'pointer', fontWeight: 500 }}>Clear All</button>
                  )}
                </div>
              </div>
@@ -90,16 +90,16 @@ export default function NotificationCenter() {
              <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
                {notifications.length === 0 ? (
                  <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-                   <div style={{ width: 48, height: 48, background: '#222', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                     <Bell size={24} color="#8a8a8e" />
+                   <div style={{ width: 48, height: 48, background: 'var(--bg-body)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                     <Bell size={24} color="var(--text-muted)" />
                    </div>
-                   <div style={{ fontSize: 15, fontWeight: 600, color: '#fff', marginBottom: 8 }}>No notifications right now</div>
-                   <div style={{ fontSize: 13, color: '#8a8a8e', marginBottom: 20, lineHeight: 1.5 }}>System monitoring is active. New alerts, reminders, and tasks will appear here.</div>
+                   <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>No notifications right now</div>
+                   <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20, lineHeight: 1.5 }}>System monitoring is active. New alerts, reminders, and tasks will appear here.</div>
                    <button onClick={() => setIsAddModalOpen(true)} className="btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>Add Notification</button>
                  </div>
                ) : (
                  notifications.map(n => (
-                   <div key={n.id} onClick={() => { if(!n.read) markAsRead(n.id); }} style={{ background: '#1a1a1a', border: `1px solid ${n.read ? '#2a2a2a' : '#333'}`, borderRadius: 12, padding: 16, position: 'relative', opacity: n.status === 'completed' ? 0.6 : 1, transition: 'all 0.2s', cursor: n.read ? 'default' : 'pointer' }}>
+                   <div key={n.id} onClick={() => { if(!n.read) markAsRead(n.id); }} style={{ background: 'var(--bg-card-elevated)', border: `1px solid ${n.read ? 'var(--border-soft)' : 'var(--border-strong)'}`, borderRadius: 12, padding: 16, position: 'relative', opacity: n.status === 'completed' ? 0.6 : 1, transition: 'all 0.2s', cursor: n.read ? 'default' : 'pointer' }}>
                      <div style={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: 8 }}>
                        {n.priority === 'task' && n.status !== 'completed' && (
                          <button onClick={(e) => { e.stopPropagation(); markAsCompleted(n.id); }} style={{ background: 'none', border: 'none', color: '#39C86A', cursor: 'pointer', padding: 4 }} title="Mark Complete"><Check size={14}/></button>
@@ -111,17 +111,17 @@ export default function NotificationCenter() {
                        <div style={{ background: `${priorityColors[n.priority]}22`, color: priorityColors[n.priority], fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, textTransform: 'uppercase' }}>
                          {n.priority}
                        </div>
-                       <div style={{ fontSize: 10, color: '#8a8a8e', fontWeight: 600 }}>{n.category}</div>
+                       <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600 }}>{n.category}</div>
                        {!n.read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#3b82f6', marginLeft: 'auto', marginRight: 40 }} />}
                      </div>
                      
-                     <div style={{ fontSize: 14, fontWeight: 600, color: n.status === 'completed' ? '#8a8a8e' : '#fff', marginBottom: 4, paddingRight: 40, textDecoration: n.status === 'completed' ? 'line-through' : 'none' }}>{n.title}</div>
-                     <div style={{ fontSize: 12, color: '#8a8a8e', marginBottom: 12, lineHeight: 1.4 }}>{n.message}</div>
+                     <div style={{ fontSize: 14, fontWeight: 600, color: n.status === 'completed' ? 'var(--text-muted)' : 'var(--text-primary)', marginBottom: 4, paddingRight: 40, textDecoration: n.status === 'completed' ? 'line-through' : 'none' }}>{n.title}</div>
+                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, lineHeight: 1.4 }}>{n.message}</div>
                      
                      {(n.dueDate || n.amount) && (
-                       <div style={{ display: 'flex', gap: 16, background: '#222', padding: '8px 12px', borderRadius: 6, fontSize: 11 }}>
-                         {n.amount && <div style={{ color: '#fff', fontWeight: 600 }}>Amount: <span style={{ color: priorityColors[n.priority] }}>${n.amount.toLocaleString()}</span></div>}
-                         {n.dueDate && <div style={{ color: '#fff', fontWeight: 600 }}>Due: <span style={{ color: '#8a8a8e' }}>{n.dueDate}</span></div>}
+                       <div style={{ display: 'flex', gap: 16, background: 'var(--bg-body)', padding: '8px 12px', borderRadius: 6, fontSize: 11 }}>
+                         {n.amount && <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Amount: <span style={{ color: priorityColors[n.priority] }}>${n.amount.toLocaleString()}</span></div>}
+                         {n.dueDate && <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>Due: <span style={{ color: 'var(--text-muted)' }}>{n.dueDate}</span></div>}
                        </div>
                      )}
 
@@ -142,26 +142,26 @@ export default function NotificationCenter() {
       {isAddModalOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }} onClick={() => setIsAddModalOpen(false)} />
-          <div className="card" style={{ position: 'relative', width: 440, padding: 32, background: '#1a1a1a', border: '1px solid #333', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', zIndex: 1 }}>
-            <button onClick={() => setIsAddModalOpen(false)} style={{ position: 'absolute', top: 20, right: 20, background: 'none', border: 'none', color: '#8a8a8e', cursor: 'pointer' }}><X size={20}/></button>
-            <div style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="card" style={{ position: 'relative', width: 440, padding: 32, background: 'var(--bg-card)', border: '1px solid var(--border-soft)', boxShadow: 'var(--shadow-strong)', zIndex: 1 }}>
+            <button onClick={() => setIsAddModalOpen(false)} style={{ position: 'absolute', top: 20, right: 20, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20}/></button>
+            <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
                Add Notification
             </div>
             <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#8a8a8e', marginBottom: 8 }}>Title</label>
+                <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Title</label>
                 <input autoFocus required type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="form-input" placeholder="e.g. Loan payment due today" />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 12, color: '#8a8a8e', marginBottom: 8 }}>Message / Notes</label>
+                <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Message / Notes</label>
                 <textarea required value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} className="form-input" placeholder="Additional details..." rows={3} style={{ resize: 'none' }} />
               </div>
 
               <div style={{ display: 'flex', gap: 16 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#8a8a8e', marginBottom: 8 }}>Category</label>
+                  <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Category</label>
                   <select required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="form-input">
                     <option>Loan Payment</option>
                     <option>Task</option>
@@ -174,7 +174,7 @@ export default function NotificationCenter() {
                   </select>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#8a8a8e', marginBottom: 8 }}>Priority</label>
+                  <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Priority</label>
                   <select required value={formData.priority} onChange={e => setFormData({...formData, priority: e.target.value as any})} className="form-input">
                     <option value="critical">Critical</option>
                     <option value="warning">Warning</option>
@@ -186,13 +186,13 @@ export default function NotificationCenter() {
 
               <div style={{ display: 'flex', gap: 16 }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#8a8a8e', marginBottom: 8 }}>Due Date (Optional)</label>
+                  <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Due Date (Optional)</label>
                   <input type="date" value={formData.dueDate} onChange={e => setFormData({...formData, dueDate: e.target.value})} className="form-input" />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: 12, color: '#8a8a8e', marginBottom: 8 }}>Amount (Optional)</label>
+                  <label style={{ display: 'block', fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>Amount (Optional)</label>
                   <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: 12, top: 12, color: '#8a8a8e', fontSize: 14 }}>$</span>
+                    <span style={{ position: 'absolute', left: 12, top: 12, color: 'var(--text-muted)', fontSize: 14 }}>$</span>
                     <input type="number" step="0.01" min="0" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} className="form-input" style={{ paddingLeft: 24 }} placeholder="0.00" />
                   </div>
                 </div>
@@ -208,7 +208,42 @@ export default function NotificationCenter() {
         </div>
       )}
 
-      <style dangerouslySetInnerHTML={{__html: `
+      <style jsx>{`
+        .form-input {
+          width: 100%;
+          background: var(--bg-card-elevated);
+          border: 1px solid var(--border-soft);
+          border-radius: 8px;
+          padding: 10px 12px;
+          color: var(--text-primary);
+          font-size: 13px;
+          outline: none;
+          transition: all 0.2s;
+        }
+        .form-input:focus {
+          border-color: var(--status-success);
+          background: var(--bg-card);
+        }
+        .btn-primary {
+          background: var(--button-primary-bg);
+          color: var(--button-primary-text);
+          border: none;
+          border-radius: 8px;
+          padding: 10px 20px;
+          font-weight: 800;
+          font-size: 13px;
+          cursor: pointer;
+        }
+        .btn-ghost {
+          background: var(--bg-card-elevated);
+          color: var(--text-primary);
+          border: 1px solid var(--border-soft);
+          border-radius: 8px;
+          padding: 10px 20px;
+          font-weight: 700;
+          font-size: 13px;
+          cursor: pointer;
+        }
         @keyframes slideInRight {
           from { transform: translateX(100%); }
           to { transform: translateX(0); }
@@ -219,7 +254,7 @@ export default function NotificationCenter() {
             top: auto !important;
             height: 85vh;
             border-left: none !important;
-            border-top: 1px solid #333;
+            border-top: 1px solid var(--border-soft);
             border-radius: 24px 24px 0 0;
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
           }
@@ -228,7 +263,7 @@ export default function NotificationCenter() {
           from { transform: translateY(100%); }
           to { transform: translateY(0); }
         }
-      `}} />
+      `}</style>
     </>
   );
 }

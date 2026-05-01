@@ -22,15 +22,7 @@ import {
   BarChart, Bar, Cell, PieChart as RePieChart, Pie, Legend
 } from 'recharts';
 
-const COLORS = {
-  success: '#39C86A',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  info: '#3b82f6',
-  muted: '#8a8a8e',
-  border: 'rgba(255, 255, 255, 0.08)',
-  accent: '#39C86A'
-};
+import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
 const CHART_COLORS = ['#39C86A', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
@@ -57,14 +49,14 @@ export default function CapitalPage() {
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
         
-        <header style={{ height: 72, background: 'var(--color-bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${COLORS.border}` }}>
+        <header style={{ height: 72, background: 'var(--bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid var(--border-soft)` }}>
           <div>
-             <h1 style={{ fontSize: 20, fontWeight: 800, color: '#fff', margin: 0 }}>Capital & Asset Control</h1>
-             <p style={{ fontSize: 12, color: COLORS.muted, margin: 0 }}>Strategic equity positioning & infrastructure valuation</p>
+             <h1 style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Capital & Asset Control</h1>
+             <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>Strategic equity positioning & infrastructure valuation</p>
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <div style={{ fontSize: 12, color: COLORS.muted, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
               <RefreshCw size={14} /> Asset Registry Synced: {mountedTime}
             </div>
             <ThemeToggle />
@@ -79,37 +71,37 @@ export default function CapitalPage() {
           
           {/* 1. CAPITAL HERO */}
           <div className="grid-12" style={{ gap: 24, marginBottom: 32 }}>
-             <div className="col-8 card" style={{ padding: '32px', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(5, 5, 5, 1) 100%)', border: '1px solid rgba(59, 130, 246, 0.15)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                   <div>
-                      <div style={{ fontSize: 12, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 12 }}>Total Capital Employed</div>
-                      <div style={{ fontSize: 48, fontWeight: 950, color: '#fff', display: 'flex', alignItems: 'center', gap: 16 }}>
-                         ${totalCapital.toLocaleString()}
-                         <div style={{ fontSize: 14, fontWeight: 700, padding: '4px 12px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: 20, color: COLORS.muted, border: '1px solid rgba(255,255,255,0.1)' }}>
-                            Equity Position: 74%
-                         </div>
-                      </div>
-                      <div style={{ fontSize: 14, color: COLORS.muted, marginTop: 12 }}>Capital Health: <span style={{ color: COLORS.success, fontWeight: 700 }}>Excellent (Low Leverage)</span></div>
-                   </div>
-                   <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 12, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Net Asset Value (NAV)</div>
-                      <div style={{ fontSize: 28, fontWeight: 900, color: '#fff' }}>$1,383,000</div>
-                      <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 4 }}>Appraised: Q2 2026</div>
-                   </div>
-                </div>
+              <div className="col-8 card" style={{ padding: '32px', background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-elevated) 100%)', border: '1px solid var(--border-soft)' }}>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                       <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 12 }}>Total Capital Employed</div>
+                       <div style={{ fontSize: 48, fontWeight: 950, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 16 }}>
+                          ${totalCapital.toLocaleString()}
+                          <div style={{ fontSize: 14, fontWeight: 700, padding: '4px 12px', background: 'var(--bg-card-elevated)', borderRadius: 20, color: 'var(--text-muted)', border: '1px solid var(--border-soft)' }}>
+                             Equity Position: 74%
+                          </div>
+                       </div>
+                       <div style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 12 }}>Capital Health: <span style={{ color: 'var(--status-success)', fontWeight: 700 }}>Excellent (Low Leverage)</span></div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                       <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Net Asset Value (NAV)</div>
+                       <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)' }}>$1,383,000</div>
+                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Appraised: Q2 2026</div>
+                    </div>
+                 </div>
                 
                 <div style={{ display: 'flex', gap: 64, marginTop: 40 }}>
                    <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Fixed Assets</div>
-                      <div style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>$1,170,000</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Fixed Assets</div>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)' }}>$1,170,000</div>
                    </div>
                    <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Current Assets</div>
-                      <div style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>$213,000</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Current Assets</div>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)' }}>$213,000</div>
                    </div>
                    <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Debt-to-Equity</div>
-                      <div style={{ fontSize: 22, fontWeight: 900, color: COLORS.info }}>0.35x</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Debt-to-Equity</div>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--status-info)' }}>0.35x</div>
                    </div>
                 </div>
              </div>
@@ -120,19 +112,19 @@ export default function CapitalPage() {
                       <Sparkles size={20} color={COLORS.success} />
                    </div>
                    <div>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Capital Strategy</div>
-                      <div style={{ fontSize: 12, color: COLORS.muted }}>AI-driven equity optimization</div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>Capital Strategy</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>AI-driven equity optimization</div>
                    </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div style={{ fontSize: 13, color: '#fff', lineHeight: 1.5 }}>
-                         <span style={{ fontWeight: 800, color: COLORS.success }}>Equity Signal:</span> Your strong equity position allows for favorable tractor financing in Q3.
+                      <div style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                         <span style={{ fontWeight: 800, color: 'var(--status-success)' }}>Equity Signal:</span> Your strong equity position allows for favorable tractor financing in Q3.
                       </div>
                    </div>
                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div style={{ fontSize: 13, color: '#fff', lineHeight: 1.5 }}>
-                         <span style={{ fontWeight: 800, color: COLORS.info }}>Depreciation:</span> Q2 machinery depreciation is 4% below forecast; maintenance ROI is high.
+                      <div style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                         <span style={{ fontWeight: 800, color: 'var(--status-info)' }}>Depreciation:</span> Q2 machinery depreciation is 4% below forecast; maintenance ROI is high.
                       </div>
                    </div>
                 </div>
@@ -143,7 +135,7 @@ export default function CapitalPage() {
              {/* 2. ASSET PORTFOLIO */}
              <div className="col-8 card" style={{ padding: '32px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                   <h3 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>Asset Portfolio Audit</h3>
+                   <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Asset Portfolio Audit</h3>
                    <div style={{ display: 'flex', gap: 12 }}>
                       <button className="btn-ghost-small"><History size={14} /> History</button>
                       <button className="btn-ghost-small"><Plus size={14} /> Add Asset</button>
@@ -151,12 +143,12 @@ export default function CapitalPage() {
                 </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                    <thead>
-                      <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                         <th style={{ padding: '16px', fontSize: 11, color: COLORS.muted, textTransform: 'uppercase' }}>Asset Category</th>
-                         <th style={{ padding: '16px', fontSize: 11, color: COLORS.muted, textTransform: 'uppercase' }}>Valuation</th>
-                         <th style={{ padding: '16px', fontSize: 11, color: COLORS.muted, textTransform: 'uppercase' }}>Condition</th>
-                         <th style={{ padding: '16px', fontSize: 11, color: COLORS.muted, textTransform: 'uppercase' }}>ROI Index</th>
-                         <th style={{ padding: '16px', fontSize: 11, color: COLORS.muted, textTransform: 'uppercase' }}>Status</th>
+                      <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-soft)' }}>
+                         <th style={{ padding: '16px', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Asset Category</th>
+                         <th style={{ padding: '16px', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Valuation</th>
+                         <th style={{ padding: '16px', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Condition</th>
+                         <th style={{ padding: '16px', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>ROI Index</th>
+                         <th style={{ padding: '16px', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Status</th>
                       </tr>
                    </thead>
                    <tbody>
@@ -167,13 +159,13 @@ export default function CapitalPage() {
                          { name: 'Cold Storage Infra', value: '$68,000', cond: 'New', roi: '1.5x', status: 'Strategic' },
                          { name: 'Grain Silos (2)', value: '$45,000', cond: 'Maintenance', roi: '0.9x', status: 'Warning' }
                       ].map((row, i) => (
-                         <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                         <tr key={i} style={{ borderBottom: '1px solid var(--border-soft)' }}>
                             <td style={{ padding: '16px' }}>
-                               <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{row.name}</div>
+                               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{row.name}</div>
                             </td>
                             <td style={{ padding: '16px', fontSize: 14, fontWeight: 700 }}>{row.value}</td>
-                            <td style={{ padding: '16px', fontSize: 13, color: COLORS.muted }}>{row.cond}</td>
-                            <td style={{ padding: '16px', fontSize: 13, fontWeight: 700, color: COLORS.success }}>{row.roi}</td>
+                            <td style={{ padding: '16px', fontSize: 13, color: 'var(--text-muted)' }}>{row.cond}</td>
+                            <td style={{ padding: '16px', fontSize: 13, fontWeight: 700, color: 'var(--status-success)' }}>{row.roi}</td>
                             <td style={{ padding: '16px' }}>
                                <span style={{ fontSize: 10, fontWeight: 900, padding: '4px 10px', borderRadius: 6, background: row.status === 'Warning' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(57, 200, 106, 0.1)', color: row.status === 'Warning' ? COLORS.warning : COLORS.success }}>
                                   {row.status.toUpperCase()}
@@ -187,7 +179,7 @@ export default function CapitalPage() {
 
              {/* 3. ALLOCATION PIE */}
              <div className="col-4 card" style={{ padding: '32px' }}>
-                <h3 style={{ fontSize: 18, fontWeight: 900, color: '#fff', marginBottom: 32 }}>Capital Allocation</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 32 }}>Capital Allocation</h3>
                 <div style={{ height: 280 }}>
                    <ResponsiveContainer width="100%" height="100%">
                       <RePieChart>
@@ -213,9 +205,9 @@ export default function CapitalPage() {
                       <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.color }} />
-                            <span style={{ fontSize: 13, color: COLORS.muted }}>{s.name}</span>
+                            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{s.name}</span>
                          </div>
-                         <span style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{((s.value / totalCapital) * 100).toFixed(0)}%</span>
+                         <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>{((s.value / totalCapital) * 100).toFixed(0)}%</span>
                       </div>
                    ))}
                 </div>
@@ -231,17 +223,17 @@ export default function CapitalPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                      <span style={{ color: COLORS.muted }}>Equity (Owner Capital)</span>
-                      <span style={{ fontWeight: 800, color: COLORS.success }}>$1,023,000</span>
+                      <span style={{ color: 'var(--text-muted)' }}>Equity (Owner Capital)</span>
+                      <span style={{ fontWeight: 800, color: 'var(--status-success)' }}>$1,023,000</span>
                    </div>
-                   <div style={{ height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden' }}>
+                   <div style={{ height: 8, background: 'var(--bg-card-elevated)', borderRadius: 4, overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: '74%', background: COLORS.success }} />
                    </div>
                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                      <span style={{ color: COLORS.muted }}>External Debt (Loans)</span>
-                      <span style={{ fontWeight: 800, color: COLORS.danger }}>$360,000</span>
+                      <span style={{ color: 'var(--text-muted)' }}>External Debt (Loans)</span>
+                      <span style={{ fontWeight: 800, color: 'var(--status-critical)' }}>$360,000</span>
                    </div>
-                   <div style={{ height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden' }}>
+                   <div style={{ height: 8, background: 'var(--bg-card-elevated)', borderRadius: 4, overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: '26%', background: COLORS.danger }} />
                    </div>
                 </div>
@@ -259,8 +251,8 @@ export default function CapitalPage() {
                          <Tractor size={20} color={COLORS.warning} />
                       </div>
                       <div style={{ flex: 1 }}>
-                         <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Tractor Fleet Expansion</div>
-                         <div style={{ fontSize: 11, color: COLORS.muted }}>Planned: Q3 2026 • $120,000</div>
+                         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Tractor Fleet Expansion</div>
+                         <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Planned: Q3 2026 • $120,000</div>
                       </div>
                       <ChevronRight size={16} color={COLORS.muted} />
                    </div>
@@ -269,8 +261,8 @@ export default function CapitalPage() {
                          <Warehouse size={20} color={COLORS.success} />
                       </div>
                       <div style={{ flex: 1 }}>
-                         <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Greenhouse Infrastructure</div>
-                         <div style={{ fontSize: 11, color: COLORS.muted }}>Planned: Q4 2026 • $45,000</div>
+                         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Greenhouse Infrastructure</div>
+                         <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Planned: Q4 2026 • $45,000</div>
                       </div>
                       <ChevronRight size={16} color={COLORS.muted} />
                    </div>
@@ -283,14 +275,14 @@ export default function CapitalPage() {
 
       <style jsx>{`
         .card {
-          background: rgba(255, 255, 255, 0.03);
+          background: var(--bg-card);
           backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          border: 1px solid var(--border-soft);
           border-radius: 24px;
         }
         .btn-primary {
-          background: #39C86A;
-          color: #050505;
+          background: var(--status-success);
+          color: var(--text-inverse);
           border: none;
           border-radius: 12px;
           padding: 10px 20px;
@@ -301,13 +293,13 @@ export default function CapitalPage() {
           text-transform: uppercase;
         }
         .btn-primary:hover {
-          background: #4ade80;
+          opacity: 0.9;
           transform: scale(1.02);
         }
         .btn-ghost-small {
-          background: rgba(255, 255, 255, 0.03);
-          color: #8a8a8e;
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          background: var(--bg-card-elevated);
+          color: var(--text-muted);
+          border: 1px solid var(--border-soft);
           border-radius: 8px;
           padding: 8px 12px;
           font-size: 11px;
@@ -319,8 +311,8 @@ export default function CapitalPage() {
           gap: 6px;
         }
         .btn-ghost-small:hover {
-          background: rgba(255, 255, 255, 0.08);
-          color: #fff;
+          background: var(--border-soft);
+          color: var(--text-primary);
         }
       `}</style>
     </div>

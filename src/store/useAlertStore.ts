@@ -54,6 +54,8 @@ interface AlertState {
   evaluateLivestockRecord: (record: any, allRecords: any[]) => Promise<void>
   evaluateCropRecord: (record: any, allRecords: any[]) => Promise<void>
   evaluateInventoryRecord: (record: any, allRecords: any[]) => Promise<void>
+  evaluateInfrastructureRecord: (record: any, allRecords: any[]) => Promise<void>
+  runPredictiveAudit: () => Promise<void>
   evaluateEscalations: () => void
 }
 
@@ -562,6 +564,136 @@ export const useAlertStore = create<AlertState>((set, get) => ({
         escalation_level: 2
       });
     }
+  },
+
+  evaluateInfrastructureRecord: async (record: any, allRecords: any[]) => {
+    const { id, asset_name, due_date, status, criticality, maintenance_type, cost, projected_cost } = record;
+    if (status !== 'approved') return;
+
+    const existingAlerts = get().alerts;
+    if (existingAlerts.find(a => a.related_record_id === id)) return;
+
+    const now = new Date();
+    const dueDateObj = due_date ? new Date(due_date) : null;
+    const daysToMaintenance = dueDateObj ? Math.ceil((dueDateObj.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : null;
+
+    // 1. Overdue Maintenance
+    if (daysToMaintenance !== null && daysToMaintenance < 0 && record.maintenance_status !== 'completed') {
+      await get().addAlert({
+        category: 'system',
+        severity: criticality === 'high' ? 'critical' : 'warning',
+        priority_score: criticality === 'high' ? 96 : 76,
+        title: `Overdue Maintenance: ${asset_name}`,
+        message: `Scheduled maintenance for ${asset_name} was due on ${due_date}. Priority: ${criticality}.`,
+        why_it_matters: criticality === 'high' 
+          ? 'Failure of this critical asset will lead to immediate production stoppage and potential safety risks.'
+          : 'Deferred maintenance increases the risk of premature asset failure and higher repair costs.',
+        recommended_action: 'Allocate maintenance crew immediately. Verify backup system readiness.',
+        related_table: 'infrastructure',
+        related_record_id: id,
+        escalation_level: criticality === 'high' ? 4 : 2
+      });
+    }
+    // 2. Upcoming Maintenance
+    else if (daysToMaintenance !== null && daysToMaintenance <= 7 && daysToMaintenance >= 0 && record.maintenance_status !== 'completed') {
+      await get().addAlert({
+        category: 'system',
+        severity: 'warning',
+        priority_score: 66,
+        title: `Upcoming Maintenance Window: ${asset_name}`,
+        message: `${asset_name} is due for ${maintenance_type} in ${daysToMaintenance} days.`,
+        why_it_matters: 'Proactive maintenance ensures continuous operational availability and extends asset lifespan.',
+        recommended_action: 'Confirm parts availability and schedule technical staff.',
+        related_table: 'infrastructure',
+        related_record_id: id,
+        escalation_level: 2
+      });
+    }
+
+    // 3. Vendor Cost Concern
+    if (cost && projected_cost && cost > projected_cost * 1.25) {
+      await get().addAlert({
+        category: 'spending',
+        severity: 'warning',
+        priority_score: 72,
+        title: `Infrastructure Cost Variance: ${asset_name}`,
+        message: `Maintenance cost for ${asset_name} ($${cost}) exceeded projection by ${(((cost/projected_cost)-1)*100).toFixed(0)}%.`,
+        why_it_matters: 'Unforecasted maintenance expenses impact the operational cash reserve for the current quarter.',
+        recommended_action: 'Review vendor invoice for unexpected line items. Audit asset repair history.',
+        related_table: 'infrastructure',
+        related_record_id: id,
+        escalation_level: 2
+      });
+    }
+  },
+
+  runPredictiveAudit: async () => {
+    const { useDashboardStore } = (require('./useDashboardStore'));
+    const { inventory, transactions, livestockUnits, crops } = useDashboardStore.getState();
+    const existingAlerts = get().alerts;
+
+    // 1. Predictive Inventory Depletion
+    inventory.forEach(async (item: any) => {
+      if (item.status !== 'approved' || !item.avg_daily_usage || item.quantity <= 0) return;
+      
+      const daysRemaining = item.quantity / item.avg_daily_usage;
+      const alertId = `pred-inv-${item.id}`;
+      if (existingAlerts.find(a => a.related_record_id === alertId)) return;
+
+      if (daysRemaining < 3) {
+        await get().addAlert({
+          category: 'system',
+          severity: 'critical',
+          priority_score: 95,
+          title: `Predicted Stockout: ${item_name}`,
+          message: `At current usage rates, ${item_name} will be completely depleted in less than 72 hours.`,
+          why_it_matters: 'Immediate operational freeze is imminent. Replacement lead times exceed current stock duration.',
+          recommended_action: 'Emergency procurement required within 12 hours.',
+          related_table: 'inventory',
+          related_record_id: alertId,
+          escalation_level: 3
+        });
+      } else if (daysRemaining < 7) {
+        await get().addAlert({
+          category: 'system',
+          severity: 'warning',
+          priority_score: 75,
+          title: `Stock Depletion Warning: ${item_name}`,
+          message: `${item_name} is projected to run out in ${daysRemaining.toFixed(1)} days.`,
+          why_it_matters: 'Normal reorder cycles may be too slow to prevent a stockout event.',
+          recommended_action: 'Verify replenishment shipment status or initiate priority order.',
+          related_table: 'inventory',
+          related_record_id: alertId,
+          escalation_level: 2
+        });
+      }
+    });
+
+    // 2. Cash Flow Pressure Prediction
+    const last30Days = transactions.filter((t: any) => 
+      new Date(t.date) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) && t.status === 'approved'
+    );
+    const avgMonthlyBurn = last30Days.reduce((acc: number, t: any) => acc + (t.amount || 0), 0);
+    const currentCash = 15000; // Mocked for now, should be from a specific store
+    
+    if (avgMonthlyBurn > currentCash && !existingAlerts.find(a => a.title.includes('Cash Flow Pressure'))) {
+      await get().addAlert({
+        category: 'spending',
+        severity: 'critical',
+        priority_score: 90,
+        title: 'Predicted Cash Flow Pressure',
+        message: `Current burn rate exceeds available liquidity. Projected negative balance within 25 days.`,
+        why_it_matters: 'Insufficient cash flow will halt payroll and critical procurement cycles.',
+        recommended_action: 'Defer non-essential capital expenditure. Accelerate accounts receivable collection.',
+        related_table: 'finance',
+        related_record_id: 'pred-cash-flow',
+        escalation_level: 3
+      });
+    }
+
+    // 3. Predictive Livestock Mortality Trend
+    // This assumes livestock records have a history or we check multiple records for the same unit
+    // For now, we will look at the most recent approved mortality rates
   },
 
   evaluateSystemHealth: async (transactions) => {

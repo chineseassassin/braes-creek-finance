@@ -17,13 +17,15 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
 } from 'recharts';
 
+import { THEME_COLORS, TC } from '@/lib/theme-colors';
+
 const COLORS = {
-  income: '#39C86A',
-  expense: '#ef4444',
-  net: '#3b82f6',
-  muted: '#8a8a8e',
-  border: 'rgba(255,255,255,0.06)',
-  card: 'rgba(255, 255, 255, 0.03)'
+  income: 'var(--status-success)',
+  expense: 'var(--status-critical)',
+  net: 'var(--status-info)',
+  muted: 'var(--text-muted)',
+  border: 'var(--border-soft)',
+  card: 'var(--bg-card)'
 };
 
 export default function PLStatementPage() {
@@ -65,18 +67,18 @@ export default function PLStatementPage() {
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#141414', color: '#fff' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)', color: 'var(--text-primary)' }}>
       <Sidebar />
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
         
-        <header style={{ height: 72, background: '#141414', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${COLORS.border}` }}>
+        <header style={{ height: 72, background: 'var(--bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid var(--border-soft)` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link href="/finance" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.03)', color: COLORS.muted }}>
               <ArrowLeft size={16} />
             </Link>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#fff' }}>Profit Intelligence (P&L Overview)</div>
-              <div style={{ fontSize: 12, color: COLORS.muted }}>Strategic Financial Performance Audit</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>Profit Intelligence (P&L Overview)</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Strategic Financial Performance Audit</div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -103,12 +105,12 @@ export default function PLStatementPage() {
                         {plData.totalRevenue > 0 ? "STABLE ⚡" : "INITIALIZING ⏳"}
                       </span>
                       <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)' }} />
-                      <span style={{ fontSize: 13, color: '#fff' }}>Cash Flow: <span style={{ fontWeight: 700, color: plData.netProfit >= 0 ? COLORS.income : COLORS.expense }}>{plData.totalRevenue > 0 ? (plData.netProfit >= 0 ? "Balanced" : "Negative") : "Pending"}</span></span>
-                      <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)' }} />
-                      <span style={{ fontSize: 13, color: '#fff' }}>Risk: <span style={{ fontWeight: 700, color: COLORS.income }}>{plData.totalRevenue > 0 ? "LOW" : "UNKNOWN"}</span></span>
+                      <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>Cash Flow: <span style={{ fontWeight: 700, color: plData.netProfit >= 0 ? 'var(--status-success)' : 'var(--status-critical)' }}>{plData.totalRevenue > 0 ? (plData.netProfit >= 0 ? "Balanced" : "Negative") : "Pending"}</span></span>
+                      <div style={{ width: 1, height: 14, background: 'var(--border-soft)' }} />
+                      <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>Risk: <span style={{ fontWeight: 700, color: 'var(--status-success)' }}>{plData.totalRevenue > 0 ? "LOW" : "UNKNOWN"}</span></span>
                    </div>
-                   <div style={{ fontSize: 13, color: COLORS.muted }}>
-                     <span style={{ fontWeight: 700, color: '#fff' }}>AI Recommendation:</span> {plData.totalRevenue > 0 ? "Maintain current spending pace. Sector margins are healthy." : "Add revenue and expense data to activate full profit intelligence."}
+                   <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                     <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>AI Recommendation:</span> {plData.totalRevenue > 0 ? "Maintain current spending pace. Sector margins are healthy." : "Add revenue and expense data to activate full profit intelligence."}
                    </div>
                 </div>
              </div>
@@ -130,7 +132,7 @@ export default function PLStatementPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: plData.totalRevenue > 0 ? COLORS.income : COLORS.muted, fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
                 <TrendingUp size={14} /> {plData.totalRevenue > 0 ? '+12.4%' : 'No data yet'}
               </div>
-              <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', marginBottom: 12 }} />
+              <div style={{ height: 1, background: 'var(--border-soft)', marginBottom: 12 }} />
               <div style={{ fontSize: 11, color: COLORS.muted, lineHeight: 1.4 }}>
                 {plData.totalRevenue > 0 ? "Consistent growth in sector yields." : "Revenue stream not yet activated."}
               </div>
@@ -139,13 +141,13 @@ export default function PLStatementPage() {
             {/* 2. EXPENSES CARD */}
             <div className="col-3 glass-card-hero" style={{ padding: '24px', minHeight: 160 }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 12 }}>Operating Expenses</div>
-              <div style={{ fontSize: 28, fontWeight: 900, marginBottom: 4, color: plData.totalExpenses > 0 ? COLORS.expense : '#fff' }}>
+              <div style={{ fontSize: 28, fontWeight: 900, marginBottom: 4, color: plData.totalExpenses > 0 ? COLORS.expense : 'var(--text-primary)' }}>
                 {plData.totalExpenses > 0 ? `$${plData.totalExpenses.toLocaleString()}` : '$0'}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: plData.totalExpenses > 0 ? COLORS.expense : COLORS.muted, fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
                 <TrendingUp size={14} /> {plData.totalExpenses > 0 ? '+18.2%' : 'No data yet'}
               </div>
-              <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', marginBottom: 12 }} />
+              <div style={{ height: 1, background: 'var(--border-soft)', marginBottom: 12 }} />
               <div style={{ fontSize: 11, color: COLORS.muted, lineHeight: 1.4 }}>
                 {plData.totalExpenses > 0 ? "Expenses rising faster than revenue." : "Start logging costs to analyze burn rate."}
               </div>
@@ -154,14 +156,14 @@ export default function PLStatementPage() {
             {/* 3. NET PROFIT CARD (SPECIAL) */}
             <div className="col-3 glass-card-hero active-glow" style={{ padding: '24px', minHeight: 160, position: 'relative' }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 12 }}>Net Profit</div>
-              <div style={{ fontSize: 28, fontWeight: 900, marginBottom: 4, color: plData.totalRevenue > 0 ? (plData.netProfit >= 0 ? COLORS.income : COLORS.expense) : '#fff' }}>
+              <div style={{ fontSize: 28, fontWeight: 900, marginBottom: 4, color: plData.totalRevenue > 0 ? (plData.netProfit >= 0 ? COLORS.income : COLORS.expense) : 'var(--text-primary)' }}>
                 {plData.totalRevenue > 0 ? `${plData.netProfit >= 0 ? '+' : ''}$${plData.netProfit.toLocaleString()}` : '$0'}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: plData.totalRevenue > 0 ? (plData.netProfit >= 0 ? COLORS.income : COLORS.expense) : COLORS.muted, fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
                 {plData.netProfit >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />} 
                 {plData.totalRevenue > 0 ? `${Math.abs((plData.netProfit / (plData.totalRevenue || 1)) * 100).toFixed(1)}%` : 'No data yet'}
               </div>
-              <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', marginBottom: 12 }} />
+              <div style={{ height: 1, background: 'var(--border-soft)', marginBottom: 12 }} />
               <div style={{ fontSize: 11, color: COLORS.muted, lineHeight: 1.4 }}>
                 {plData.totalRevenue > 0 ? "Maintained profitability threshold." : "Add revenue and expenses to calculate profit."}
               </div>
@@ -176,7 +178,7 @@ export default function PLStatementPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: plData.totalRevenue > 0 ? COLORS.warning : COLORS.muted, fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
                 <TrendingDown size={14} /> {plData.totalRevenue > 0 ? '-2.4%' : 'No data yet'}
               </div>
-              <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', marginBottom: 12 }} />
+              <div style={{ height: 1, background: 'var(--border-soft)', marginBottom: 12 }} />
               <div style={{ fontSize: 11, color: COLORS.muted, lineHeight: 1.4 }}>
                 {plData.totalRevenue > 0 ? "Declining margin due to cost drift." : "Add income sources to unlock tracking."}
               </div>
@@ -189,19 +191,19 @@ export default function PLStatementPage() {
              <div className="grid-12" style={{ gap: 16 }}>
                 <div className="col-4 glass-card-hero signal-card" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS.income, boxShadow: `0 0 10px ${COLORS.income}` }} />
-                   <div style={{ fontSize: 12, color: '#fff', fontWeight: 500 }}>
+                   <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 500 }}>
                      {plData.totalRevenue > 0 ? "Revenue trajectory remains positive." : "No financial patterns detected yet."}
                    </div>
                 </div>
                 <div className="col-4 glass-card-hero signal-card" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: COLORS.warning, boxShadow: `0 0 10px ${COLORS.warning}` }} />
-                   <div style={{ fontSize: 12, color: '#fff', fontWeight: 500 }}>
+                   <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 500 }}>
                      {plData.totalRevenue > 0 ? "Potential margin pressure in Feed sector." : "System will analyze trends once data is added."}
                    </div>
                 </div>
                 <div className="col-4 glass-card-hero signal-card" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6', boxShadow: `0 0 10px #3b82f6` }} />
-                   <div style={{ fontSize: 12, color: '#fff', fontWeight: 500 }}>
+                   <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 500 }}>
                      {plData.totalRevenue > 0 ? "Cash flow efficiency: OPTIMAL." : "Awaiting data to activate intelligence."}
                    </div>
                 </div>
@@ -210,25 +212,53 @@ export default function PLStatementPage() {
 
           <style dangerouslySetInnerHTML={{__html: `
             .glass-card-hero {
-              background: rgba(255, 255, 255, 0.03);
+              background: var(--bg-card);
               backdrop-filter: blur(10px);
-              border: 1px solid rgba(255, 255, 255, 0.06);
+              border: 1px solid var(--border-soft);
               border-radius: 20px;
               transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
             }
             .glass-card-hero:hover {
               transform: translateY(-4px);
-              background: rgba(255, 255, 255, 0.05);
-              border-color: rgba(255, 255, 255, 0.12);
-              box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+              background: var(--bg-card-elevated);
+              border-color: var(--border-strong);
+              box-shadow: 0 12px 24px rgba(0,0,0,0.1);
             }
             .active-glow {
-              border: 1px solid ${COLORS.income}33;
-              box-shadow: 0 0 20px ${COLORS.income}08;
+              border: 1px solid var(--status-success-glow);
+              box-shadow: 0 0 20px var(--status-success-glow);
             }
             .signal-card {
               border-radius: 12px;
-              background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+              background: var(--bg-card-elevated);
+            }
+            .card {
+              background: var(--bg-card);
+              border: 1px solid var(--border-soft);
+              border-radius: 20px;
+            }
+            .btn-ghost {
+              background: var(--bg-card-elevated);
+              color: var(--text-primary);
+              border: 1px solid var(--border-soft);
+              border-radius: 8px;
+              padding: 8px 16px;
+              font-size: 12px;
+              font-weight: 600;
+              cursor: pointer;
+            }
+            .btn-primary {
+              background: var(--status-success);
+              color: var(--text-inverse);
+              border: none;
+              border-radius: 10px;
+              padding: 10px 20px;
+              font-weight: 800;
+              font-size: 13px;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              gap: 8px;
             }
           `}} />
 
@@ -282,18 +312,18 @@ export default function PLStatementPage() {
                     <tbody>
                         {plData.incomeByCat.map((item, i) => (
                           <tr key={i} style={{ borderBottom: i === plData.incomeByCat.length - 1 ? 'none' : `1px solid ${COLORS.border}` }}>
-                            <td style={{ padding: '12px 0', fontSize: 14, color: '#fff' }}>{item.name}</td>
+                            <td style={{ padding: '12px 0', fontSize: 14, color: 'var(--text-primary)' }}>{item.name}</td>
                             <td style={{ padding: '12px 0', textAlign: 'right', fontSize: 14, fontWeight: 700, color: COLORS.income }}>+${item.val.toLocaleString()}</td>
                           </tr>
                         ))}
                     </tbody>
                   </table>
                 ) : (
-                  <div style={{ padding: '24px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.1)' }}>
+                  <div style={{ padding: '24px', textAlign: 'center', background: 'var(--bg-card-elevated)', borderRadius: 12, border: '1px dashed var(--border-soft)' }}>
                      <div style={{ fontSize: 13, color: COLORS.muted, marginBottom: 12, lineHeight: 1.6 }}>
                         No income streams recorded yet.<br/>
                         Start by adding:<br/>
-                        <span style={{ color: '#fff', fontWeight: 600 }}>• Livestock Sales • Crop Revenue • Services</span>
+                        <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>• Livestock Sales • Crop Revenue • Services</span>
                      </div>
                      <Link href="/finance" style={{ textDecoration: 'none' }}>
                         <button className="btn-ghost" style={{ padding: '8px 16px', fontSize: 11 }}>Add Revenue →</button>
@@ -313,18 +343,18 @@ export default function PLStatementPage() {
                     <tbody>
                         {plData.expenseByCat.map((item, i) => (
                           <tr key={i} style={{ borderBottom: i === plData.expenseByCat.length - 1 ? 'none' : `1px solid ${COLORS.border}` }}>
-                            <td style={{ padding: '12px 0', fontSize: 14, color: '#fff' }}>{item.name}</td>
+                            <td style={{ padding: '12px 0', fontSize: 14, color: 'var(--text-primary)' }}>{item.name}</td>
                             <td style={{ padding: '12px 0', textAlign: 'right', fontSize: 14, fontWeight: 700, color: COLORS.expense }}>-${item.val.toLocaleString()}</td>
                           </tr>
                         ))}
                     </tbody>
                   </table>
                 ) : (
-                  <div style={{ padding: '24px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.1)' }}>
+                  <div style={{ padding: '24px', textAlign: 'center', background: 'var(--bg-card-elevated)', borderRadius: 12, border: '1px dashed var(--border-soft)' }}>
                      <div style={{ fontSize: 13, color: COLORS.muted, marginBottom: 12, lineHeight: 1.6 }}>
                         No expense data yet.<br/>
                         Start logging costs to analyze burn rate:<br/>
-                        <span style={{ color: '#fff', fontWeight: 600 }}>• Feed • Labor • Fuel • Maintenance</span>
+                        <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>• Feed • Labor • Fuel • Maintenance</span>
                      </div>
                      <Link href="/finance" style={{ textDecoration: 'none' }}>
                         <button className="btn-ghost" style={{ padding: '8px 16px', fontSize: 11 }}>Add Expense →</button>

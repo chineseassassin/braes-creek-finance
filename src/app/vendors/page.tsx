@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import ThemeToggle from "@/components/ThemeToggle";
 import NotificationCenter from "@/components/NotificationCenter";
 import { useUIStore } from '@/store/useUIStore';
+import { useAppStore } from '@/store/useAppStore';
 import { 
   Truck, Search, Plus, Filter, Sparkles, 
   AlertTriangle, CheckCircle2, TrendingUp, 
@@ -14,20 +15,12 @@ import {
 } from "lucide-react";
 import { SAMPLE_VENDORS, SAMPLE_SEGMENTS } from '@/lib/sample-data';
 
-const COLORS = {
-  success: '#39C86A',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  info: '#3b82f6',
-  muted: '#8a8a8e',
-  border: 'rgba(255, 255, 255, 0.08)',
-  accent: '#39C86A',
-  bg: 'var(--color-bg-body)',
-  glass: 'rgba(255, 255, 255, 0.03)'
-};
+import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
 export default function VendorIntelligencePage() {
   const { sidebarCollapsed } = useUIStore();
+  const { theme } = useAppStore();
+  const isLight = theme === 'light';
   const [vendors, setVendors] = useState(SAMPLE_VENDORS.map(v => ({
     ...v,
     total_spend: Math.floor(Math.random() * 50000) + 5000,
@@ -55,14 +48,14 @@ export default function VendorIntelligencePage() {
   }, [vendors]);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: COLORS.bg }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)' }}>
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
-        <header style={{ height: 72, background: COLORS.bg, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${COLORS.border}` }}>
+        <header style={{ height: 72, background: 'var(--bg-sidebar)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid var(--border-soft)` }}>
           <div>
-             <h1 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>Vendor Intelligence Command Center</h1>
-             <p style={{ fontSize: 11, color: COLORS.muted, margin: 0 }}>Supply chain auditing & performance analytics</p>
+             <h1 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Vendor Intelligence Command Center</h1>
+             <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, fontWeight: 700 }}>Supply chain auditing & performance analytics</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <ThemeToggle />
@@ -82,11 +75,16 @@ export default function VendorIntelligencePage() {
                 { label: 'Top Vendor', val: metrics.topVendor.name, color: COLORS.warning, icon: <Star size={14}/> },
                 { label: 'High Risk Vendors', val: metrics.highRiskCount, color: COLORS.danger, icon: <ShieldAlert size={14}/> },
               ].map((card, i) => (
-                <div key={i} className="col-2-4 card-compact" style={{ borderLeft: `2px solid ${card.color}` }}>
-                   <div style={{ fontSize: 9, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div key={i} className="col-2-4 card-compact" style={{ 
+                   borderLeft: `2px solid ${card.color}`,
+                   background: isLight ? `color-mix(in srgb, ${card.color}, transparent 92%)` : 'var(--bg-card)',
+                   boxShadow: isLight ? `0 4px 12px color-mix(in srgb, ${card.color}, transparent 90%)` : `inset 4px 0 10px ${card.color}10`,
+                   transition: 'all 0.2s ease'
+                }}>
+                   <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
                       {card.icon} {card.label}
                    </div>
-                   <div style={{ fontSize: 18, fontWeight: 950, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.val}</div>
+                   <div style={{ fontSize: 18, fontWeight: 950, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.val}</div>
                 </div>
               ))}
            </div>
@@ -96,13 +94,13 @@ export default function VendorIntelligencePage() {
               {/* MAIN CONTENT (LEFT) */}
               <div className="col-9">
                  <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.03)', padding: '10px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)' }}>
-                       <Search size={16} color={COLORS.muted} />
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg-card-elevated)', padding: '10px 16px', borderRadius: 12, border: '1px solid var(--border-soft)' }}>
+                       <Search size={16} color='var(--text-muted)' />
                        <input 
                          placeholder="Search vendors by name, service, or contact..." 
                          value={search}
                          onChange={e => setSearch(e.target.value)}
-                         style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 13, width: '100%' }}
+                         style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 13, width: '100%' }}
                        />
                     </div>
                     <button className="btn-filter"><Filter size={14}/> Filters</button>
@@ -113,8 +111,8 @@ export default function VendorIntelligencePage() {
                        <div key={v.id} className="col-4 vendor-card">
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 16 }}>
                              <div>
-                                <div style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{v.name}</div>
-                                <div style={{ fontSize: 10, color: COLORS.muted, textTransform: 'uppercase', fontWeight: 800 }}>Supply Chain Entity</div>
+                                <div style={{ fontSize: 14, fontWeight: 900, color: 'var(--text-primary)' }}>{v.name}</div>
+                                <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 800 }}>Supply Chain Entity</div>
                              </div>
                              {v.risk === 'High' && <span className="risk-badge">HIGH RISK</span>}
                           </div>
@@ -138,7 +136,7 @@ export default function VendorIntelligencePage() {
                           </div>
 
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, borderTop: `1px solid ${COLORS.border}` }}>
-                             <div style={{ fontSize: 10, color: COLORS.muted }}>Trend: <span style={{ color: v.cost_trend === 'up' ? COLORS.danger : COLORS.success }}>{v.cost_trend.toUpperCase()}</span></div>
+                             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Trend: <span style={{ color: v.cost_trend === 'up' ? COLORS.danger : COLORS.success }}>{v.cost_trend.toUpperCase()}</span></div>
                              <button className="btn-view">Details <ChevronRight size={12}/></button>
                           </div>
                        </div>
@@ -152,7 +150,7 @@ export default function VendorIntelligencePage() {
                  <div className="glass-card" style={{ padding: '24px', borderLeft: `3px solid ${COLORS.success}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                        <Sparkles size={16} color={COLORS.success} />
-                       <h3 style={{ fontSize: 14, fontWeight: 900, color: '#fff', margin: 0 }}>Vendor Intelligence</h3>
+                       <h3 style={{ fontSize: 14, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Vendor Intelligence</h3>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                        {[
@@ -161,15 +159,15 @@ export default function VendorIntelligencePage() {
                          { title: 'Usage Alert', desc: 'Vendor Y usage is approaching annual bulk discount threshold.' },
                        ].map((insight, i) => (
                          <div key={i} style={{ borderBottom: i < 2 ? `1px solid ${COLORS.border}` : 'none', paddingBottom: i < 2 ? 16 : 0 }}>
-                            <div style={{ fontSize: 12, fontWeight: 800, color: '#fff', marginBottom: 4 }}>{insight.title}</div>
-                            <div style={{ fontSize: 11, color: COLORS.muted, lineHeight: 1.4 }}>{insight.desc}</div>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>{insight.title}</div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.4 }}>{insight.desc}</div>
                          </div>
                        ))}
                     </div>
                  </div>
 
                  <div className="glass-card" style={{ padding: '24px' }}>
-                    <h3 style={{ fontSize: 13, fontWeight: 900, color: '#fff', marginBottom: 20, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Performance Matrix</h3>
+                    <h3 style={{ fontSize: 13, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 20, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Performance Matrix</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                        {[
                          { label: 'Best Value', val: 'AgriSupply Co', color: COLORS.success },
@@ -177,10 +175,10 @@ export default function VendorIntelligencePage() {
                          { label: 'Most Reliable', val: 'John Deere Serv', color: COLORS.info },
                          { label: 'Most Used', val: 'Estate Fuel Ltd', color: COLORS.warning },
                        ].map((p, i) => (
-                         <div key={i} style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <div style={{ fontSize: 10, fontWeight: 800, color: COLORS.muted, marginBottom: 4 }}>{p.label}</div>
-                            <div style={{ fontSize: 12, fontWeight: 900, color: '#fff' }}>{p.val}</div>
-                         </div>
+                          <div key={i} style={{ background: 'var(--bg-card-elevated)', padding: '12px', borderRadius: 12, border: '1px solid var(--border-soft)' }}>
+                             <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 4 }}>{p.label}</div>
+                             <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-primary)' }}>{p.val}</div>
+                          </div>
                        ))}
                     </div>
                  </div>
@@ -194,36 +192,36 @@ export default function VendorIntelligencePage() {
       <style jsx>{`
         .col-2-4 { width: calc(20% - 10px); }
         .card-compact {
-          background: ${COLORS.glass};
+          background: var(--bg-card);
           backdrop-filter: blur(12px);
-          border: 1px solid ${COLORS.border};
+          border: 1px solid var(--border-soft);
           border-radius: 12px;
           padding: 12px 16px;
         }
         .glass-card {
-          background: ${COLORS.glass};
+          background: var(--bg-card);
           backdrop-filter: blur(12px);
-          border: 1px solid ${COLORS.border};
+          border: 1px solid var(--border-soft);
           border-radius: 20px;
         }
         .vendor-card {
-           background: ${COLORS.glass};
+           background: var(--bg-card);
            backdrop-filter: blur(12px);
-           border: 1px solid ${COLORS.border};
+           border: 1px solid var(--border-soft);
            border-radius: 20px;
            padding: 24px;
            transition: all 0.2s ease;
         }
         .vendor-card:hover {
-           border-color: rgba(57, 200, 106, 0.3);
+           border-color: var(--status-success);
            transform: translateY(-2px);
         }
         .risk-badge {
            font-size: 8px;
            font-weight: 950;
            padding: 4px 8px;
-           background: rgba(239, 68, 68, 0.1);
-           color: ${COLORS.danger};
+           background: var(--status-critical-glow);
+           color: var(--status-critical);
            border-radius: 6px;
            letter-spacing: 0.05em;
         }
@@ -235,15 +233,15 @@ export default function VendorIntelligencePage() {
         }
         .stat {
            padding: 12px;
-           background: rgba(255,255,255,0.02);
+           background: var(--bg-card-elevated);
            border-radius: 12px;
         }
-        .stat-label { font-size: 9px; font-weight: 800; color: COLORS.muted; text-transform: uppercase; margin-bottom: 4px; }
-        .stat-val { font-size: 14px; font-weight: 900; color: #fff; }
-        .contact-info { display: flex; alignItems: center; gap: 8px; fontSize: 11px; color: ${COLORS.muted}; }
-        .btn-view { background: none; border: none; color: ${COLORS.success}; font-size: 11px; font-weight: 800; cursor: pointer; display: flex; alignItems: center; gap: 4px; }
-        .btn-primary { background: ${COLORS.success}; color: #050505; border: none; border-radius: 10px; padding: 10px 20px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; alignItems: center; gap: 8px; }
-        .btn-filter { background: rgba(255,255,255,0.03); border: 1px solid ${COLORS.border}; border-radius: 12px; padding: 10px 16px; color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; alignItems: center; gap: 8px; }
+        .stat-label { font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+        .stat-val { font-size: 14px; font-weight: 900; color: var(--text-primary); }
+        .contact-info { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); }
+        .btn-view { background: none; border: none; color: var(--status-success); font-size: 11px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .btn-primary { background: var(--status-success); color: var(--text-inverse); border: none; border-radius: 10px; padding: 10px 20px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .btn-filter { background: var(--bg-card-elevated); border: 1px solid var(--border-soft); border-radius: 12px; padding: 10px 16px; color: var(--text-primary); font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
       `}</style>
     </div>
   );

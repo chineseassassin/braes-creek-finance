@@ -261,6 +261,93 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
        }
     }
 
+    // 9. RULE: Repeated Infrastructure Repair Cost
+    const repairCostAlerts = activeAlerts.filter(a => a.related_table === 'infrastructure' && a.title.includes('Cost Variance'));
+    repairCostAlerts.forEach(alert => {
+       const existing = currentRecs.find(r => r.title.includes('Asset Lifecycle Audit'));
+       if (existing) return;
+
+       newRecs.push({
+          id: `rec-in-r-${alert.id}`,
+          module: 'Infrastructure & Ops',
+          title: 'Asset Lifecycle Audit',
+          what_happening: alert.message,
+          why_it_matters: "Recurring high maintenance costs for this asset are approaching the cost of total replacement (CapEx vs OpEx).",
+          next_steps: "Analyze total repair spend for this asset over 12 months. Request quotes for modern energy-efficient replacements. Evaluate if current usage exceeds original asset specs.",
+          estimated_impact: "Estimated 22% reduction in long-term operational maintenance overhead.",
+          urgency: 'medium',
+          confidence: 84,
+          impact_score: 72,
+          status: 'new',
+          created_at: new Date().toISOString()
+       });
+    });
+
+    // 10. RULE: Critical Operational Risk (Overdue Critical Assets)
+    const criticalInfraAlerts = activeAlerts.filter(a => a.related_table === 'infrastructure' && a.severity === 'critical');
+    if (criticalInfraAlerts.length > 0) {
+       const existing = currentRecs.find(r => r.title.includes('Operational Continuity'));
+       if (!existing) {
+          newRecs.push({
+             id: `rec-in-c-${Math.random()}`,
+             module: 'Infrastructure & Ops',
+             title: 'Operational Continuity Protocol',
+             what_happening: "Critical infrastructure (Power/Irrigation/Storage) maintenance is overdue.",
+             why_it_matters: "Single point of failure detected. Failure of these assets will halt production or cause catastrophic product loss (e.g., cold chain failure).",
+             next_steps: "Activate emergency maintenance budget. Redirect technical staff to high-risk zones immediately. Deploy secondary generators/pumps for redundancy.",
+             estimated_impact: "Protects estimated $45,000 in perishable inventory/production yield.",
+             urgency: 'critical',
+             confidence: 96,
+             impact_score: 98,
+             status: 'new',
+             created_at: new Date().toISOString()
+          });
+       }
+    }
+
+    // 11. RULE: Predictive Supply Chain Management
+    const predStockAlerts = activeAlerts.filter(a => a.related_record_id?.toString().startsWith('pred-inv-') && a.severity === 'critical');
+    predStockAlerts.forEach(alert => {
+       const existing = currentRecs.find(r => r.title.includes('Just-in-Time Procurement'));
+       if (existing) return;
+
+       newRecs.push({
+          id: `rec-pd-s-${alert.id}`,
+          module: 'Predictive Intelligence',
+          title: 'Just-in-Time Procurement Strategy',
+          what_happening: "Current stock velocity indicates a total depletion of core inputs within the next 48-72 hours.",
+          why_it_matters: "Waiting for standard reorder cycles will result in a 4-day production gap, costing approximately $2,400 in lost labor productivity and yield.",
+          next_steps: "Bypass standard procurement approval for this item. Contact 'GreenField Supplies' for same-day express delivery. Update the safety stock baseline to 10 days.",
+          estimated_impact: "Saves $2,400 in productivity loss and prevents supply chain breakage.",
+          urgency: 'critical',
+          confidence: 94,
+          impact_score: 92,
+          status: 'new',
+          created_at: new Date().toISOString()
+       });
+    });
+
+    // 12. RULE: Cash Flow Protection Strategy
+    if (activeAlerts.some(a => a.related_record_id === 'pred-cash-flow')) {
+       const existing = currentRecs.find(r => r.title.includes('Liquidity Protection'));
+       if (!existing) {
+          newRecs.push({
+             id: `rec-pd-c-${Math.random()}`,
+             module: 'Predictive Intelligence',
+             title: 'Liquidity Protection Strategy',
+             what_happening: "Predictive modeling indicates a cash flow deficit by the end of the next month.",
+             why_it_matters: "Maintaining a minimum 1.5x liquidity ratio is required for the upcoming harvest-related labor surge.",
+             next_steps: "Review pending vendor payments for deferral eligibility. Audit accounts receivable for items older than 30 days. Consider a short-term credit line bridge.",
+             estimated_impact: "Maintains operational solvency and preserves credit rating for Q4 expansion.",
+             urgency: 'high',
+             confidence: 91,
+             impact_score: 88,
+             status: 'new',
+             created_at: new Date().toISOString()
+          });
+       }
+    }
+
     // Sort by Urgency and Impact Score
     const urgencyMap = { 'critical': 4, 'high': 3, 'medium': 2, 'low': 1 };
     const allRecs = [...newRecs, ...currentRecs.filter(r => r.status === 'new')]

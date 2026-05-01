@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Sidebar from '@/components/Sidebar'
 import Topbar from '@/components/Topbar'
 import { SAMPLE_SEGMENTS, SAMPLE_CATEGORIES } from '@/lib/sample-data'
+import { useAppStore } from '@/store/useAppStore'
 
 const SETTING_TABS = ['General', 'Users & Access', 'Categories', 'Segments', 'Notifications', 'Audit Log']
 
@@ -21,6 +22,7 @@ const SAMPLE_AUDIT = [
 ]
 
 export default function SettingsPage() {
+  const { theme, setTheme } = useAppStore();
   const [activeTab, setActiveTab] = useState('General')
   const [farmName, setFarmName] = useState('Green Valley Agro Enterprise')
   const [currency, setCurrency] = useState('TTD')
@@ -49,8 +51,8 @@ export default function SettingsPage() {
                   cursor: 'pointer',
                   fontSize: 13,
                   fontWeight: activeTab === tab ? 700 : 400,
-                  color: activeTab === tab ? '#4ade80' : 'var(--text-secondary)',
-                  borderBottom: activeTab === tab ? '2px solid #16a34a' : '2px solid transparent',
+                  color: activeTab === tab ? 'var(--status-success)' : 'var(--text-secondary)',
+                  borderBottom: activeTab === tab ? '2px solid var(--status-success)' : '2px solid transparent',
                   transition: 'all 0.18s',
                   marginBottom: -1,
                 }}
@@ -100,6 +102,33 @@ export default function SettingsPage() {
                 </div>
               </div>
 
+              <div className="card" style={{ marginBottom: 16 }}>
+                <div className="card-header"><div className="card-title">✨ Appearance</div></div>
+                <div className="card-body">
+                  <div style={{ display: 'flex', gap: 12 }}>
+                     <button 
+                       className={`btn ${theme === 'dark' ? 'btn-primary' : 'btn-secondary'}`}
+                       style={{ flex: 1, height: 80, flexDirection: 'column', gap: 8 }}
+                       onClick={() => setTheme('dark')}
+                     >
+                        <div style={{ fontSize: 20 }}>🌙</div>
+                        <div>Dark Mode</div>
+                     </button>
+                     <button 
+                       className={`btn ${theme === 'light' ? 'btn-primary' : 'btn-secondary'}`}
+                       style={{ flex: 1, height: 80, flexDirection: 'column', gap: 8 }}
+                       onClick={() => setTheme('light')}
+                     >
+                        <div style={{ fontSize: 20 }}>☀️</div>
+                        <div>Light Mode</div>
+                     </button>
+                  </div>
+                  <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text-muted)', textAlign: 'center' }}>
+                     Toggle between a premium charcoal look and a clean professional light interface.
+                  </div>
+                </div>
+              </div>
+
               <div className="card">
                 <div className="card-header"><div className="card-title">⚠️ Danger Zone</div></div>
                 <div className="card-body">
@@ -112,7 +141,7 @@ export default function SettingsPage() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
                     <div>
-                      <div style={{ fontWeight: 600, color: '#f87171', fontSize: 13 }}>Reset All Data</div>
+                      <div style={{ fontWeight: 600, color: 'var(--status-critical)', fontSize: 13 }}>Reset All Data</div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Permanently delete all records (irreversible)</div>
                     </div>
                     <button className="btn btn-danger btn-sm">🗑️ Reset</button>
@@ -145,7 +174,7 @@ export default function SettingsPage() {
                         <tr key={u.id}>
                           <td className="primary">
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: '#4ade80' }}>
+                              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--status-success-glow)', color: 'var(--status-success)' }}>
                                 {u.name[0]}
                               </div>
                               <div>
@@ -161,7 +190,7 @@ export default function SettingsPage() {
                                <option>Admin</option>
                             </select>
                           </td>
-                          <td><span className="badge" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#4ade80', fontWeight: 800 }}>● Active</span></td>
+                          <td><span className="badge" style={{ background: 'var(--status-success-glow)', color: 'var(--status-success)', fontWeight: 800 }}>● Active</span></td>
                           <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{u.lastLogin}</td>
                         </tr>
                       ))}
@@ -184,22 +213,22 @@ export default function SettingsPage() {
                   </select>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(255,255,255,0.02)', padding: 24, borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#4ade80', fontSize: 13, fontWeight: 600 }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-success)', fontSize: 13, fontWeight: 600 }}>
                       <span style={{ fontSize: 14 }}>✔</span> Can add expenses
                    </div>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#4ade80', fontSize: 13, fontWeight: 600 }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-success)', fontSize: 13, fontWeight: 600 }}>
                       <span style={{ fontSize: 14 }}>✔</span> Can log payroll
                    </div>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#4ade80', fontSize: 13, fontWeight: 600 }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-success)', fontSize: 13, fontWeight: 600 }}>
                       <span style={{ fontSize: 14 }}>✔</span> Can update livestock
                    </div>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#f87171', fontSize: 13, fontWeight: 600 }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-critical)', fontSize: 13, fontWeight: 600 }}>
                       <span style={{ fontSize: 14 }}>✖</span> Cannot delete data
                    </div>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#f87171', fontSize: 13, fontWeight: 600 }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-critical)', fontSize: 13, fontWeight: 600 }}>
                       <span style={{ fontSize: 14 }}>✖</span> Cannot access settings
                    </div>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: '#f87171', fontSize: 13, fontWeight: 600 }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-critical)', fontSize: 13, fontWeight: 600 }}>
                       <span style={{ fontSize: 14 }}>✖</span> Cannot modify reports
                    </div>
                 </div>
@@ -223,7 +252,7 @@ export default function SettingsPage() {
                       <tr>
                         <td className="primary">Mary Joseph</td>
                         <td style={{ fontSize: 12 }}>Update Livestock Mortality</td>
-                        <td style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600 }}>Due in 2h 15m</td>
+                        <td style={{ fontSize: 12, color: 'var(--status-warning)', fontWeight: 600 }}>Due in 2h 15m</td>
                         <td><span className="badge badge-warning">In Progress</span></td>
                         <td>
                           <div style={{ display: 'flex', gap: 6 }}>
@@ -235,7 +264,7 @@ export default function SettingsPage() {
                       <tr>
                         <td className="primary">James Ali</td>
                         <td style={{ fontSize: 12 }}>Upload Feed Receipt</td>
-                        <td style={{ fontSize: 12, color: '#f87171', fontWeight: 600 }}>Expired (Yesterday)</td>
+                        <td style={{ fontSize: 12, color: 'var(--status-critical)', fontWeight: 600 }}>Expired (Yesterday)</td>
                         <td><span className="badge badge-danger">Missed</span></td>
                         <td>
                           <div style={{ display: 'flex', gap: 6 }}>
@@ -246,7 +275,7 @@ export default function SettingsPage() {
                       <tr>
                         <td className="primary">Jane Doe</td>
                         <td style={{ fontSize: 12 }}>Log Today's Labor</td>
-                        <td style={{ fontSize: 12, color: '#4ade80', fontWeight: 600 }}>Submitted</td>
+                        <td style={{ fontSize: 12, color: 'var(--status-success)', fontWeight: 600 }}>Submitted</td>
                         <td><span className="badge badge-success">Reviewing</span></td>
                         <td>
                           <div style={{ display: 'flex', gap: 6 }}>
@@ -269,7 +298,7 @@ export default function SettingsPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                    {['Expenses', 'Payroll', 'Livestock', 'Crops'].map((mod, i) => (
-                      <div key={mod} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: 'rgba(255,255,255,0.02)', borderRadius: i === 0 ? '12px 12px 0 0' : i === 3 ? '0 0 12px 12px' : 0, borderBottom: i < 3 ? '1px solid var(--border-subtle)' : 'none' }}>
+                      <div key={mod} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: 'var(--bg-card-elevated)', borderRadius: i === 0 ? '12px 12px 0 0' : i === 3 ? '0 0 12px 12px' : 0, borderBottom: i < 3 ? '1px solid var(--border-subtle)' : 'none' }}>
                          <div style={{ fontWeight: 600, fontSize: 13 }}>{mod}</div>
                          <label className="settings-switch">
                             <input type="checkbox" defaultChecked={true} />
@@ -289,20 +318,20 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                   <div style={{ padding: 20, background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+                   <div style={{ padding: 20, background: 'var(--bg-card-elevated)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
                       <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Change Password</div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>Last changed 45 days ago.</div>
                       <button className="btn btn-secondary" style={{ width: '100%', fontSize: 12 }}>Update Password</button>
                    </div>
-                   <div style={{ padding: 20, background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+                   <div style={{ padding: 20, background: 'var(--bg-card-elevated)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
                       <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Two-Factor Auth</div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>Secure your account with 2FA.</div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                         <span style={{ fontSize: 12, color: '#4ade80', fontWeight: 800 }}>Enabled</span>
+                         <span style={{ fontSize: 12, color: 'var(--status-success)', fontWeight: 800 }}>Enabled</span>
                          <label className="settings-switch"><input type="checkbox" defaultChecked /><span className="settings-slider"></span></label>
                       </div>
                    </div>
-                   <div style={{ gridColumn: 'span 2', padding: 20, background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+                   <div style={{ gridColumn: 'span 2', padding: 20, background: 'var(--bg-card-elevated)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                          <div>
                             <div style={{ fontWeight: 700, fontSize: 13 }}>Active Sessions</div>
@@ -315,7 +344,7 @@ export default function SettingsPage() {
                             <div style={{ fontSize: 12, fontWeight: 700 }}>MacBook Pro (Chrome)</div>
                             <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>New York, USA — IP: 192.168.1.1</div>
                          </div>
-                         <div style={{ fontSize: 11, fontWeight: 600, color: '#4ade80' }}>Current Session</div>
+                         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--status-success)' }}>Current Session</div>
                       </div>
                    </div>
                 </div>
@@ -325,22 +354,22 @@ export default function SettingsPage() {
               <div className="card" style={{ border: '1px solid rgba(239, 68, 68, 0.3)', background: 'linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, transparent 100%)' }}>
                 <div className="card-header" style={{ marginBottom: 16, borderBottom: '1px solid rgba(239, 68, 68, 0.1)', paddingBottom: 16 }}>
                   <div>
-                     <div className="card-title" style={{ fontSize: 16, color: '#f87171' }}>Danger Zone</div>
+                     <div className="card-title" style={{ fontSize: 16, color: 'var(--status-critical)' }}>Danger Zone</div>
                      <div style={{ fontSize: 12, color: '#fca5a5' }}>Destructive operations.</div>
                   </div>
                 </div>
                 <div style={{ padding: '8px 0' }}>
                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                      <div>
-                       <div style={{ fontWeight: 700, color: '#f87171', fontSize: 14, marginBottom: 4 }}>System Factory Reset</div>
+                       <div style={{ fontWeight: 700, color: 'var(--status-critical)', fontSize: 14, marginBottom: 4 }}>System Factory Reset</div>
                        <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
                           This will permanently delete all records, transactions, users, and logs.<br/>
-                          <span style={{ fontWeight: 800, color: '#fca5a5' }}>Warning: 4,129 records will be destroyed.</span>
+                          <span style={{ fontWeight: 800, color: 'var(--status-warning)' }}>Warning: 4,129 records will be destroyed.</span>
                        </div>
                      </div>
                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 220 }}>
                         <input type="text" placeholder='Type "RESET" to confirm' className="form-input" style={{ borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(0,0,0,0.2)' }} />
-                        <button className="btn" style={{ background: '#ef4444', color: '#fff', fontSize: 12, fontWeight: 800, padding: '10px' }}>PERMANENTLY RESET</button>
+                        <button className="btn" style={{ background: 'var(--status-critical)', color: '#fff', fontSize: 12, fontWeight: 800, padding: '10px' }}>PERMANENTLY RESET</button>
                      </div>
                    </div>
                 </div>

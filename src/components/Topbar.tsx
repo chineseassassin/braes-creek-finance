@@ -17,8 +17,8 @@ export default function Topbar({ title, subtitle, actions }: TopbarProps) {
       position: 'sticky',
       top: 0,
       zIndex: 50,
-      background: 'var(--color-bg-body)',
-      borderBottom: '1px solid var(--color-border)',
+      background: 'var(--bg-sidebar)',
+      borderBottom: '1px solid var(--border-soft)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -28,11 +28,11 @@ export default function Topbar({ title, subtitle, actions }: TopbarProps) {
       boxSizing: 'border-box',
     }}>
       <div>
-        <h1 style={{ fontSize: 18, fontWeight: 900, color: 'var(--color-text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+        <h1 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
           {title}
         </h1>
         {subtitle && (
-          <p style={{ fontSize: 11, color: 'var(--color-text-muted)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginTop: 2 }}>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginTop: 2 }}>
             {subtitle}
           </p>
         )}
@@ -43,7 +43,7 @@ export default function Topbar({ title, subtitle, actions }: TopbarProps) {
         <NotificationCenter />
         {actions && (
           <>
-            <div style={{ width: 1, height: 24, background: 'var(--color-border)', margin: '0 4px' }} />
+            <div style={{ width: 1, height: 24, background: 'var(--border-soft)', margin: '0 4px' }} />
             {actions}
           </>
         )}

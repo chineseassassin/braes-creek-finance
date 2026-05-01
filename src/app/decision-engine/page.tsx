@@ -49,7 +49,7 @@ export default function DecisionEnginePage() {
            <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%', overflowX: 'hidden' }}>
            
               {/* SECTION 1 — AI BRIEF (HERO) */}
-              <div className="card animate-ai-shimmer" style={{ marginBottom: 48, padding: 48, border: '1px solid rgba(139, 92, 246, 0.4)', boxShadow: '0 20px 60px rgba(139, 92, 246, 0.1)' }}>
+              <div className="card animate-ai-shimmer" style={{ marginBottom: 48, padding: 48, border: '2px solid rgba(139, 92, 246, 0.5)', boxShadow: '0 25px 80px rgba(139, 92, 246, 0.2)' }}>
                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
                        <div style={{ width: 64, height: 64, borderRadius: 16, background: 'rgba(34, 197, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 30px var(--color-primary-glow)' }}>
@@ -73,9 +73,9 @@ export default function DecisionEnginePage() {
                        <div className="label-small" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-text-secondary)' }}><TrendingDown size={14}/> <span>WHY IT MATTERS</span></div>
                        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.4 }}>Estimated profit impact: <span style={{ color: 'var(--color-danger)', fontWeight: 900, textShadow: '0 0 12px rgba(239,68,68,0.4)' }}>-8.4% this cycle</span>. Margin risk critical.</div>
                     </div>
-                    <div style={{ padding: '24px 32px', background: 'rgba(139, 92, 246, 0.1)', borderRadius: 16, border: '1px solid rgba(139, 92, 246, 0.3)', boxShadow: 'inset 0 0 20px rgba(139, 92, 246, 0.05)' }}>
-                       <div className="label-small" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, color: '#d8b4fe', fontWeight: 900, letterSpacing: '0.1em' }}><Target size={14}/> <span>WHAT TO DO NEXT</span></div>
-                       <div style={{ fontSize: 28, fontWeight: 950, color: '#fff', lineHeight: 1.3, letterSpacing: '-0.01em' }}>Isolate Block C feed supply & deploy rapid antibiotic protocol.</div>
+                    <div style={{ padding: '24px 32px', background: 'var(--status-ai-glow)', borderRadius: 16, border: '1px solid rgba(139, 92, 246, 0.4)', boxShadow: 'inset 0 0 30px rgba(139, 92, 246, 0.1)' }}>
+                       <div className="label-small" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--status-ai)', fontWeight: 950, letterSpacing: '0.15em' }}><Target size={14}/> <span>WHAT TO DO NEXT</span></div>
+                       <div style={{ fontSize: 28, fontWeight: 950, color: 'var(--text-primary)', lineHeight: 1.3, letterSpacing: '-0.01em' }}>Isolate Block C feed supply & deploy rapid antibiotic protocol.</div>
                     </div>
                  </div>
               </div>
@@ -86,17 +86,17 @@ export default function DecisionEnginePage() {
                  <div className="grid-12" style={{ gap: 24 }}>
                     <div className="card" style={{ gridColumn: 'span 4', padding: 32, background: 'linear-gradient(180deg, rgba(239, 68, 68, 0.1) 0%, transparent 100%)', borderTop: '2px solid var(--color-danger)' }}>
                        <div className="label-small" style={{ marginBottom: 16 }}>Profit Leakage Exposed</div>
-                       <div style={{ fontSize: 36, fontWeight: 950, color: 'var(--color-danger)', letterSpacing: '-0.02em', marginBottom: 8, textShadow: '0 0 20px rgba(239, 68, 68, 0.3)' }}>-$14,500</div>
+                       <div style={{ fontSize: 36, fontWeight: 950, color: 'var(--color-danger)', letterSpacing: '-0.02em', marginBottom: 8, textShadow: 'var(--status-critical-glow)' }}>-$14,500</div>
                        <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600 }}>Identified across 3 operational domains this month.</p>
                     </div>
                     <div className="card" style={{ gridColumn: 'span 4', padding: 32, background: 'linear-gradient(180deg, rgba(34, 197, 94, 0.1) 0%, transparent 100%)', borderTop: '2px solid var(--color-primary)' }}>
                        <div className="label-small" style={{ marginBottom: 16 }}>Recoverable Revenue</div>
-                       <div style={{ fontSize: 36, fontWeight: 950, color: 'var(--color-primary)', letterSpacing: '-0.02em', marginBottom: 8, textShadow: '0 0 20px rgba(34, 197, 94, 0.3)' }}>+$12,400</div>
+                       <div style={{ fontSize: 36, fontWeight: 950, color: 'var(--color-primary)', letterSpacing: '-0.02em', marginBottom: 8, textShadow: 'var(--status-success-glow)' }}>+$12,400</div>
                        <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600 }}>Available if critical decisions are executed within 48 hours.</p>
                     </div>
-                    <div className="card" style={{ gridColumn: 'span 4', padding: 32, background: 'linear-gradient(180deg, rgba(139, 92, 246, 0.1) 0%, transparent 100%)', borderTop: '2px solid #a78bfa' }}>
+                    <div className="card" style={{ gridColumn: 'span 4', padding: 32, background: 'linear-gradient(180deg, rgba(139, 92, 246, 0.1) 0%, transparent 100%)', borderTop: '2px solid var(--status-ai)' }}>
                        <div className="label-small" style={{ marginBottom: 16 }}>Efficiency Gains</div>
-                       <div style={{ fontSize: 36, fontWeight: 950, color: '#d8b4fe', letterSpacing: '-0.02em', marginBottom: 8, textShadow: '0 0 20px rgba(139, 92, 246, 0.3)' }}>+$5,000<span style={{ fontSize: 16 }}>/mo</span></div>
+                       <div style={{ fontSize: 36, fontWeight: 950, color: 'var(--status-ai)', letterSpacing: '-0.02em', marginBottom: 8, textShadow: 'var(--status-ai-glow)' }}>+$5,000<span style={{ fontSize: 16 }}>/mo</span></div>
                        <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600 }}>Long-term savings from supply chain renegotiation.</p>
                     </div>
                  </div>
@@ -114,7 +114,7 @@ export default function DecisionEnginePage() {
                     <div className="card decision-card" style={{ padding: 0, border: '1px solid rgba(239, 68, 68, 0.5)', boxShadow: '0 12px 40px rgba(239, 68, 68, 0.15)', overflow: 'hidden' }}>
                        <div style={{ padding: '32px 40px', background: 'linear-gradient(90deg, rgba(239, 68, 68, 0.08) 0%, transparent 100%)' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                             <div style={{ background: 'var(--color-danger)', color: '#fff', fontSize: 11, fontWeight: 950, padding: '6px 12px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.05em', boxShadow: '0 0 10px rgba(239,68,68,0.5)' }}>CRITICAL</div>
+                             <div style={{ background: 'var(--status-critical)', color: 'var(--text-inverse)', fontSize: 11, fontWeight: 950, padding: '6px 12px', borderRadius: 6, textTransform: 'uppercase', letterSpacing: '0.05em', boxShadow: 'var(--shadow-soft)' }}>CRITICAL</div>
                              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}><Sparkles size={14} color="var(--color-danger)"/> 98% Confidence</div>
                              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text-muted)' }}>• Related Module: Livestock Intelligence</div>
                           </div>
@@ -134,11 +134,11 @@ export default function DecisionEnginePage() {
                           
                           <div style={{ padding: '24px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: 16, border: '1px solid rgba(239, 68, 68, 0.2)', marginBottom: 32 }}>
                              <div className="label-small" style={{ marginBottom: 8, color: '#fca5a5', fontWeight: 900, letterSpacing: '0.05em' }}>Recommended Action</div>
-                             <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', lineHeight: 1.4 }}>Review feed supplier and inspect poultry health records.</div>
+                             <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.4 }}>Review feed supplier and inspect poultry health records.</div>
                           </div>
 
                           <div style={{ display: 'flex', gap: 12 }}>
-                             <button className="btn-primary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'var(--color-danger)', color: '#fff', border: 'none' }}>Open Module</button>
+                             <button className="btn-primary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'var(--status-critical)', color: 'var(--text-inverse)', border: 'none', borderRadius: 10, cursor: 'pointer' }}>Open Module</button>
                              <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Create Task</button>
                              <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Send Alert</button>
                              <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Mark Reviewed</button>
@@ -170,11 +170,11 @@ export default function DecisionEnginePage() {
                           
                           <div style={{ padding: '24px', background: 'rgba(34, 197, 94, 0.05)', borderRadius: 16, border: '1px solid rgba(34, 197, 94, 0.2)', marginBottom: 32 }}>
                              <div className="label-small" style={{ marginBottom: 8, color: '#86efac', fontWeight: 900, letterSpacing: '0.05em' }}>Recommended Action</div>
-                             <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', lineHeight: 1.4 }}>Draft renegotiation letter and schedule vendor meeting.</div>
+                             <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.4 }}>Draft renegotiation letter and schedule vendor meeting.</div>
                           </div>
 
                           <div style={{ display: 'flex', gap: 12 }}>
-                             <button className="btn-primary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'var(--color-primary)', color: '#101010', border: 'none' }}>Open Module</button>
+                             <button className="btn-primary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'var(--status-success)', color: 'var(--text-inverse)', border: 'none', borderRadius: 10, cursor: 'pointer' }}>Open Module</button>
                              <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Create Task</button>
                              <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Send Alert</button>
                              <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Mark Reviewed</button>
@@ -206,11 +206,11 @@ export default function DecisionEnginePage() {
                           
                           <div style={{ padding: '24px', background: 'rgba(245, 158, 11, 0.05)', borderRadius: 16, border: '1px solid rgba(245, 158, 11, 0.2)', marginBottom: 32 }}>
                              <div className="label-small" style={{ marginBottom: 8, color: '#fcd34d', fontWeight: 900, letterSpacing: '0.05em' }}>Recommended Action</div>
-                             <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', lineHeight: 1.4 }}>Log decision and set reminder for next quarter.</div>
+                             <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.4 }}>Log decision and set reminder for next quarter.</div>
                           </div>
 
                           <div style={{ display: 'flex', gap: 12 }}>
-                             <button className="btn-primary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'var(--color-warning)', color: '#101010', border: 'none' }}>Open Module</button>
+                             <button className="btn-primary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'var(--status-warning)', color: 'var(--text-inverse)', border: 'none', borderRadius: 10, cursor: 'pointer' }}>Open Module</button>
                              <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Create Task</button>
                              <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Send Alert</button>
                              <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Mark Reviewed</button>
@@ -257,7 +257,9 @@ export default function DecisionEnginePage() {
 
       <style jsx>{`
         .animate-ai-shimmer {
-          background: radial-gradient(circle at top left, rgba(139, 92, 246, 0.15), transparent 60%), linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%), var(--color-surface-card);
+          background: radial-gradient(circle at top left, rgba(139, 92, 246, 0.25), transparent 70%), 
+                      linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(139, 92, 246, 0.02) 100%), 
+                      var(--bg-card);
           background-size: 200% 200%;
           animation: aiShimmer 10s ease infinite;
         }

@@ -86,23 +86,23 @@ export default function Sidebar() {
           text-decoration: none;
           font-size: 13px;
           transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-          color: #B8B8B8;
+          color: var(--text-secondary);
           font-weight: 600;
         }
         .nav-link:hover {
-          background: rgba(255, 255, 255, 0.06);
-          color: #F5F5F5;
+          background: var(--border-soft);
+          color: var(--text-primary);
         }
         .nav-link.active {
-          background: rgba(34, 197, 94, 0.14);
-          color: #22C55E !important;
+          background: var(--status-success-glow);
+          color: var(--status-success) !important;
           font-weight: 800;
-          border: 1px solid rgba(34, 197, 94, 0.1);
+          border: 1px solid var(--status-success-glow);
         }
         .group-header {
           font-size: 9px;
           font-weight: 900;
-          color: #555555;
+          color: var(--text-muted);
           text-transform: uppercase;
           letter-spacing: 0.15em;
           padding: 20px 14px 8px 14px;
@@ -112,7 +112,7 @@ export default function Sidebar() {
           width: 4px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255,255,255,0.05);
+          background: var(--border-soft);
           border-radius: 10px;
         }
         .main-content {
@@ -122,7 +122,7 @@ export default function Sidebar() {
 
       <aside style={{
         position: 'fixed', top: 0, left: 0, width: w, height: '100vh',
-        background: '#101010', borderRight: '1px solid rgba(255,255,255,0.08)',
+        background: 'var(--bg-sidebar)', borderRight: '1px solid var(--border-soft)',
         display: 'flex', flexDirection: 'column', zIndex: 100,
         overflow: 'hidden', transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
       }}>
@@ -130,16 +130,16 @@ export default function Sidebar() {
         <div style={{
           height: 72, display: 'flex', alignItems: 'center',
           padding: sidebarCollapsed ? '0 15px' : '0 24px',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          borderBottom: '1px solid var(--border-soft)',
           justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: 12,
         }}>
-          <div style={{ width: 34, height: 34, background: '#22C55E', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 0 15px rgba(34, 197, 94, 0.2)' }}>
-            <span style={{ color: '#101010', fontSize: 16, fontWeight: 950 }}>B</span>
+          <div style={{ width: 34, height: 34, background: 'var(--status-success)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 0 15px var(--status-success-glow)' }}>
+            <span style={{ color: 'var(--text-inverse)', fontSize: 16, fontWeight: 950 }}>B</span>
           </div>
           {!sidebarCollapsed && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <div style={{ color: '#F5F5F5', fontWeight: 900, fontSize: 14, letterSpacing: '-0.02em' }}>Braes Creek Estate</div>
-              <div style={{ color: '#22C55E', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Command Center</div>
+              <div style={{ color: 'var(--text-primary)', fontWeight: 900, fontSize: 14, letterSpacing: '-0.02em' }}>Braes Creek Estate</div>
+              <div style={{ color: 'var(--status-success)', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Command Center</div>
             </div>
           )}
         </div>
@@ -163,7 +163,7 @@ export default function Sidebar() {
                   >
                     <Icon size={16} style={{ flexShrink: 0 }} />
                     {!sidebarCollapsed && <span style={{ flex: 1 }}>{item.label}</span>}
-                    {!sidebarCollapsed && isActive && <div style={{ width: 4, height: 4, borderRadius: '50%', background: '#22C55E', boxShadow: '0 0 8px #22C55E' }} />}
+                    {!sidebarCollapsed && isActive && <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--status-success)', boxShadow: '0 0 8px var(--status-success)' }} />}
                   </Link>
                 )
               })}
@@ -172,11 +172,11 @@ export default function Sidebar() {
         </nav>
 
         {/* Toggle button */}
-        <div style={{ padding: '12px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ padding: '12px', borderTop: '1px solid var(--border-soft)' }}>
           <button onClick={toggleSidebar} style={{
             width: '100%', padding: '10px', borderRadius: 10, cursor: 'pointer',
-            background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
-            color: '#7A7A7A', display: 'flex', alignItems: 'center',
+            background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)',
+            color: 'var(--text-muted)', display: 'flex', alignItems: 'center',
             justifyContent: sidebarCollapsed ? 'center' : 'space-between', transition: 'all 0.2s',
           }}>
             {!sidebarCollapsed && <span style={{ fontSize: 11, fontWeight: 700 }}>Collapse Menu</span>}
@@ -186,14 +186,14 @@ export default function Sidebar() {
 
         {/* User Footer */}
         {!sidebarCollapsed && (
-          <div style={{ padding: '16px 20px', background: 'rgba(255,255,255,0.01)', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+          <div style={{ padding: '16px 20px', background: 'var(--bg-card)', borderTop: '1px solid var(--border-soft)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#22C55E', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#101010', fontSize: 13, fontWeight: 950, flexShrink: 0 }}>P</div>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-inverse)', fontSize: 13, fontWeight: 950, flexShrink: 0 }}>P</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ color: '#F5F5F5', fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Peter Admin</div>
-                <div style={{ color: '#22C55E', fontSize: 10, fontWeight: 800 }}>Estate Control</div>
+                <div style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Peter Admin</div>
+                <div style={{ color: 'var(--status-success)', fontSize: 10, fontWeight: 800 }}>Estate Control</div>
               </div>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', boxShadow: '0 0 8px #22C55E' }} />
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--status-success)', boxShadow: '0 0 8px var(--status-success)' }} />
             </div>
           </div>
         )}

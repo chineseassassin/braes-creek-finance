@@ -12,17 +12,7 @@ import {
   Smartphone as PhoneIcon, TriangleAlert, Plus, ArrowRight, Sparkles, Target, Activity, MessageSquare
 } from "lucide-react";
 
-const COLORS = {
-  primary: '#39C86A',
-  success: '#39C86A',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  info: '#3b82f6',
-  muted: '#8a8a8e',
-  border: 'rgba(255, 255, 255, 0.06)',
-  card: 'rgba(255, 255, 255, 0.02)',
-  bg: '#141414'
-};
+import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
 export default function MobileAlertsPage() {
   const { sidebarCollapsed } = useUIStore();
@@ -40,14 +30,14 @@ export default function MobileAlertsPage() {
   ]);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: COLORS.bg, color: '#fff' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)', color: 'var(--text-primary)' }}>
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease', overflow: 'hidden' }}>
         
-        <header style={{ height: 72, background: COLORS.bg, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${COLORS.border}` }}>
+        <header style={{ height: 72, background: 'var(--bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${COLORS.border}` }}>
           <div>
-             <h1 style={{ fontSize: 16, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>Mobile Alert Center</h1>
+             <h1 style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Mobile Alert Center</h1>
              <p style={{ fontSize: 10, color: COLORS.muted, margin: 0, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>Omni-Channel Operations Assistant</p>
           </div>
           
@@ -72,7 +62,7 @@ export default function MobileAlertsPage() {
                     {/* 1. ALERT CENTER OVERVIEW */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
                        {[
-                          { label: 'Total Alerts', val: 12, color: '#fff' },
+                          { label: 'Total Alerts', val: 12, color: 'var(--text-primary)' },
                           { label: 'Scheduled', val: 3, color: COLORS.info },
                           { label: 'Sent Today', val: 5, color: COLORS.success },
                           { label: 'Failures', val: 0, color: COLORS.danger },
@@ -89,7 +79,7 @@ export default function MobileAlertsPage() {
                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                              <Zap size={18} color={COLORS.primary} />
-                             <h3 style={{ fontSize: 16, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>Intelligence Rule Builder</h3>
+                             <h3 style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Intelligence Rule Builder</h3>
                           </div>
                           <span className="premium-badge">AI LOGIC ENABLED</span>
                        </div>
@@ -133,7 +123,7 @@ export default function MobileAlertsPage() {
                     {/* 3. OPERATIONAL ALERT QUEUE */}
                     <div className="card-glass" style={{ padding: '32px' }}>
                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-                          <h3 style={{ fontSize: 16, fontWeight: 900, color: '#fff', margin: 0 }}>Operational Alert Ledger</h3>
+                          <h3 style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Operational Alert Ledger</h3>
                           <span style={{ fontSize: 10, color: COLORS.muted, fontWeight: 800 }}>LATEST 24 HOURS</span>
                        </div>
                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -148,12 +138,12 @@ export default function MobileAlertsPage() {
                                          <Bell size={18} color={color} />
                                       </div>
                                       <div>
-                                         <div style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{alert.title}</div>
+                                         <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>{alert.title}</div>
                                          <div style={{ fontSize: 10, color: COLORS.muted, fontWeight: 800, textTransform: 'uppercase' }}>{alert.source} • {alert.time}</div>
                                       </div>
                                    </div>
                                    <div style={{ flex: 1 }}>
-                                      <div style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>{alert.action}</div>
+                                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)' }}>{alert.action}</div>
                                    </div>
                                    <div style={{ textAlign: 'right', flex: 0.5 }}>
                                       <span className="status-tag" style={{ color, borderColor: `rgba(${isCrit ? '239, 68, 68' : (isHigh ? '245, 158, 11' : '59, 130, 246')}, 0.2)` }}>
@@ -191,7 +181,7 @@ export default function MobileAlertsPage() {
                                       <span style={{ fontSize: 8, fontWeight: 950, color: COLORS.danger }}>CRITICAL</span>
                                       <span style={{ fontSize: 8, color: COLORS.muted }}>NOW</span>
                                    </div>
-                                   <div style={{ fontSize: 10, fontWeight: 700, textAlign: 'left', lineHeight: 1.4, color: '#fff' }}>
+                                   <div style={{ fontSize: 10, fontWeight: 700, textAlign: 'left', lineHeight: 1.4, color: 'var(--text-primary)' }}>
                                       Capital Alert: Cash runway below 14 days. Audit expenses.
                                    </div>
                                 </div>
@@ -201,7 +191,7 @@ export default function MobileAlertsPage() {
                                       <span style={{ fontSize: 8, fontWeight: 950, color: COLORS.warning }}>WARNING</span>
                                       <span style={{ fontSize: 8, color: COLORS.muted }}>10M AGO</span>
                                    </div>
-                                   <div style={{ fontSize: 10, fontWeight: 700, textAlign: 'left', lineHeight: 1.4, color: '#fff' }}>
+                                   <div style={{ fontSize: 10, fontWeight: 700, textAlign: 'left', lineHeight: 1.4, color: 'var(--text-primary)' }}>
                                       Loan Due: Payment of $12k due in 48h. Confirm reserve.
                                    </div>
                                 </div>
@@ -218,7 +208,7 @@ export default function MobileAlertsPage() {
                     <div className="card-glass" style={{ padding: '24px' }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                           <Smartphone size={18} color={COLORS.primary} />
-                          <h3 style={{ fontSize: 15, fontWeight: 900, color: '#fff', margin: 0 }}>Gateway Integration</h3>
+                          <h3 style={{ fontSize: 15, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Gateway Integration</h3>
                        </div>
                        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                           <div>
@@ -226,7 +216,7 @@ export default function MobileAlertsPage() {
                              <input className="saas-input" placeholder="+1 (555) 000-0000" />
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                             <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>AI Neural Routing</span>
+                             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>AI Neural Routing</span>
                              <div className="toggle active"><div /></div>
                           </div>
                           <div style={{ height: 1, background: COLORS.border }} />
@@ -244,34 +234,34 @@ export default function MobileAlertsPage() {
       </div>
 
       <style jsx>{`
-        .card-glass { background: ${COLORS.card}; backdrop-filter: blur(40px); border: 1px solid ${COLORS.border}; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
-        .premium-badge { font-size: 8px; font-weight: 950; padding: 6px 14px; background: rgba(57, 200, 106, 0.08); color: ${COLORS.primary}; border: 1px solid rgba(57, 200, 106, 0.2); border-radius: 30px; letter-spacing: 0.1em; }
-        .input-label { display: block; font-size: 9px; font-weight: 900; color: ${COLORS.muted}; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em; }
-        .saas-select, .saas-input { width: 100%; padding: 14px; background: rgba(255,255,255,0.015); border: 1px solid ${COLORS.border}; border-radius: 12px; color: #fff; font-size: 13px; font-weight: 600; outline: none; transition: all 0.2s; }
-        .saas-select:focus, .saas-input:focus { border-color: ${COLORS.primary}; background: rgba(255,255,255,0.04); }
+        .card-glass { background: var(--bg-card); backdrop-filter: blur(40px); border: 1px solid var(--border-soft); border-radius: 20px; box-shadow: var(--shadow-medium); }
+        .premium-badge { font-size: 8px; font-weight: 950; padding: 6px 14px; background: var(--status-success-glow); color: var(--status-success); border: 1px solid var(--border-soft); border-radius: 30px; letter-spacing: 0.1em; }
+        .input-label { display: block; font-size: 9px; font-weight: 900; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em; }
+        .saas-select, .saas-input { width: 100%; padding: 14px; background: var(--bg-card-elevated); border: 1px solid var(--border-soft); border-radius: 12px; color: var(--text-primary); font-size: 13px; font-weight: 600; outline: none; transition: all 0.2s; }
+        .saas-select:focus, .saas-input:focus { border-color: var(--status-success); background: var(--bg-card); }
         
-        .tab-pill { background: transparent; border: none; padding: 10px 20px; color: ${COLORS.muted}; font-size: 12px; font-weight: 800; cursor: pointer; border-radius: 10px; transition: all 0.2s; }
-        .tab-pill.active { background: rgba(255,255,255,0.04); color: #fff; }
-        .btn-saas-primary { background: #fff; border: none; border-radius: 10px; padding: 12px 24px; color: ${COLORS.bg}; font-size: 12px; font-weight: 950; cursor: pointer; transition: all 0.2s; }
-        .btn-saas-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,255,255,0.2); }
+        .tab-pill { background: transparent; border: none; padding: 10px 20px; color: var(--text-muted); font-size: 12px; font-weight: 800; cursor: pointer; border-radius: 10px; transition: all 0.2s; }
+        .tab-pill.active { background: var(--bg-card-elevated); color: var(--text-primary); }
+        .btn-saas-primary { background: var(--button-primary-bg); border: none; border-radius: 10px; padding: 12px 24px; color: var(--button-primary-text); font-size: 12px; font-weight: 950; cursor: pointer; transition: all 0.2s; }
+        .btn-saas-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-soft); }
         
-        .saas-alert-row { display: flex; align-items: center; padding: 16px 24px; background: rgba(255,255,255,0.01); border: 1px solid ${COLORS.border}; border-radius: 16px; transition: all 0.2s; }
-        .saas-alert-row:hover { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.15); transform: translateX(4px); }
+        .saas-alert-row { display: flex; align-items: center; padding: 16px 24px; background: var(--bg-card-elevated); border: 1px solid var(--border-soft); border-radius: 16px; transition: all 0.2s; }
+        .saas-alert-row:hover { background: var(--bg-card); border-color: var(--border-strong); transform: translateX(4px); }
         .alert-icon-wrap { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-        .status-tag { font-size: 9px; font-weight: 950; padding: 4px 12px; border-radius: 30px; border: 1px solid transparent; background: rgba(255,255,255,0.02); }
-        .icon-btn-ghost { background: transparent; border: 1px solid ${COLORS.border}; border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: ${COLORS.muted}; cursor: pointer; transition: all 0.2s; }
-        .icon-btn-ghost:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .status-tag { font-size: 9px; font-weight: 950; padding: 4px 12px; border-radius: 30px; border: 1px solid var(--border-soft); background: var(--bg-card-elevated); }
+        .icon-btn-ghost { background: transparent; border: 1px solid var(--border-soft); border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+        .icon-btn-ghost:hover { background: var(--bg-card-elevated); color: var(--text-primary); }
         
-        .phone-container { width: 240px; height: 480px; background: #000; border-radius: 44px; border: 8px solid #222; margin: 0 auto; position: relative; box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
-        .phone-screen { position: absolute; inset: 4px; background: #141414; border-radius: 36px; overflow: hidden; display: flex; flex-direction: column; }
-        .phone-header { height: 44px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid ${COLORS.border}; }
-        .phone-notification { background: rgba(255,255,255,0.03); backdrop-filter: blur(10px); border: 1px solid ${COLORS.border}; border-radius: 14px; padding: 14px; border-left-width: 4px; }
-        .phone-notification.critical { border-left-color: ${COLORS.danger}; }
-        .phone-notification.warning { border-left-color: ${COLORS.warning}; }
+        .phone-container { width: 240px; height: 480px; background: #000; border-radius: 44px; border: 8px solid #222; margin: 0 auto; position: relative; box-shadow: var(--shadow-strong); }
+        .phone-screen { position: absolute; inset: 4px; background: var(--bg-body); border-radius: 36px; overflow: hidden; display: flex; flex-direction: column; }
+        .phone-header { height: 44px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-soft); }
+        .phone-notification { background: var(--bg-card); backdrop-filter: blur(10px); border: 1px solid var(--border-soft); border-radius: 14px; padding: 14px; border-left-width: 4px; }
+        .phone-notification.critical { border-left-color: var(--status-critical); }
+        .phone-notification.warning { border-left-color: var(--status-warning); }
         .phone-dock { position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; }
         
-        .toggle { width: 42px; height: 24px; background: rgba(255,255,255,0.05); border-radius: 30px; position: relative; cursor: pointer; }
-        .toggle.active { background: ${COLORS.primary}; }
+        .toggle { width: 42px; height: 24px; background: var(--bg-card-elevated); border-radius: 30px; position: relative; cursor: pointer; }
+        .toggle.active { background: var(--status-success); }
         .toggle div { position: absolute; left: 4px; top: 4px; width: 16px; height: 16px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
         .toggle.active div { transform: translateX(18px); }
         

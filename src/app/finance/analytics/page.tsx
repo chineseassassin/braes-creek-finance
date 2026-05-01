@@ -18,17 +18,7 @@ import {
   BarChart, Bar, Cell, LineChart as RechartsLineChart, Line
 } from 'recharts';
 
-const COLORS = {
-  primary: '#39C86A',
-  success: '#39C86A',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  info: '#3b82f6',
-  muted: '#8a8a8e',
-  border: 'rgba(255, 255, 255, 0.08)',
-  card: 'rgba(255, 255, 255, 0.03)',
-  bg: 'var(--color-bg-body)'
-};
+import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
 const TABS = [
   { id: 'pl',         label: 'P&L Matrix',          icon: LayoutGrid },
@@ -61,24 +51,24 @@ export default function ProfitIntelligenceHub() {
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: COLORS.bg }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)' }}>
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
-        <header style={{ height: 72, background: COLORS.bg, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${COLORS.border}` }}>
+        <header style={{ height: 72, background: 'var(--bg-sidebar)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid var(--border-soft)` }}>
           <div>
-             <h1 style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0 }}>Profit Intelligence</h1>
-             <p style={{ fontSize: 12, color: COLORS.muted, margin: 0 }}>Advanced Strategic Oversight Engine</p>
+             <h1 style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Profit Intelligence</h1>
+             <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>Advanced Strategic Oversight Engine</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <ThemeToggle />
             <NotificationCenter />
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: COLORS.primary, color: '#050505', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 13 }}>P</div>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--status-success)', color: 'var(--text-inverse)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 13 }}>P</div>
           </div>
         </header>
 
         {/* Tab Bar */}
-        <div style={{ padding: '0 32px', background: COLORS.bg, borderBottom: `1px solid ${COLORS.border}`, display: 'flex', gap: 32, position: 'sticky', top: 72, zIndex: 40, overflowX: 'auto' }} className="no-scrollbar">
+        <div style={{ padding: '0 32px', background: 'var(--bg-sidebar)', borderBottom: `1px solid var(--border-soft)`, display: 'flex', gap: 32, position: 'sticky', top: 72, zIndex: 40, overflowX: 'auto' }} className="no-scrollbar">
            {TABS.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -90,8 +80,8 @@ export default function ProfitIntelligenceHub() {
                     padding: '20px 0',
                     background: 'none',
                     border: 'none',
-                    borderBottom: isActive ? `2px solid ${COLORS.success}` : '2px solid transparent',
-                    color: isActive ? COLORS.success : COLORS.muted,
+                    borderBottom: isActive ? `2px solid var(--status-success)` : '2px solid transparent',
+                    color: isActive ? 'var(--status-success)' : 'var(--text-muted)',
                     fontSize: 12,
                     fontWeight: 800,
                     cursor: 'pointer',
@@ -114,30 +104,30 @@ export default function ProfitIntelligenceHub() {
              <div className="animate-fade-in">
                 <div className="grid-12" style={{ gap: 16, marginBottom: 32 }}>
                    <div className="col-4 card" style={{ padding: '24px' }}>
-                      <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Total Revenue</div>
-                      <div style={{ fontSize: 28, fontWeight: 950, color: '#fff' }}>${metrics.totalInc.toLocaleString()}</div>
+                      <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Total Revenue</div>
+                      <div style={{ fontSize: 28, fontWeight: 950, color: 'var(--text-primary)' }}>${metrics.totalInc.toLocaleString()}</div>
                    </div>
                    <div className="col-4 card" style={{ padding: '24px' }}>
-                      <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Total Expenses</div>
-                      <div style={{ fontSize: 28, fontWeight: 950, color: COLORS.danger }}>${metrics.totalExp.toLocaleString()}</div>
+                      <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Total Expenses</div>
+                       <div style={{ fontSize: 28, fontWeight: 950, color: 'var(--status-critical)', textShadow: 'var(--status-critical-glow)' }}>${metrics.totalExp.toLocaleString()}</div>
                    </div>
                    <div className="col-4 card" style={{ padding: '24px' }}>
-                      <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Net Profit Margin</div>
-                      <div style={{ fontSize: 28, fontWeight: 950, color: COLORS.primary }}>{metrics.margin}%</div>
+                      <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Net Profit Margin</div>
+                       <div style={{ fontSize: 28, fontWeight: 950, color: 'var(--status-success)', textShadow: 'var(--status-success-glow)' }}>{metrics.margin}%</div>
                    </div>
                 </div>
 
                 <div className="card" style={{ padding: '32px' }}>
-                   <h3 style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 32 }}>Financial Trajectory</h3>
+                   <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 32 }}>Financial Trajectory</h3>
                    <div style={{ height: 300 }}>
                       <ResponsiveContainer width="100%" height="100%">
                          <AreaChart data={trendData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                            <XAxis dataKey="n" axisLine={false} tickLine={false} tick={{ fill: COLORS.muted, fontSize: 11 }} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fill: COLORS.muted, fontSize: 11 }} />
-                            <Tooltip contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 12 }} />
-                            <Area type="monotone" dataKey="rev" stroke={COLORS.primary} fill={COLORS.primary} fillOpacity={0.05} strokeWidth={3} />
-                            <Area type="monotone" dataKey="exp" stroke={COLORS.danger} fill={COLORS.danger} fillOpacity={0.05} strokeWidth={3} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-soft)" vertical={false} />
+                            <XAxis dataKey="n" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+                            <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+                            <Tooltip contentStyle={{ background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', borderRadius: 12, color: 'var(--text-primary)' }} />
+                            <Area type="monotone" dataKey="rev" stroke="var(--status-success)" fill="var(--status-success)" fillOpacity={0.05} strokeWidth={3} />
+                            <Area type="monotone" dataKey="exp" stroke="var(--status-critical)" fill="var(--status-critical)" fillOpacity={0.05} strokeWidth={3} />
                          </AreaChart>
                       </ResponsiveContainer>
                    </div>
@@ -147,19 +137,19 @@ export default function ProfitIntelligenceHub() {
 
            {activeTab === 'ai' && (
              <div className="animate-fade-in">
-                <div className="card" style={{ padding: '32px', border: '1px solid rgba(139, 92, 246, 0.2)', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, var(--color-bg-body) 100%)', marginBottom: 32 }}>
+                <div className="card" style={{ padding: '32px', border: '1px solid var(--status-ai-glow)', background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-elevated) 100%)', marginBottom: 32 }}>
                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                       <Sparkles size={18} color="#a78bfa" />
-                      <h3 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>AI Profit Optimization</h3>
+                      <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>AI Profit Optimization</h3>
                    </div>
                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
-                         <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Margin Recovery Signal</div>
-                         <p style={{ fontSize: 12, color: COLORS.muted }}>Operational inefficiencies in feed management (+18%) are putting pressure on net margins. Implement immediate audit to capture 4.5% recovery.</p>
+                      <div style={{ padding: '16px', background: 'var(--bg-card-elevated)', borderRadius: 16, border: '1px solid var(--border-soft)' }}>
+                         <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>Margin Recovery Signal</div>
+                         <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Operational inefficiencies in feed management (+18%) are putting pressure on net margins. Implement immediate audit to capture 4.5% recovery.</p>
                       </div>
-                      <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
-                         <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Revenue Expansion Opportunity</div>
-                         <p style={{ fontSize: 12, color: COLORS.muted }}>Sustained growth in high-yield crop sectors suggests capacity for 15% acreage expansion in the next cycle.</p>
+                      <div style={{ padding: '16px', background: 'var(--bg-card-elevated)', borderRadius: 16, border: '1px solid var(--border-soft)' }}>
+                         <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>Revenue Expansion Opportunity</div>
+                         <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Sustained growth in high-yield crop sectors suggests capacity for 15% acreage expansion in the next cycle.</p>
                       </div>
                    </div>
                 </div>
@@ -171,9 +161,9 @@ export default function ProfitIntelligenceHub() {
 
       <style jsx>{`
         .card {
-          background: rgba(255, 255, 255, 0.03);
+          background: var(--bg-card);
           backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          border: 1px solid var(--border-soft);
           border-radius: 24px;
         }
         .animate-fade-in {

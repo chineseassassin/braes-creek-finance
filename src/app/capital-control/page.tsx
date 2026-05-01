@@ -23,15 +23,7 @@ import {
   LineChart, Line
 } from 'recharts';
 
-const COLORS = {
-  success: '#39C86A',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  info: '#3b82f6',
-  muted: '#8a8a8e',
-  border: 'rgba(255, 255, 255, 0.08)',
-  accent: '#39C86A'
-};
+import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
 const TABS = [
   { id: 'overview', label: 'Capital Overview', icon: LayoutGrid },
@@ -86,10 +78,10 @@ export default function CapitalControlPage() {
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
-        <header style={{ height: 72, background: 'var(--color-bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${COLORS.border}` }}>
+        <header style={{ height: 72, background: 'var(--bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid var(--border-soft)` }}>
           <div>
-             <h1 style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0 }}>Capital Control</h1>
-             <p style={{ fontSize: 12, color: COLORS.muted, margin: 0 }}>Monitor capital, debt exposure, and financial leverage</p>
+             <h1 style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Capital Control</h1>
+             <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>Monitor capital, debt exposure, and financial leverage</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <ThemeToggle />
@@ -101,7 +93,7 @@ export default function CapitalControlPage() {
           </div>
         </header>
 
-        <div style={{ padding: '0 32px', background: 'var(--color-bg-body)', borderBottom: `1px solid ${COLORS.border}`, display: 'flex', gap: 32, position: 'sticky', top: 72, zIndex: 40, overflowX: 'auto' }} className="no-scrollbar">
+        <div style={{ padding: '0 32px', background: 'var(--bg-body)', borderBottom: `1px solid var(--border-soft)`, display: 'flex', gap: 32, position: 'sticky', top: 72, zIndex: 40, overflowX: 'auto' }} className="no-scrollbar">
            {TABS.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -113,8 +105,8 @@ export default function CapitalControlPage() {
                     padding: '20px 0',
                     background: 'none',
                     border: 'none',
-                    borderBottom: isActive ? `2px solid ${COLORS.success}` : '2px solid transparent',
-                    color: isActive ? COLORS.success : COLORS.muted,
+                    borderBottom: isActive ? `2px solid var(--status-success)` : '2px solid transparent',
+                    color: isActive ? 'var(--status-success)' : 'var(--text-muted)',
                     fontSize: 12,
                     fontWeight: 800,
                     cursor: 'pointer',
@@ -138,24 +130,24 @@ export default function CapitalControlPage() {
                 <div className="grid-12" style={{ gap: 16, marginBottom: 32 }}>
                    <div className="col-3 card" style={{ padding: '24px' }}>
                       <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Total Borrowed</div>
-                      <div style={{ fontSize: 24, fontWeight: 950, color: '#fff' }}>${totalBorrowed.toLocaleString()}</div>
+                      <div style={{ fontSize: 24, fontWeight: 950, color: 'var(--text-primary)' }}>${totalBorrowed.toLocaleString()}</div>
                    </div>
                    <div className="col-3 card" style={{ padding: '24px' }}>
                       <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Outstanding Balance</div>
-                      <div style={{ fontSize: 24, fontWeight: 950, color: COLORS.danger }}>${totalBalance.toLocaleString()}</div>
+                       <div style={{ fontSize: 24, fontWeight: 950, color: 'var(--status-critical)', textShadow: 'var(--status-critical-glow)' }}>${totalBalance.toLocaleString()}</div>
                    </div>
                    <div className="col-3 card" style={{ padding: '24px' }}>
                       <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Total Repaid</div>
-                      <div style={{ fontSize: 24, fontWeight: 950, color: COLORS.success }}>${totalRepaid.toLocaleString()}</div>
+                       <div style={{ fontSize: 24, fontWeight: 950, color: 'var(--status-success)', textShadow: 'var(--status-success-glow)' }}>${totalRepaid.toLocaleString()}</div>
                    </div>
                    <div className="col-3 card" style={{ padding: '24px' }}>
                       <div style={{ fontSize: 10, fontWeight: 900, color: COLORS.muted, textTransform: 'uppercase', marginBottom: 8 }}>Debt Pressure</div>
-                      <div style={{ fontSize: 24, fontWeight: 950, color: overdueCount > 0 ? COLORS.danger : COLORS.success }}>{overdueCount > 0 ? 'CRITICAL' : 'STABLE'}</div>
+                       <div style={{ fontSize: 24, fontWeight: 950, color: overdueCount > 0 ? 'var(--status-critical)' : 'var(--status-success)', textShadow: overdueCount > 0 ? 'var(--status-critical-glow)' : 'var(--status-success-glow)' }}>{overdueCount > 0 ? 'CRITICAL' : 'STABLE'}</div>
                    </div>
                 </div>
 
                 <div className="card" style={{ padding: '32px' }}>
-                   <h3 style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 24 }}>Repayment Velocity Matrix</h3>
+                   <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 24 }}>Repayment Velocity Matrix</h3>
                    <div style={{ height: 250 }}>
                       <ResponsiveContainer width="100%" height="100%">
                          <AreaChart data={repaymentTrend}>
@@ -174,9 +166,9 @@ export default function CapitalControlPage() {
            {activeTab === 'loans' && (
              <div className="animate-fade-in">
                 <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '8px 16px', width: 350 }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', borderRadius: 10, padding: '8px 16px', width: 350 }}>
                       <Search size={14} color={COLORS.muted} />
-                      <input placeholder="Search lenders..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ background: 'none', border: 'none', outline: 'none', color: '#fff', fontSize: 12, width: '100%' }} />
+                      <input placeholder="Search lenders..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 12, width: '100%' }} />
                    </div>
                 </div>
                 <div className="grid-12" style={{ gap: 24 }}>
@@ -184,9 +176,9 @@ export default function CapitalControlPage() {
                       <div key={loan.id} className="col-6 card" style={{ padding: '24px' }}>
                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                               <Landmark size={20} color={COLORS.success} />
+                               <Landmark size={20} color='var(--status-success)' />
                                <div>
-                                  <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>{loan.lender_name}</div>
+                                  <div style={{ fontSize: 15, fontWeight: 900, color: 'var(--text-primary)' }}>{loan.lender_name}</div>
                                   <div style={{ fontSize: 11, color: COLORS.muted }}>{loan.loan_type || 'Infrastructure'}</div>
                                </div>
                             </div>
@@ -198,9 +190,9 @@ export default function CapitalControlPage() {
                          </div>
                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                             <span style={{ fontSize: 12, color: COLORS.muted }}>Remaining</span>
-                            <span style={{ fontSize: 14, fontWeight: 900, color: COLORS.danger }}>${loan.remaining_balance.toLocaleString()}</span>
+                            <span style={{ fontSize: 14, fontWeight: 900, color: 'var(--status-critical)' }}>${loan.remaining_balance.toLocaleString()}</span>
                          </div>
-                         <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 16 }}>Next Payment: <span style={{ color: '#fff' }}>{loan.due_date}</span></div>
+                         <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 16 }}>Next Payment: <span style={{ color: 'var(--text-primary)' }}>{loan.due_date}</span></div>
                       </div>
                    ))}
                 </div>
@@ -208,18 +200,18 @@ export default function CapitalControlPage() {
            )}
 
            {activeTab === 'ai' && (
-             <div className="animate-fade-in card" style={{ padding: '32px', border: '1px solid rgba(139, 92, 246, 0.2)', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(5, 5, 5, 1) 100%)' }}>
+             <div className="animate-fade-in card" style={{ padding: '32px', border: '1px solid var(--status-ai-glow)', background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-elevated) 100%)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                    <Sparkles size={18} color="#a78bfa" />
-                   <h3 style={{ fontSize: 18, fontWeight: 900, color: '#fff', margin: 0 }}>AI Capital Insights</h3>
+                   <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>AI Capital Insights</h3>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                    <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Refinancing Opportunity Detected</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>Refinancing Opportunity Detected</div>
                       <p style={{ fontSize: 12, color: COLORS.muted }}>Interest rates for infrastructure loans have drifted. Consolidating existing high-interest liabilities could save $2,400 monthly.</p>
                    </div>
                    <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div style={{ fontSize: 13, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Cash-Flow Coverage Alert</div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>Cash-Flow Coverage Alert</div>
                       <p style={{ fontSize: 12, color: COLORS.muted }}>Projected cash-flow for Q3 provides 1.8x coverage of debt obligations. Capital expansion is authorized.</p>
                    </div>
                 </div>
@@ -231,14 +223,14 @@ export default function CapitalControlPage() {
 
       <style jsx>{`
         .card {
-          background: rgba(255, 255, 255, 0.03);
+          background: var(--bg-card);
           backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          border: 1px solid var(--border-soft);
           border-radius: 24px;
         }
         .btn-primary {
-          background: #39C86A;
-          color: #050505;
+          background: var(--button-primary-bg);
+          color: var(--button-primary-text);
           border: none;
           border-radius: 12px;
           padding: 10px 20px;
@@ -247,11 +239,11 @@ export default function CapitalControlPage() {
           cursor: pointer;
         }
         .btn-ghost {
-           background: rgba(255,255,255,0.05);
-           border: 1px solid rgba(255,255,255,0.1);
+           background: var(--bg-card-elevated);
+           border: 1px solid var(--border-soft);
            border-radius: 8px;
            padding: 6px 12px;
-           color: #fff;
+           color: var(--text-primary);
         }
         .animate-fade-in {
           animation: fadeIn 0.4s ease-out;
