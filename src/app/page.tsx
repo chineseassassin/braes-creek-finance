@@ -97,7 +97,7 @@ export default function Home() {
     { label: 'Livestock', val: '840 Units', status: '2 Active Alerts', icon: <Beef size={20}/>, color: 'var(--status-warning)', href: '/livestock' },
     { label: 'Workforce', val: '12 Active', status: 'Labor Costs Rising', icon: <Users size={20}/>, color: 'var(--status-info)', href: '/labor' },
     { label: 'Maintenance', val: '4 Fleet', status: '1 Service Overdue', icon: <Wrench size={20}/>, color: 'var(--status-critical)', href: '/infrastructure' },
-    { label: 'Supplies', val: '12 Items', status: 'Low Inventory Alert', icon: <ShoppingCart size={20}/>, color: 'var(--status-warning)', href: '/infrastructure' },
+    { label: 'Supplies', val: '12 Items', status: 'Low Inventory Alert', icon: <ShoppingCart size={20}/>, color: 'var(--status-warning)', href: '/inventory' },
   ];
 
   return (
@@ -149,9 +149,9 @@ export default function Home() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
                        <div style={{ background: 'var(--status-critical)', color: 'var(--text-inverse)', padding: '8px 16px', borderRadius: 6, fontWeight: 950, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.1em', boxShadow: '0 0 25px var(--status-critical)', animation: 'pulse 1s infinite' }}>EMERGENCY</div>
                        <div>
-                          <div style={{ fontSize: 20, fontWeight: 950, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ fontSize: 20, fontWeight: 950, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 12 }}>
+                             <ShieldAlert size={20} className="animate-pulse" style={{ color: 'var(--status-critical)' }} />
                              {highestAlert.title}
-                             <ShieldAlert size={20} className="animate-pulse" />
                           </div>
                           <div style={{ fontSize: 14, color: 'var(--status-critical)', fontWeight: 700, opacity: 0.9 }}>{highestAlert.message}</div>
                        </div>
@@ -345,7 +345,10 @@ export default function Home() {
                   <div style={{ gridColumn: 'span 4' }}>
                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                         <h3 className="section-title">System Health Matrix</h3>
-                        <div className="label-small" style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}><div className="pulse-dot"></div> Updated just now</div>
+                        <div className="label-small" style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
+                        <div className="pulse-dot" style={{ flexShrink: 0 }}></div> 
+                        <span>Updated just now</span>
+                     </div>
                      </div>
                      <div className="card" style={{ padding: '32px' }}>
                        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
@@ -410,7 +413,24 @@ export default function Home() {
               <div style={{ borderTop: `1px solid var(--border-soft)`, paddingTop: 40, marginTop: 40 }}>
                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                     <h3 className="section-title">Live Activity Feed</h3>
-                    <div className="badge-info" style={{ background: 'var(--status-info-glow)', color: 'var(--status-info)', border: '1px solid var(--status-info)' }}><div className="live-dot-subtle" style={{ background: 'var(--status-info)' }}></div> CONNECTED ENGINE</div>
+                     <div className="badge-info" style={{ 
+                        background: 'var(--status-info-glow)', 
+                        color: 'var(--status-info)', 
+                        border: '1px solid var(--status-info)', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 8,
+                        padding: '6px 14px',
+                        borderRadius: '30px',
+                        fontSize: '10px',
+                        fontWeight: 900,
+                        letterSpacing: '0.05em',
+                        height: 'fit-content'
+                     }}>
+                        <div className="live-dot-subtle" style={{ background: 'var(--status-info)', flexShrink: 0, width: 6, height: 6 }}></div>
+                        CONNECTED ENGINE
+                     </div>
+
                  </div>
                  <div className="card" style={{ padding: '32px 40px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>

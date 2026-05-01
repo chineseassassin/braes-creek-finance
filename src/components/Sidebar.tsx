@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUIStore } from '@/store/useUIStore'
+import { useAppStore } from '@/store/useAppStore'
 import {
   LayoutDashboard, BarChart3, CreditCard, Banknote,
   Users, Beef, Sprout, Settings, ChevronRight,
@@ -70,7 +71,19 @@ const GROUPS = [
 export default function Sidebar() {
   const pathname = usePathname()
   const { sidebarCollapsed, toggleSidebar } = useUIStore()
+  const { currentUser } = useAppStore()
   const w = sidebarCollapsed ? 64 : 250
+
+  const filteredGroups = GROUPS.map(group => ({
+    ...group,
+    items: group.items.filter(item => {
+      if (currentUser.role === 'restricted') {
+        const restrictedHrefs = ['/loans', '/finance/pl', '/capital', '/capital-control', '/reports', '/settings', '/cash-flow'];
+        if (restrictedHrefs.includes(item.href)) return false;
+      }
+      return true;
+    })
+  })).filter(group => group.items.length > 0);
 
   return (
     <>
@@ -146,7 +159,7 @@ export default function Sidebar() {
 
         {/* Nav Sections */}
         <nav className="custom-scrollbar" style={{ flex: 1, padding: '12px 8px', overflowY: 'auto', overflowX: 'hidden' }}>
-          {GROUPS.map((group) => (
+          {filteredGroups.map((group) => (
             <div key={group.title} style={{ marginBottom: 12 }}>
               {!sidebarCollapsed && <div className="group-header">{group.title}</div>}
               {group.items.map((item) => {

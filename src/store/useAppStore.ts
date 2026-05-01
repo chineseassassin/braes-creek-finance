@@ -19,7 +19,7 @@ import { SystemEvent } from '@/lib/types'
 interface UserIdentity {
   id: string;
   name: string;
-  role: 'admin' | 'data-entry' | 'viewer';
+  role: 'admin' | 'data-entry' | 'viewer' | 'restricted';
 }
 
 interface AppState {
@@ -33,7 +33,7 @@ interface AppState {
   syncCrossModuleData: () => void;
   
   // Phase 3 Actions
-  switchRole: (role: 'admin' | 'data-entry' | 'viewer') => void;
+  switchRole: (role: 'admin' | 'data-entry' | 'viewer' | 'restricted') => void;
   setTheme: (theme: 'dark' | 'light') => void;
   
   // Placeholder Wiring for future phases
@@ -56,7 +56,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     const identities = {
       'admin': { id: 'user-admin-1', name: 'Peter Admin', role: 'admin' as const },
       'data-entry': { id: 'user-de-1', name: 'Mary Operator', role: 'data-entry' as const },
-      'viewer': { id: 'user-view-1', name: 'James Observer', role: 'viewer' as const }
+      'viewer': { id: 'user-view-1', name: 'James Observer', role: 'viewer' as const },
+      'restricted': { id: 'user-res-1', name: 'Staff Member', role: 'restricted' as const }
     };
     set({ currentUser: identities[role] });
   },
