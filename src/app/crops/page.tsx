@@ -1,293 +1,281 @@
 'use client'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Sidebar from '@/components/Sidebar'
 import Topbar from '@/components/Topbar'
-import { SAMPLE_CROPS } from '@/lib/sample-data'
-import { CropType } from '@/lib/types'
+import { useCropStore } from '@/store/useCropStore'
+import { useAppStore } from '@/store/useAppStore'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts'
+import { toast, Toaster } from 'react-hot-toast'
+import { 
+  Sprout, Calendar, TrendingUp, TrendingDown, 
+  Map, Activity, ClipboardList, Info, AlertTriangle,
+  Clock, CheckCircle2, ChevronRight
+} from 'lucide-react'
+import React from 'react'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n)
 
-const CROP_ICONS: Record<string, string> = {
-  'Cassava': '🌿', 'Sweet Potato': '🍠', 'Tomato': '🍅', 'Cucumber': '🥒',
-  'Bell Pepper': '🫑', 'Sorrel': '🌺', 'Scotch Bonnet Pepper': '🌶️'
-}
-
-const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }> = {
-  upcoming: { bg: 'rgba(59,130,246,0.1)', text: '#93c5fd', label: '📅 Upcoming' },
-  growing: { bg: 'rgba(34,197,94,0.1)', text: '#4ade80', label: '🌱 Growing' },
-  ready: { bg: 'rgba(245,158,11,0.1)', text: '#fbbf24', label: '✅ Ready to Harvest' },
-  harvested: { bg: 'rgba(100,116,139,0.1)', text: '#94a3b8', label: '📦 Harvested' },
-}
-
-function getCropStatus(crop: CropType): string {
-  const today = new Date()
-  const plant = crop.planting_date ? new Date(crop.planting_date) : null
-  const harvest = crop.expected_harvest ? new Date(crop.expected_harvest) : null
-  if (!plant) return 'upcoming'
-  if (harvest && today > harvest) return 'harvested'
-  if (harvest) {
-    const daysLeft = Math.ceil((harvest.getTime() - today.getTime()) / 86400000)
-    if (daysLeft < 30) return 'ready'
-  }
-  return 'growing'
-}
-
-const CROP_COSTS: Record<string, number> = {
-  'crop-1': 8500, 'crop-2': 3200, 'crop-3': 4800,
-  'crop-4': 1600, 'crop-5': 2100, 'crop-6': 850, 'crop-7': 1200,
-}
-
 export default function CropsPage() {
-  const [crops, setCrops] = useState<CropType[]>(SAMPLE_CROPS)
+  const { crops, addCrop, isLoading } = useCropStore()
+  const { currentUser } = useAppStore()
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState({
-    name: '', variety: '', planting_date: '', expected_harvest: '',
-    area_acres: '', season: '', notes: ''
+    name: '', variety: '', area_acres: '', planting_date: new Date().toISOString().split('T')[0],
+    expected_harvest: '', expected_yield: '', actual_yield: '',
+    input_costs: '', labor_cost: '', status: 'growing', notes: ''
   })
 
-  const totalAcres = crops.reduce((s, c) => s + (c.area_acres ?? 0), 0)
-  const activeCrops = crops.filter(c => getCropStatus(c) === 'growing').length
-  const totalCosts = Object.values(CROP_COSTS).reduce((s, v) => s + v, 0)
+  // Filter approved for metrics
+  const approvedCrops = useMemo(() => crops.filter(c => c.workflow_status === 'approved'), [crops])
+  
+  const totalAcres = approvedCrops.reduce((s, c) => s + c.area_acres, 0)
+  const totalInputCost = approvedCrops.reduce((s, c) => s + (c.input_costs + c.labor_cost), 0)
+  const activeCount = approvedCrops.filter(c => c.status === 'growing' || c.status === 'harvest_ready').length
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const costByCrop = approvedCrops.map(c => ({
+    name: c.name,
+    cost: c.input_costs + c.labor_cost,
+    acres: c.area_acres
+  }))
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const newCrop: CropType = {
-      id: `crop-${Date.now()}`,
-      name: form.name,
-      variety: form.variety || undefined,
-      planting_date: form.planting_date || undefined,
-      expected_harvest: form.expected_harvest || undefined,
-      area_acres: parseFloat(form.area_acres) || undefined,
-      season: form.season || undefined,
-      notes: form.notes || undefined,
-      created_at: new Date().toISOString(),
+    const payload = {
+      ...form,
+      area_acres: parseFloat(form.area_acres) || 0,
+      input_costs: parseFloat(form.input_costs) || 0,
+      labor_cost: parseFloat(form.labor_cost) || 0,
     }
-    setCrops(prev => [newCrop, ...prev])
-    setShowModal(false)
-    setForm({ name: '', variety: '', planting_date: '', expected_harvest: '', area_acres: '', season: '', notes: '' })
+
+    const result = await addCrop(payload as any)
+    if (result) {
+      if (currentUser.role === 'admin') {
+        toast.success('Crop record saved & approved')
+      } else {
+        toast.success('Submitted for approval')
+      }
+      setShowModal(false)
+      setForm({
+        name: '', variety: '', area_acres: '', planting_date: new Date().toISOString().split('T')[0],
+        expected_harvest: '', expected_yield: '', actual_yield: '',
+        input_costs: '', labor_cost: '', status: 'growing', notes: ''
+      })
+    }
   }
 
   return (
     <div className="app-shell">
+      <Toaster position="top-right" />
       <Sidebar />
       <div className="main-content">
         <Topbar
-          title="Crop Operations"
-          subtitle="Planting schedules, harvest dates, and cost-per-crop tracking"
-          actions={<button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>+ Add Crop</button>}
+          title="Crop Management"
+          subtitle="Field production, yield tracking, and resource efficiency"
+          actions={<button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>+ Add Crop Cycle</button>}
         />
         <div className="page-container">
           <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-            <div className="kpi-card" style={{ '--kpi-color': '#10b981' } as any}>
-              <div className="kpi-label">Total Crops</div>
-              <div className="kpi-value">{crops.length}</div>
-              <div className="kpi-sub">varieties tracked</div>
+            <div className="kpi-card no-hover" style={{ '--kpi-color': 'var(--status-success)' } as any}>
+              <div className="kpi-label">Active Crop Cycles</div>
+              <div className="kpi-value" style={{ color: 'var(--status-success)', textShadow: 'var(--status-success-glow)' }}>{activeCount}</div>
+              <div className="kpi-sub">growing or harvest ready</div>
             </div>
-            <div className="kpi-card" style={{ '--kpi-color': '#22c55e' } as any}>
-              <div className="kpi-label">Active Growing</div>
-              <div className="kpi-value">{activeCrops}</div>
-              <div className="kpi-sub">currently in field</div>
+            <div className="kpi-card" style={{ '--kpi-color': 'var(--status-info)' } as any}>
+              <div className="kpi-label">Total Area Planted</div>
+              <div className="kpi-value" style={{ color: 'var(--status-info)', textShadow: 'var(--status-info-glow)' }}>{totalAcres.toFixed(1)} <span style={{ fontSize: 14, fontWeight: 700 }}>Acres</span></div>
+              <div className="kpi-sub">across all field segments</div>
             </div>
-            <div className="kpi-card" style={{ '--kpi-color': '#f59e0b' } as any}>
-              <div className="kpi-label">Total Acreage</div>
-              <div className="kpi-value">{totalAcres.toFixed(1)}</div>
-              <div className="kpi-sub">acres under cultivation</div>
+            <div className="kpi-card" style={{ '--kpi-color': 'var(--status-warning)' } as any}>
+              <div className="kpi-label">Total Input Costs</div>
+              <div className="kpi-value" style={{ color: 'var(--status-warning)', textShadow: 'var(--status-warning-glow)' }}>{fmt(totalInputCost)}</div>
+              <div className="kpi-sub">materials + labor to date</div>
             </div>
-            <div className="kpi-card" style={{ '--kpi-color': '#ef4444' } as any}>
-              <div className="kpi-label">Total Crop Costs</div>
-              <div className="kpi-value">{fmt(totalCosts)}</div>
-              <div className="kpi-sub">inputs & labor</div>
+            <div className="kpi-card" style={{ '--kpi-color': 'var(--status-ai)' } as any}>
+              <div className="kpi-label">Avg. Cost / Acre</div>
+              <div className="kpi-value" style={{ color: 'var(--status-ai)', textShadow: 'var(--status-ai-glow)' }}>{totalAcres > 0 ? fmt(totalInputCost / totalAcres) : '$0'}</div>
+              <div className="kpi-sub">production efficiency</div>
             </div>
           </div>
 
-          {/* Crop Cards Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16, marginBottom: 24 }}>
-            {crops.map(crop => {
-              const status = getCropStatus(crop)
-              const statusMeta = STATUS_COLORS[status]
-              const icon = CROP_ICONS[crop.name] ?? '🌱'
-              const cost = CROP_COSTS[crop.id] ?? 0
-              const today = new Date()
-              const harvest = crop.expected_harvest ? new Date(crop.expected_harvest) : null
-              const daysLeft = harvest ? Math.ceil((harvest.getTime() - today.getTime()) / 86400000) : null
-              const costPerAcre = crop.area_acres ? cost / crop.area_acres : 0
-
-              return (
-                <div key={crop.id} className="card" style={{ borderLeft: '4px solid #16a34a' }}>
-                  <div className="card-body">
-                    <div className="flex-between" style={{ marginBottom: 12 }}>
-                      <div className="flex-center">
-                        <span style={{ fontSize: 28 }}>{icon}</span>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)' }}>{crop.name}</div>
-                          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{crop.variety ?? 'Standard variety'}</div>
-                        </div>
-                      </div>
-                      <span style={{ padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, background: statusMeta.bg, color: statusMeta.text }}>
-                        {statusMeta.label}
-                      </span>
+          <div className="chart-grid">
+            <div className="card">
+              <div className="card-header"><div className="card-title">Investment by Crop Type</div></div>
+              <div className="card-body">
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={costByCrop} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                    <XAxis dataKey="name" tick={{ fill: 'var(--text-primary)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: 'var(--text-primary)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} />
+                    <Tooltip 
+                      formatter={(v: any) => fmt(v)} 
+                      contentStyle={{ background: '#1f1f23', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
+                      itemStyle={{ color: 'var(--text-primary)' }}
+                      labelStyle={{ color: 'var(--text-primary)' }}
+                    />
+                    <Bar dataKey="cost" fill="var(--status-success)" radius={[4, 4, 0, 0]} fillOpacity={0.8} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div className="card no-hover">
+              <div className="card-header"><div className="card-title">Production Status</div></div>
+              <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {['growing', 'harvest_ready', 'harvested', 'planned'].map(status => {
+                  const count = approvedCrops.filter(c => c.status === status).length
+                  const pct = approvedCrops.length > 0 ? (count / approvedCrops.length) * 100 : 0
+                  return (
+                    <div key={status} style={{ background: 'var(--bg-card-elevated)', padding: '12px 16px', borderRadius: 12, border: '1px solid var(--border-soft)' }}>
+                       <div className="flex-between" style={{ marginBottom: 6 }}>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                            {status.replace('_', ' ')}
+                          </span>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)' }}>{count} batches</span>
+                       </div>
+                       <div className="progress-bar">
+                          <div className="progress-fill" style={{ width: `${pct}%`, background: status === 'harvest_ready' ? 'var(--status-success)' : status === 'growing' ? 'var(--status-info)' : 'var(--text-muted)' }} />
+                       </div>
                     </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-                      {[
-                        { label: 'Area', val: crop.area_acres ? `${crop.area_acres} acres` : '—' },
-                        { label: 'Season', val: crop.season ?? 'Year-round' },
-                        { label: 'Planted', val: crop.planting_date ?? '—' },
-                        { label: 'Harvest', val: crop.expected_harvest ?? '—' },
-                      ].map(item => (
-                        <div key={item.label} style={{ background: 'rgba(255,255,255,0.03)', padding: '7px 10px', borderRadius: 7 }}>
-                          <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>{item.label}</div>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginTop: 1 }}>{item.val}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {daysLeft !== null && (
-                      <div style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '7px 10px', borderRadius: 8,
-                        background: daysLeft < 0 ? 'rgba(100,116,139,0.08)' : daysLeft < 30 ? 'rgba(245,158,11,0.08)' : 'rgba(34,197,94,0.06)',
-                        marginBottom: 10
-                      }}>
-                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                          {daysLeft < 0 ? 'Harvest passed' : daysLeft < 30 ? '⚠️ Harvest approaching' : '📅 Days to harvest'}
-                        </span>
-                        <span style={{ fontWeight: 700, fontSize: 13, color: daysLeft < 0 ? '#94a3b8' : daysLeft < 30 ? '#fbbf24' : '#4ade80' }}>
-                          {daysLeft < 0 ? `${Math.abs(daysLeft)}d ago` : `${daysLeft} days`}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex-between" style={{ marginBottom: 12, padding: '7px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: 8 }}>
-                      <div>
-                        <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Total Cost</div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#f87171' }}>{fmt(cost)}</div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Cost/Acre</div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{costPerAcre > 0 ? fmt(costPerAcre) : '—'}</div>
-                      </div>
-                    </div>
-
-                    {crop.notes && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>📝 {crop.notes}</div>}
-
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>✏️ Edit</button>
-                      <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>💸 Costs</button>
-                      <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>📊 Yield</button>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-
-            {/* Add New Crop CTA */}
-            <div
-              className="card"
-              style={{ borderStyle: 'dashed', borderColor: 'rgba(22,163,74,0.3)', cursor: 'pointer', background: 'rgba(22,163,74,0.02)' }}
-              onClick={() => setShowModal(true)}
-            >
-              <div className="card-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 200 }}>
-                <div style={{ fontSize: 40, marginBottom: 10, opacity: 0.4 }}>🌱</div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>Add New Crop</div>
-                <div style={{ fontSize: 12, color: '#52525b', textAlign: 'center' }}>Track any new crop type — expand easily anytime</div>
+                  )
+                })}
               </div>
             </div>
           </div>
 
-          {/* Crop Summary Table */}
-          <div className="card">
-            <div className="card-header">
-              <div className="card-title">Crop Cost Summary</div>
-              <button className="btn btn-secondary btn-sm">📥 Export</button>
-            </div>
-            <div className="data-table-wrapper">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Crop</th>
-                    <th>Variety</th>
-                    <th>Acres</th>
-                    <th>Planted</th>
-                    <th>Harvest</th>
-                    <th>Status</th>
-                    <th>Cost</th>
-                    <th>$/Acre</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {crops.map(crop => {
-                    const status = getCropStatus(crop)
-                    const statusMeta = STATUS_COLORS[status]
-                    const cost = CROP_COSTS[crop.id] ?? 0
-                    return (
-                      <tr key={crop.id}>
-                        <td className="primary">{CROP_ICONS[crop.name] ?? '🌱'} {crop.name}</td>
-                        <td style={{ fontSize: 12 }}>{crop.variety ?? '—'}</td>
-                        <td>{crop.area_acres ?? '—'}</td>
-                        <td style={{ fontSize: 12, fontFamily: 'monospace' }}>{crop.planting_date ?? '—'}</td>
-                        <td style={{ fontSize: 12, fontFamily: 'monospace' }}>{crop.expected_harvest ?? '—'}</td>
-                        <td><span style={{ padding: '3px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700, background: statusMeta.bg, color: statusMeta.text }}>{statusMeta.label}</span></td>
-                        <td className="amount expense">{fmt(cost)}</td>
-                        <td style={{ fontWeight: 600 }}>{crop.area_acres ? fmt(cost / crop.area_acres) : '—'}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 20 }}>
+            {crops.map(crop => {
+               const isPending = crop.workflow_status === 'pending'
+               return (
+                 <div key={crop.id} className="card" style={{ opacity: isPending ? 0.8 : 1, borderLeft: `4px solid ${crop.status === 'harvest_ready' ? 'var(--status-success)' : 'var(--status-info)'}` }}>
+                   <div className="card-body">
+                      <div className="flex-between" style={{ marginBottom: 16 }}>
+                         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--bg-card-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+                               {crop.name === 'Cassava' ? '🌿' : crop.name === 'Tomato' ? '🍅' : '🌱'}
+                            </div>
+                            <div>
+                               <div style={{ fontWeight: 850, fontSize: 16, color: 'var(--text-primary)' }}>{crop.name}</div>
+                               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{crop.variety || 'Standard Variety'}</div>
+                            </div>
+                         </div>
+                         <div style={{ textAlign: 'right' }}>
+                            <span className={`badge ${crop.status === 'harvest_ready' ? 'badge-healthy' : crop.status === 'harvested' ? 'badge-info' : 'badge-warning'}`}>
+                               {crop.status.replace('_', ' ')}
+                            </span>
+                            {isPending && <div className="label-small" style={{ color: 'var(--status-warning)', marginTop: 4 }}>PENDING APPROVAL</div>}
+                         </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                         <div style={{ background: 'var(--bg-card-elevated)', padding: 12, borderRadius: 10, border: '1px solid var(--border-soft)' }}>
+                            <div className="label-small">Area Planted</div>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{crop.area_acres} Acres</div>
+                         </div>
+                         <div style={{ background: 'var(--bg-card-elevated)', padding: 12, borderRadius: 10, border: '1px solid var(--border-soft)' }}>
+                            <div className="label-small">Expected Yield</div>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--status-success)', marginTop: 2 }}>{crop.expected_yield || 'TBD'}</div>
+                         </div>
+                         <div style={{ background: 'var(--bg-card-elevated)', padding: 12, borderRadius: 10, border: '1px solid var(--border-soft)' }}>
+                            <div className="label-small">Total Investment</div>
+                            <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{fmt(crop.input_costs + crop.labor_cost)}</div>
+                         </div>
+                         <div style={{ background: 'var(--bg-card-elevated)', padding: 12, borderRadius: 10, border: '1px solid var(--border-soft)' }}>
+                            <div className="label-small">Expected Harvest</div>
+                            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>{crop.expected_harvest}</div>
+                         </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--bg-card-elevated)', borderRadius: 8, marginBottom: 16 }}>
+                         <Clock size={14} color="var(--text-muted)" />
+                         <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Planted on {crop.planting_date}</span>
+                      </div>
+
+                      {crop.notes && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>📝 {crop.notes}</div>}
+
+                      <div style={{ display: 'flex', gap: 8 }}>
+                         <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>✏️ Edit Cycle</button>
+                         <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>📊 Projections</button>
+                      </div>
+                   </div>
+                 </div>
+               )
+            })}
           </div>
         </div>
       </div>
 
       {showModal && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
-          <div className="modal">
+          <div className="modal" style={{ maxWidth: 640 }}>
             <div className="modal-header">
-              <div className="modal-title">Add New Crop</div>
+              <div className="modal-title">Initialize New Crop Cycle</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 <div className="form-grid" style={{ marginBottom: 16 }}>
                   <div className="form-group">
-                    <label className="form-label">Crop Name *</label>
-                    <input className="form-input" placeholder="e.g. Pumpkin" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
+                    <label className="form-label">Crop Name / Type *</label>
+                    <input className="form-input" placeholder="e.g. Cassava, Sweet Potato" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Variety</label>
-                    <input className="form-input" placeholder="e.g. Butternut" value={form.variety} onChange={e => setForm(p => ({ ...p, variety: e.target.value }))} />
+                    <input className="form-input" placeholder="e.g. Local White, Red Skin" value={form.variety} onChange={e => setForm(p => ({ ...p, variety: e.target.value }))} />
                   </div>
                 </div>
+
                 <div className="form-grid" style={{ marginBottom: 16 }}>
                   <div className="form-group">
-                    <label className="form-label">Planting Date</label>
-                    <input type="date" className="form-input" value={form.planting_date} onChange={e => setForm(p => ({ ...p, planting_date: e.target.value }))} />
+                    <label className="form-label">Area Planted (Acres) *</label>
+                    <input type="number" step="0.01" className="form-input" placeholder="0.00" value={form.area_acres} onChange={e => setForm(p => ({ ...p, area_acres: e.target.value }))} required />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Expected Harvest</label>
-                    <input type="date" className="form-input" value={form.expected_harvest} onChange={e => setForm(p => ({ ...p, expected_harvest: e.target.value }))} />
+                    <label className="form-label">Expected Yield</label>
+                    <input className="form-input" placeholder="e.g. 5000 lbs" value={form.expected_yield} onChange={e => setForm(p => ({ ...p, expected_yield: e.target.value }))} />
                   </div>
                 </div>
+
                 <div className="form-grid" style={{ marginBottom: 16 }}>
                   <div className="form-group">
-                    <label className="form-label">Area (Acres)</label>
-                    <input type="number" className="form-input" placeholder="0.0" step="0.1" value={form.area_acres} onChange={e => setForm(p => ({ ...p, area_acres: e.target.value }))} />
+                    <label className="form-label">Planting Date *</label>
+                    <input type="date" className="form-input" value={form.planting_date} onChange={e => setForm(p => ({ ...p, planting_date: e.target.value }))} required />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Season</label>
-                    <input className="form-input" placeholder="e.g. Dry, Wet, Year-round" value={form.season} onChange={e => setForm(p => ({ ...p, season: e.target.value }))} />
+                    <label className="form-label">Expected Harvest Date *</label>
+                    <input type="date" className="form-input" value={form.expected_harvest} onChange={e => setForm(p => ({ ...p, expected_harvest: e.target.value }))} required />
                   </div>
                 </div>
+
+                <div className="form-grid" style={{ marginBottom: 16 }}>
+                  <div className="form-group">
+                    <label className="form-label">Input Costs (Materials/Seed) *</label>
+                    <input type="number" className="form-input" placeholder="0.00" value={form.input_costs} onChange={e => setForm(p => ({ ...p, input_costs: e.target.value }))} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Initial Labor Cost *</label>
+                    <input type="number" className="form-input" placeholder="0.00" value={form.labor_cost} onChange={e => setForm(p => ({ ...p, labor_cost: e.target.value }))} required />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                   <label className="form-label">Cycle Status</label>
+                   <select className="form-select" value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value as any }))}>
+                      <option value="planned">Planned</option>
+                      <option value="growing">Growing</option>
+                      <option value="harvest_ready">Harvest Ready</option>
+                   </select>
+                </div>
+
                 <div className="form-group">
                   <label className="form-label">Notes</label>
-                  <textarea className="form-textarea" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
+                  <textarea className="form-textarea" placeholder="Soil prep, fertilizer schedule, etc." value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
                 </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Crop</button>
+                <button type="submit" className="btn btn-primary" disabled={isLoading}>
+                   {isLoading ? 'Saving...' : 'Initialize Crop Cycle'}
+                </button>
               </div>
             </form>
           </div>

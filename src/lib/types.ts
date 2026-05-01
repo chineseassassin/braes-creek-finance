@@ -156,11 +156,17 @@ export interface CropType {
   id: string
   name: string
   variety?: string
-  season?: string
-  planting_date?: string
-  expected_harvest?: string
-  area_acres?: number
+  area_acres: number
+  planting_date: string
+  expected_harvest: string
+  expected_yield?: string
+  actual_yield?: string
+  input_costs: number
+  labor_cost: number
+  status: 'planned' | 'growing' | 'harvest_ready' | 'harvested'
+  workflow_status?: 'pending' | 'approved' | 'rejected'
   notes?: string
+  created_by?: string
   created_at: string
 }
 
