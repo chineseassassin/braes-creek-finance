@@ -206,9 +206,10 @@ export interface InfrastructureAsset {
   name: string
   type: 'Tractor' | 'Pump' | 'Generator' | 'Irrigation' | 'Storage' | 'Building' | 'Vehicle' | 'Other'
   location: string
-  status: 'active' | 'needs_service' | 'down' | 'retired'
-  purchase_value: number
-  purchase_date: string
+  status: 'operational' | 'maintenance' | 'critical' | 'decommissioned'
+  replacement_value: number
+  last_inspection: string
+  health_index: number
   vendor_name?: string
   notes?: string
   workflow_status: 'pending' | 'approved' | 'rejected'
@@ -218,7 +219,7 @@ export interface InfrastructureAsset {
 
 export interface MaintenanceRecord {
   id: string
-  asset_id: string
+  asset_id?: string
   date: string
   maintenance_type: 'routine' | 'repair' | 'replacement' | 'inspection'
   description: string
@@ -226,10 +227,13 @@ export interface MaintenanceRecord {
   vendor_id?: string
   vendor_name?: string
   next_service_date?: string
-  status: 'completed' | 'scheduled' | 'pending'
-  workflow_status: 'pending' | 'approved' | 'rejected'
-  created_by: string
+  status?: 'completed' | 'scheduled' | 'pending'
+  workflow_status?: 'pending' | 'approved' | 'rejected'
+  created_by?: string
   created_at: string
+  // Optional denormalized fields used in sample data and UI
+  equipment_name?: string
+  notes?: string
 }
 
 export interface Budget {

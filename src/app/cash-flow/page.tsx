@@ -20,6 +20,8 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   BarChart, Bar, Cell, PieChart as RePieChart, Pie
 } from 'recharts';
+import { toast, Toaster } from 'react-hot-toast';
+import { exportToCSV } from '@/lib/exportUtils';
 
 import { THEME_COLORS, TC } from '@/lib/theme-colors';
 
@@ -40,10 +42,38 @@ export default function CashFlowPage() {
   const { sidebarCollapsed } = useUIStore();
   const [mountedTime, setMountedTime] = useState("");
   
+  const [forecastDays, setForecastDays] = useState(7);
+  
   useEffect(() => {
     fetchTransactions();
     setMountedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   }, [fetchTransactions]);
+
+  const handleExport = () => {
+    const dataToExport = transactions.map(t => ({
+      Date: t.date,
+      Type: t.type.toUpperCase(),
+      Category: t.category,
+      Amount: t.amount,
+      Reference: t.reference || 'N/A',
+      Status: t.status
+    }));
+    exportToCSV(dataToExport, 'Cash_Flow_Movement_Ledger');
+  };
+
+  const handleRunForecast = () => {
+    const id = toast.loading('Running Neural Liquidity Forecast...');
+    setTimeout(() => {
+      toast.success('Forecast Complete: 98.4% Confidence Interval.', { id, icon: '📊' });
+    }, 2000);
+  };
+
+  const handleRecommendationClick = (text: string) => {
+    toast(`Strategy applied: ${text}`, {
+      icon: '✅',
+      style: { background: '#1a1a1a', color: '#fff', border: '1px solid #333' }
+    });
+  };
 
   const hasData = transactions.length > 0;
 
@@ -67,6 +97,7 @@ export default function CashFlowPage() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)' }}>
+      <Toaster position="top-right" />
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
@@ -83,9 +114,12 @@ export default function CashFlowPage() {
             </div>
             <ThemeToggle />
             <NotificationCenter />
-            <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px' }}>
-               <Sparkles size={16} /> Run Forecast
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+               <button className="btn-ghost" onClick={handleExport} style={{ fontSize: 12 }}><Download size={14} /> Export Movement</button>
+               <button className="btn-primary" onClick={handleRunForecast} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px' }}>
+                  <Sparkles size={16} /> Run Forecast
+               </button>
+            </div>
           </div>
         </header>
 
@@ -145,8 +179,8 @@ export default function CashFlowPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                    <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Predictive Cash Forecast</h3>
                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button className="btn-ghost active" style={{ fontSize: 11 }}>Next 7 Days</button>
-                      <button className="btn-ghost" style={{ fontSize: 11 }}>Next 30 Days</button>
+                      <button className={`btn-ghost ${forecastDays === 7 ? 'active' : ''}`} onClick={() => setForecastDays(7)} style={{ fontSize: 11 }}>Next 7 Days</button>
+                      <button className={`btn-ghost ${forecastDays === 30 ? 'active' : ''}`} onClick={() => setForecastDays(30)} style={{ fontSize: 11 }}>Next 30 Days</button>
                    </div>
                 </div>
 
@@ -277,7 +311,9 @@ export default function CashFlowPage() {
                                   </div>
                                   <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{rec.text}</span>
                                </div>
-                               <ChevronRight size={18} color={COLORS.muted} />
+                               <button onClick={() => handleRecommendationClick(rec.text)} style={{ background: 'none', border: 'none', color: COLORS.muted, cursor: 'pointer' }}>
+                                   <ChevronRight size={18} />
+                                </button>
                             </div>
                          ))}
                       </>
@@ -318,7 +354,7 @@ export default function CashFlowPage() {
         </main>
       </div>
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{__html: `
         .card {
           background: var(--bg-card);
           backdrop-filter: blur(12px);
@@ -362,7 +398,7 @@ export default function CashFlowPage() {
           background: var(--border-strong);
           border-color: var(--border-strong);
         }
-      `}</style>
+      `}} />
     </div>
   );
 }

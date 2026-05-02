@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import {
   Bell, Search, Users, ShoppingCart,
   AlertCircle, ShieldAlert, Wrench, Landmark, Sprout, Beef,
-  ArrowRight, ShieldCheck, Zap, Info, TriangleAlert, Clock,
+  ArrowRight, ShieldCheck, Zap, Info, AlertTriangle, Clock,
   Sparkles, ChevronRight, Activity, DollarSign, TrendingUp, TrendingDown, MessageSquare, Target, BrainCircuit
 } from "lucide-react";
 
@@ -174,7 +174,7 @@ export default function Home() {
                 >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--status-critical-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--status-critical)' }}>
-                          <TriangleAlert size={20} color="var(--status-critical)" />
+                          <AlertTriangle size={20} color="var(--status-critical)" />
                        </div>
                        <div className="animate-ai-text-update" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                           <span style={{ color: 'var(--status-critical)', fontWeight: 950, textTransform: 'uppercase', fontSize: 11, letterSpacing: '0.1em' }}>CRITICAL ALERT</span>

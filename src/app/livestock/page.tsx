@@ -6,7 +6,8 @@ import { useLivestockStore } from '@/store/useLivestockStore'
 import { useAppStore } from '@/store/useAppStore'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { toast, Toaster } from 'react-hot-toast'
-import { Activity, Plus, Package, DollarSign, TrendingUp, TrendingDown, ClipboardList, Info, AlertTriangle } from 'lucide-react'
+import { Activity, Plus, Package, DollarSign, TrendingUp, TrendingDown, ClipboardList, Info, AlertTriangle, Download } from 'lucide-react'
+import { exportToCSV } from '@/lib/exportUtils'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n)
@@ -19,9 +20,10 @@ const ANIMAL_COLORS: Record<string, string> = {
 }
 
 export default function LivestockPage() {
-  const { units: livestock, addUnit, isLoading } = useLivestockStore()
+  const { units: livestock, addUnit, updateUnit, isLoading } = useLivestockStore()
   const { currentUser } = useAppStore()
   const [showModal, setShowModal] = useState(false)
+  const [editingUnitId, setEditingUnitId] = useState<string | null>(null)
   const [form, setForm] = useState({
     animal_type: 'broiler', batch_name: '', quantity: '', mortality_count: '0', 
     feed_cost: '', medicine_cost: '', production_output: '',
@@ -62,23 +64,42 @@ export default function LivestockPage() {
       current_value: parseFloat(form.current_value) || 0,
     }
 
-    const result = await addUnit(payload as any)
-    
-    if (result) {
-       if (currentUser.role === 'admin') {
-          toast.success('Livestock record saved & approved')
-       } else {
-          toast.success('Submitted for approval')
-       }
-       setShowModal(false)
-       setForm({
-         animal_type: 'broiler', batch_name: '', quantity: '', mortality_count: '0', 
-         feed_cost: '', medicine_cost: '', production_output: '',
-         acquisition_date: new Date().toISOString().split('T')[0],
-         acquisition_cost: '', current_value: '', status: 'active', notes: ''
-       })
+    if (editingUnitId) {
+      await updateUnit(editingUnitId, payload as any)
+      toast.success('Livestock record updated')
+    } else {
+      const result = await addUnit(payload as any)
+      if (result) {
+         if (currentUser.role === 'admin') {
+            toast.success('Livestock record saved & approved')
+         } else {
+            toast.success('Submitted for approval')
+         }
+      }
     }
+    setShowModal(false)
+    setEditingUnitId(null)
+    setForm({
+      animal_type: 'broiler', batch_name: '', quantity: '', mortality_count: '0', 
+      feed_cost: '', medicine_cost: '', production_output: '',
+      acquisition_date: new Date().toISOString().split('T')[0],
+      acquisition_cost: '', current_value: '', status: 'active', notes: ''
+    })
   }
+
+  const handleExport = () => {
+    const data = livestock.map(l => ({
+      Batch: l.batch_name || l.animal_type,
+      Type: l.animal_type,
+      Quantity: l.quantity,
+      Mortality: l.mortality_count || 0,
+      MarketValue: l.current_value || 0,
+      InputCosts: (l.feed_cost || 0) + (l.medicine_cost || 0),
+      Status: l.status.toUpperCase(),
+      Approval: (l.workflow_status || 'approved').toUpperCase()
+    }));
+    exportToCSV(data, 'Livestock_Asset_Inventory');
+  };
 
   return (
     <div className="app-shell">
@@ -88,7 +109,21 @@ export default function LivestockPage() {
         <Topbar
           title="Livestock Operations"
           subtitle="Animal inventory, values, and performance tracking"
-          actions={<button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>+ Add Livestock</button>}
+          actions={
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-secondary btn-sm" onClick={handleExport}><Download size={14} /> Export Inventory</button>
+              <button className="btn btn-primary btn-sm" onClick={() => {
+                setEditingUnitId(null);
+                setForm({
+                  animal_type: 'broiler', batch_name: '', quantity: '', mortality_count: '0', 
+                  feed_cost: '', medicine_cost: '', production_output: '',
+                  acquisition_date: new Date().toISOString().split('T')[0],
+                  acquisition_cost: '', current_value: '', status: 'active', notes: ''
+                });
+                setShowModal(true);
+              }}>+ Add Livestock</button>
+            </div>
+          }
         />
         <div className="page-container">
           <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
@@ -224,8 +259,17 @@ export default function LivestockPage() {
                     {unit.notes && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>📝 {unit.notes}</div>}
 
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>✏️ Edit</button>
-                      <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>📋 History</button>
+                      <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => {
+                         setForm({
+                            animal_type: unit.animal_type || 'broiler', batch_name: unit.batch_name || '', quantity: unit.quantity?.toString() || '0', mortality_count: unit.mortality_count?.toString() || '0', 
+                            feed_cost: unit.feed_cost?.toString() || '', medicine_cost: unit.medicine_cost?.toString() || '', production_output: unit.production_output || '',
+                            acquisition_date: unit.acquisition_date || new Date().toISOString().split('T')[0],
+                            acquisition_cost: unit.acquisition_cost?.toString() || '0', current_value: unit.current_value?.toString() || '', status: unit.status || 'active', notes: unit.notes || ''
+                         });
+                         setEditingUnitId(unit.id);
+                         setShowModal(true);
+                      }}>✏️ Edit</button>
+                      <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => toast.success(`Viewing history for ${unit.batch_name || unit.animal_type}`)}>📋 History</button>
                     </div>
                   </div>
                 </div>
@@ -239,7 +283,7 @@ export default function LivestockPage() {
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
           <div className="modal" style={{ maxWidth: 640 }}>
             <div className="modal-header">
-              <div className="modal-title">Add Livestock Batch / Group</div>
+              <div className="modal-title">{editingUnitId ? 'Edit Livestock Batch' : 'Add Livestock Batch / Group'}</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -311,7 +355,7 @@ export default function LivestockPage() {
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={isLoading}>
-                   {isLoading ? 'Saving...' : 'Record Livestock Batch'}
+                   {isLoading ? 'Saving...' : editingUnitId ? 'Save Changes' : 'Record Livestock Batch'}
                 </button>
               </div>
             </form>

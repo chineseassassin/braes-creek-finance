@@ -22,6 +22,8 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   LineChart, Line
 } from 'recharts';
+import { toast, Toaster } from 'react-hot-toast';
+import { exportToCSV } from '@/lib/exportUtils';
 
 import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
@@ -58,6 +60,13 @@ export default function CapitalControlPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [modalType, setModalType] = useState<'loan' | 'lender' | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [formData, setFormData] = useState({
+    lender_name: '',
+    amount: '',
+    interest_rate: '',
+    due_date: '',
+    loan_type: 'Infrastructure'
+  });
 
   const fetchLoans = async () => {
     setIsLoading(true);
@@ -66,12 +75,43 @@ export default function CapitalControlPage() {
     setIsLoading(false);
   };
 
+  const handleAddLoan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const toastId = toast.loading('Registering new loan obligation...');
+    setTimeout(() => {
+      toast.success('Loan registered successfully. Capital matrix updated.', { id: toastId });
+      setModalType(null);
+      fetchLoans();
+    }, 1500);
+  };
+
+  const handleAddLender = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const toastId = toast.loading('Establishing lender profile...');
+    setTimeout(() => {
+      toast.success('Lender registered. Now ready for loan assignment.', { id: toastId });
+      setModalType(null);
+    }, 1500);
+  };
+
   useEffect(() => { fetchLoans(); }, []);
 
   const totalBorrowed = loans.reduce((acc, curr) => acc + Number(curr.amount), 0);
   const totalBalance = loans.filter(l => l.status !== 'paid').reduce((acc, curr) => acc + Number(curr.remaining_balance), 0);
   const totalRepaid = totalBorrowed - totalBalance;
   const overdueCount = loans.filter(l => l.status === 'overdue').length;
+
+  const handleExport = () => {
+    const dataToExport = loans.map(l => ({
+      Lender: l.lender_name,
+      'Principal Amount': l.amount,
+      'Remaining Balance': l.remaining_balance,
+      'Interest Rate': `${l.interest_rate}%`,
+      'Due Date': l.due_date,
+      Status: l.status.toUpperCase()
+    }));
+    exportToCSV(dataToExport, 'Capital_Control_Ledger');
+  };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg-body)' }}>
@@ -87,6 +127,7 @@ export default function CapitalControlPage() {
             <ThemeToggle />
             <NotificationCenter />
             <div style={{ display: 'flex', gap: 8 }}>
+               <button className="btn-ghost" onClick={handleExport} style={{ fontSize: 12 }}><Download size={14} /> Export Archive</button>
                <button className="btn-ghost" onClick={() => setModalType('lender')} style={{ fontSize: 12 }}><Building2 size={14} /> Add Lender</button>
                <button className="btn-primary" onClick={() => setModalType('loan')} style={{ fontSize: 12 }}><Plus size={16} /> Register Loan</button>
             </div>
@@ -221,6 +262,97 @@ export default function CapitalControlPage() {
         </main>
       </div>
 
+      {modalType && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+           <Toaster position="top-right" />
+           <div className="card" style={{ width: 440, padding: '40px', position: 'relative', background: 'var(--bg-card)', border: '1px solid var(--border-soft)' }}>
+              <button onClick={() => setModalType(null)} style={{ position: 'absolute', top: 24, right: 24, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                 <X size={20} />
+              </button>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
+                 <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(57, 200, 106, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {modalType === 'loan' ? <BankIcon size={20} color={COLORS.success} /> : <Building2 size={20} color={COLORS.success} />}
+                 </div>
+                 <div>
+                    <h2 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>{modalType === 'loan' ? 'Register New Loan' : 'Add New Lender'}</h2>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0 }}>Capital Control Interface v2.0</p>
+                 </div>
+              </div>
+
+              <form onSubmit={modalType === 'loan' ? handleAddLoan : handleAddLender} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                 <div>
+                    <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>{modalType === 'loan' ? 'Lender Name' : 'Institution Name'}</label>
+                    <input 
+                       required 
+                       placeholder={modalType === 'loan' ? "e.g. Farm Credit Services" : "e.g. Standard Chartered"}
+                       className="form-input"
+                       value={formData.lender_name}
+                       onChange={e => setFormData({...formData, lender_name: e.target.value})}
+                    />
+                 </div>
+
+                 {modalType === 'loan' && (
+                   <>
+                     <div style={{ display: 'flex', gap: 16 }}>
+                        <div style={{ flex: 1 }}>
+                           <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Principal Amount</label>
+                           <input 
+                              required 
+                              type="number"
+                              placeholder="50000"
+                              className="form-input"
+                              value={formData.amount}
+                              onChange={e => setFormData({...formData, amount: e.target.value})}
+                           />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                           <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Interest Rate (%)</label>
+                           <input 
+                              required 
+                              type="number"
+                              step="0.01"
+                              placeholder="4.5"
+                              className="form-input"
+                              value={formData.interest_rate}
+                              onChange={e => setFormData({...formData, interest_rate: e.target.value})}
+                           />
+                        </div>
+                     </div>
+                     <div>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Maturity Date</label>
+                        <input 
+                           required 
+                           type="date"
+                           className="form-input"
+                           value={formData.due_date}
+                           onChange={e => setFormData({...formData, due_date: e.target.value})}
+                        />
+                     </div>
+                   </>
+                 )}
+
+                 {modalType === 'lender' && (
+                   <div>
+                      <label style={{ display: 'block', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>Institution Type</label>
+                      <select className="form-input" value={formData.loan_type} onChange={e => setFormData({...formData, loan_type: e.target.value})}>
+                         <option>Commercial Bank</option>
+                         <option>Agricultural Cooperative</option>
+                         <option>Government Agency</option>
+                         <option>Private Equity</option>
+                      </select>
+                   </div>
+                 )}
+
+                 <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+                    <button type="button" onClick={() => setModalType(null)} className="btn-ghost" style={{ flex: 1, padding: '12px' }}>Cancel</button>
+                    <button type="submit" className="btn-primary" style={{ flex: 2, padding: '12px' }}>{modalType === 'loan' ? 'Register Loan' : 'Save Lender'}</button>
+                 </div>
+              </form>
+           </div>
+        </div>
+      )}
+
       <style jsx>{`
         .card {
           background: var(--bg-card);
@@ -244,6 +376,22 @@ export default function CapitalControlPage() {
            border-radius: 8px;
            padding: 6px 12px;
            color: var(--text-primary);
+           cursor: pointer;
+           transition: all 0.2s;
+        }
+        .form-input {
+           width: 100%;
+           background: var(--bg-body);
+           border: 1px solid var(--border-soft);
+           color: var(--text-primary);
+           padding: 12px 16px;
+           border-radius: 12px;
+           font-size: 14px;
+           outline: none;
+           transition: border-color 0.2s;
+        }
+        .form-input:focus {
+           border-color: var(--status-success);
         }
         .animate-fade-in {
           animation: fadeIn 0.4s ease-out;

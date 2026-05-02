@@ -11,10 +11,11 @@ import {
   Plus, Search, Filter, Download, 
   Package, Boxes, RefreshCw, AlertCircle, 
   MoreVertical, Sparkles, Activity, X, 
-  PlusCircle, MinusCircle, History, Edit2, Truck
+  PlusCircle, MinusCircle, History, Edit2, Truck, AlertTriangle, CheckCircle2
 } from "lucide-react";
 import { toast, Toaster } from 'react-hot-toast';
 import { THEME_COLORS as COLORS } from '@/lib/theme-colors';
+import { exportToCSV } from '@/lib/exportUtils';
 
 const CATEGORIES = ['Feed', 'Fertilizer', 'Chemical', 'Medicine', 'Building Material', 'Fuel', 'Equipment', 'Other'];
 
@@ -25,12 +26,14 @@ export default function InventoryPage() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [stockAction, setStockAction] = useState<'add' | 'use'>('add');
   const [stockAmount, setStockAmount] = useState('');
   
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [selectedForOrder, setSelectedForOrder] = useState<string[]>([]);
 
   const [form, setForm] = useState({
     itemName: '', category: 'Feed' as any, quantity: '', unit: '',
@@ -51,6 +54,7 @@ export default function InventoryPage() {
   const lowStockCount = approvedItems.filter(item => item.quantity <= item.reorderThreshold).length;
   const criticalCount = approvedItems.filter(item => item.quantity <= item.criticalThreshold).length;
   const criticalItem = approvedItems.find(item => item.quantity <= item.criticalThreshold);
+  const lowStockItems = useMemo(() => items.filter(i => i.quantity <= i.reorderThreshold), [items]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +88,51 @@ export default function InventoryPage() {
     toast.success(`Stock ${stockAction === 'add' ? 'added' : 'reduced'} successfully`);
     setIsStockModalOpen(false);
     setStockAmount('');
+  };
+
+  const handleSupplyAudit = () => {
+    useAppStore.getState().logEmployeeSubmission(
+      'Inventory',
+      'audit',
+      'inventory',
+      'bulk-audit-' + Date.now(),
+      { items_checked: items.length, status: 'complete', health_index: approvedItems.length / items.length }
+    );
+    toast.success('Supply Audit Logged Successfully');
+  };
+
+  const handleBulkOrder = async () => {
+    if (selectedForOrder.length === 0) {
+      toast.error('Select items to order');
+      return;
+    }
+
+    // Log a submission for the whole batch
+    useAppStore.getState().logEmployeeSubmission(
+      'Inventory',
+      'bulk_order',
+      'inventory',
+      'bulk-order-' + Date.now(),
+      { item_ids: selectedForOrder, order_count: selectedForOrder.length }
+    );
+
+    toast.success(`Bulk order for ${selectedForOrder.length} items submitted`);
+    setIsBulkModalOpen(false);
+    setSelectedForOrder([]);
+  };
+
+  const handleExport = () => {
+    const data = filteredItems.map(i => ({
+      Item: i.itemName,
+      Category: i.category,
+      Quantity: i.quantity,
+      Unit: i.unit,
+      UnitCost: i.unitCost,
+      TotalValue: i.quantity * i.unitCost,
+      Status: i.quantity <= i.criticalThreshold ? 'CRITICAL' : (i.quantity <= i.reorderThreshold ? 'LOW' : 'HEALTHY'),
+      Vendor: i.vendorName || 'N/A'
+    }));
+    exportToCSV(data, 'Inventory_Ledger');
   };
 
   return (
@@ -145,8 +194,11 @@ export default function InventoryPage() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                   <button className="btn-secondary" style={{ width: 160 }}>Log Supply Audit</button>
-                   <button className="btn-primary" style={{ width: 160 }}>Bulk Reorder</button>
+                   <button className="btn-secondary" style={{ width: 160 }} onClick={handleSupplyAudit}>Log Supply Audit</button>
+                   <button className="btn-primary" style={{ width: 160 }} onClick={() => {
+                     setSelectedForOrder(lowStockItems.map(i => i.id));
+                     setIsBulkModalOpen(true);
+                   }}>Bulk Reorder</button>
                 </div>
              </div>
           </div>
@@ -156,6 +208,9 @@ export default function InventoryPage() {
                 <div style={{ padding: '24px', borderBottom: '1px solid var(--border-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                    <h3 className="card-title">Stock Asset Ledger</h3>
                    <div style={{ display: 'flex', gap: 12 }}>
+                      <button className="btn btn-secondary btn-sm" style={{ height: 40, display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px' }} onClick={handleExport}>
+                         <Download size={14} /> Export
+                      </button>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', borderRadius: 12, padding: '0 16px', height: 40 }}>
                          <Search size={14} color="var(--text-muted)" />
                          <input 
@@ -377,6 +432,62 @@ export default function InventoryPage() {
                  <div className="modal-footer">
                     <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setIsStockModalOpen(false)}>Cancel</button>
                     <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleStockUpdate}>Confirm Adjustment</button>
+                 </div>
+              </div>
+           </div>
+        )}
+
+        {/* MODAL: BULK REORDER */}
+        {isBulkModalOpen && (
+           <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setIsBulkModalOpen(false)}>
+              <div className="modal" style={{ maxWidth: 540 }}>
+                 <div className="modal-header">
+                    <h2 className="modal-title">Strategic Bulk Reorder</h2>
+                    <button className="btn-ghost-small" onClick={() => setIsBulkModalOpen(false)}><X size={20} /></button>
+                 </div>
+                 <div className="modal-body">
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Select items that require immediate replenishment based on operational thresholds.</p>
+                    
+                    <div style={{ maxHeight: 300, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                       {lowStockItems.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+                             <CheckCircle2 size={32} style={{ opacity: 0.2, marginBottom: 12, marginInline: 'auto' }} />
+                             <div>No items currently below reorder threshold.</div>
+                          </div>
+                       ) : (
+                          lowStockItems.map(item => (
+                             <div 
+                                key={item.id} 
+                                onClick={() => {
+                                  setSelectedForOrder(prev => prev.includes(item.id) ? prev.filter(id => id !== item.id) : [...prev, item.id]);
+                                }}
+                                style={{ 
+                                  padding: '12px 16px', borderRadius: 12, background: 'var(--bg-card-elevated)', border: `1px solid ${selectedForOrder.includes(item.id) ? 'var(--status-success)' : 'var(--border-soft)'}`,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', transition: 'all 0.2s'
+                                }}
+                             >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                   <div style={{ width: 16, height: 16, borderRadius: 4, border: '2px solid var(--border-soft)', background: selectedForOrder.includes(item.id) ? 'var(--status-success)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                      {selectedForOrder.includes(item.id) && <CheckCircle2 size={12} color="white" />}
+                                   </div>
+                                   <div>
+                                      <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--text-primary)' }}>{item.itemName}</div>
+                                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.quantity} {item.unit} in stock</div>
+                                   </div>
+                                </div>
+                                <div className={`badge ${item.quantity <= item.criticalThreshold ? 'badge-critical' : 'badge-warning'}`}>
+                                   {item.quantity <= item.criticalThreshold ? 'CRITICAL' : 'LOW'}
+                                </div>
+                             </div>
+                          ))
+                       )}
+                    </div>
+                 </div>
+                 <div className="modal-footer">
+                    <button className="btn btn-secondary" onClick={() => setIsBulkModalOpen(false)}>Cancel</button>
+                    <button className="btn btn-primary" onClick={handleBulkOrder} disabled={selectedForOrder.length === 0}>
+                       Request Reorder ({selectedForOrder.length})
+                    </button>
                  </div>
               </div>
            </div>

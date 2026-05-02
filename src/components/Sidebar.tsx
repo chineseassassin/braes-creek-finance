@@ -146,8 +146,8 @@ export default function Sidebar() {
           borderBottom: '1px solid var(--border-soft)',
           justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: 12,
         }}>
-          <div style={{ width: 34, height: 34, background: 'var(--status-success)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 0 15px var(--status-success-glow)' }}>
-            <span style={{ color: 'var(--text-inverse)', fontSize: 16, fontWeight: 950 }}>B</span>
+          <div style={{ width: 42, height: 42, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <img src="/bc-logo.png" alt="BC Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           {!sidebarCollapsed && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>

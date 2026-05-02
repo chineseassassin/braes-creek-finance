@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Sidebar from "@/components/Sidebar";
 import NotificationCenter from "@/components/NotificationCenter";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -159,7 +159,7 @@ export default function ProfitIntelligenceHub() {
         </main>
       </div>
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{__html: `
         .card {
           background: var(--bg-card);
           backdrop-filter: blur(12px);
@@ -176,9 +176,7 @@ export default function ProfitIntelligenceHub() {
         .no-scrollbar::-webkit-scrollbar {
           display: none;
         }
-      `}</style>
+      `}} />
     </div>
   );
 }
-
-import React from 'react';

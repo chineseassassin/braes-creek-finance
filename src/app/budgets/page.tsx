@@ -4,6 +4,9 @@ import Topbar from '@/components/Topbar'
 import { SAMPLE_BUDGETS, SAMPLE_SEGMENTS } from '@/lib/sample-data'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
+import { exportToCSV } from '@/lib/exportUtils'
+import { toast, Toaster } from 'react-hot-toast'
+
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n)
 
@@ -22,6 +25,20 @@ export default function BudgetsPage() {
       variance: b.budgeted_amount - b.actual_amount,
     }
   })
+
+  const handleExport = () => {
+    const dataToExport = budgetData.map(b => ({
+      'Budget Name': b.name,
+      Segment: b.segmentName,
+      'Period Start': b.period_start,
+      'Period End': b.period_end,
+      Budgeted: b.budgeted_amount,
+      Actual: b.actual_amount,
+      Variance: b.variance,
+      Utilization: `${b.utilization.toFixed(1)}%`
+    }));
+    exportToCSV(dataToExport, 'Budget_Detail_Report');
+  };
 
   const totalBudgeted = SAMPLE_BUDGETS.reduce((s, b) => s + b.budgeted_amount, 0)
   const totalActual = SAMPLE_BUDGETS.reduce((s, b) => s + b.actual_amount, 0)
@@ -93,7 +110,7 @@ export default function BudgetsPage() {
           <div className="card">
             <div className="card-header">
               <div className="card-title">Budget Detail by Segment</div>
-              <button className="btn btn-secondary btn-sm">📥 Export</button>
+              <button onClick={handleExport} className="btn btn-secondary btn-sm">📥 Export</button>
             </div>
             <div className="data-table-wrapper">
               <table className="data-table">

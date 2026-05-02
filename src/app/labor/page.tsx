@@ -25,6 +25,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   AreaChart, Area, Cell
 } from 'recharts';
+import { exportToCSV } from '@/lib/exportUtils';
 
 import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
@@ -144,6 +145,18 @@ export default function WorkforceIntelligencePage() {
     }
   };
 
+  const handleExport = () => {
+    const data = filtered.map(l => ({
+      Worker: l.worker_name,
+      Task: l.task,
+      Date: l.date,
+      Hours: l.hours_worked || 0,
+      TotalCost: l.total_cost,
+      Status: (l.status || 'approved').toUpperCase()
+    }));
+    exportToCSV(data, 'Workforce_Labor_Log');
+  };
+
   const aiRecommendations = useMemo(() => [
     { type: 'Immediate Action', text: "Labor cost for tomato operations is rising faster than output.", severity: 'HIGH', color: '#f97316' },
     { type: 'Efficiency Opportunity', text: "Devon Smith shows strong task completion efficiency.", severity: 'LOW', color: COLORS.success },
@@ -219,11 +232,14 @@ export default function WorkforceIntelligencePage() {
                 </div>
 
                 <div className="card" style={{ padding: '32px' }}>
-                   <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '8px 16px', width: 300 }}>
                          <Search size={14} color={COLORS.muted} />
                          <input placeholder="Search records..." value={search} onChange={e => setSearch(e.target.value)} style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 12, width: '100%' }} />
                       </div>
+                      <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: 8 }} onClick={handleExport}>
+                         <Download size={16} /> Export Ledger
+                      </button>
                    </div>
                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <thead>
@@ -257,7 +273,7 @@ export default function WorkforceIntelligencePage() {
                    </table>
                 </div>
              </div>
-           )}
+            )}
 
            {activeTab === 'performance' && (
              <div className="animate-fade-in card" style={{ padding: '32px' }}>
@@ -460,6 +476,3 @@ export default function WorkforceIntelligencePage() {
     </div>
   );
 }
-
-import React from 'react';
-

@@ -2,6 +2,7 @@
 import Sidebar from '@/components/Sidebar'
 import Topbar from '@/components/Topbar'
 import { Clock, CheckCircle, AlertTriangle, FileText, ChevronRight } from 'lucide-react'
+import { toast, Toaster } from 'react-hot-toast'
 
 const ASSIGNED_TASKS = [
   { id: 1, title: 'Update Livestock Mortality', desc: 'Log today\'s mortality rates for Broiler House A.', due: 'Due in 2h 15m', status: 'pending', color: 'var(--status-warning)', rgb: '217, 119, 6' },
@@ -12,6 +13,7 @@ const ASSIGNED_TASKS = [
 export default function EmployeeTasksPage() {
   return (
     <div className="app-shell">
+      <Toaster position="top-right" />
       <Sidebar />
       <div className="main-content">
         <Topbar title="Assigned Tasks" subtitle="Your temporary data-entry assignments" />
@@ -59,7 +61,7 @@ export default function EmployeeTasksPage() {
                    
                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {task.status === 'pending' && (
-                         <button className="btn" style={{ background: 'var(--status-warning)', color: '#fff', border: 'none', fontWeight: 900, borderRadius: 10, padding: '10px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>Start Task <ChevronRight size={16} style={{ marginLeft: 4 }} /></button>
+                         <button onClick={() => toast.success(`Opening task: ${task.title}...`)} className="btn" style={{ background: 'var(--status-warning)', color: '#fff', border: 'none', fontWeight: 900, borderRadius: 10, padding: '10px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>Start Task <ChevronRight size={16} style={{ marginLeft: 4 }} /></button>
                       )}
                       {task.status === 'missed' && (
                          <button className="btn btn-secondary" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>Access Locked</button>

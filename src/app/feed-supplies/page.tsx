@@ -4,6 +4,7 @@ import Sidebar from '@/components/Sidebar'
 import Topbar from '@/components/Topbar'
 import { SAMPLE_FEED_PURCHASES, SAMPLE_MAINTENANCE, SAMPLE_SEGMENTS } from '@/lib/sample-data'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { exportToCSV } from '@/lib/exportUtils'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n)
@@ -29,6 +30,34 @@ export default function FeedSuppliesPage() {
       return acc
     }, {} as Record<string, number>)
   ).map(([name, cost]) => ({ name: name.replace(' ', '\n'), cost }))
+
+  const handleExport = () => {
+    if (activeTab === 'feed') {
+      const data = SAMPLE_FEED_PURCHASES.map(f => {
+        const seg = SAMPLE_SEGMENTS.find(s => s.id === f.segment_id);
+        return {
+          Date: f.date,
+          Type: f.feed_type,
+          Quantity_kg: f.quantity_kg,
+          UnitCost: f.unit_cost,
+          TotalCost: f.total_cost,
+          Supplier: f.supplier,
+          Segment: seg?.name || 'N/A'
+        };
+      });
+      exportToCSV(data, 'Feed_Purchases');
+    } else {
+      const data = SAMPLE_MAINTENANCE.map(m => ({
+        Date: m.date,
+        Asset: (m as any).asset_name || 'N/A',
+        Type: m.maintenance_type,
+        Description: m.description,
+        Cost: m.cost,
+        NextService: m.next_service_date || 'N/A'
+      }));
+      exportToCSV(data, 'Equipment_Maintenance');
+    }
+  };
 
   return (
     <div className="app-shell">
@@ -96,7 +125,7 @@ export default function FeedSuppliesPage() {
               <div className="card">
                 <div className="card-header">
                   <div className="card-title">Feed Purchase Log</div>
-                  <button className="btn btn-secondary btn-sm">📥 Export</button>
+                  <button className="btn btn-secondary btn-sm" onClick={handleExport}>📥 Export</button>
                 </div>
                 <div className="data-table-wrapper">
                   <table className="data-table">
@@ -142,39 +171,45 @@ export default function FeedSuppliesPage() {
             <div className="card">
               <div className="card-header">
                 <div className="card-title">Equipment Maintenance Log</div>
-                <button className="btn btn-secondary btn-sm">+ Add Record</button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn-secondary btn-sm" onClick={handleExport}>📥 Export</button>
+                  <button className="btn btn-secondary btn-sm">+ Add Record</button>
+                </div>
               </div>
               <div style={{ display: 'grid', gap: 12, padding: 20 }}>
-                {SAMPLE_MAINTENANCE.map(m => (
-                  <div key={m.id} style={{
-                    background: 'rgba(255,255,255,0.02)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 12,
-                    padding: 16,
-                    borderLeft: `4px solid ${MAINTENANCE_COLORS[m.maintenance_type]}`
-                  }}>
-                    <div className="flex-between" style={{ marginBottom: 10 }}>
-                      <div>
-                        <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 14 }}>🔧 {m.equipment_name}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{m.description}</div>
+                {SAMPLE_MAINTENANCE.map(m => {
+                  const equipmentName = (m as any).asset_name || (m as any).equipment_name || (m as any).assetName || "Maintenance Item";
+                  return (
+                    <div key={m.id} style={{
+                      background: 'rgba(255,255,255,0.02)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: 12,
+                      padding: 16,
+                      borderLeft: `4px solid ${MAINTENANCE_COLORS[m.maintenance_type]}`
+                    }}>
+                      <div className="flex-between" style={{ marginBottom: 10 }}>
+                        <div>
+                          <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 14 }}>🔧 {equipmentName}</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{m.description}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <span style={{
+                            padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                            background: `${MAINTENANCE_COLORS[m.maintenance_type]}20`,
+                            color: MAINTENANCE_COLORS[m.maintenance_type],
+                            textTransform: 'capitalize'
+                          }}>{m.maintenance_type}</span>
+                          <div style={{ fontSize: 16, fontWeight: 800, color: '#f87171', marginTop: 4, fontFamily: 'Outfit, sans-serif' }}>{fmt(m.cost)}</div>
+                        </div>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{
-                          padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
-                          background: `${MAINTENANCE_COLORS[m.maintenance_type]}20`,
-                          color: MAINTENANCE_COLORS[m.maintenance_type],
-                          textTransform: 'capitalize'
-                        }}>{m.maintenance_type}</span>
-                        <div style={{ fontSize: 16, fontWeight: 800, color: '#f87171', marginTop: 4, fontFamily: 'Outfit, sans-serif' }}>{fmt(m.cost)}</div>
+                      <div style={{ display: 'flex', gap: 20, fontSize: 12, color: 'var(--text-muted)' }}>
+                        <span>📅 Date: {m.date}</span>
+                        {m.next_service_date && <span>🔄 Next service: <strong style={{ color: '#fbbf24' }}>{m.next_service_date}</strong></span>}
+                        {((m as any).notes || (m as any).description) && <span>📝 {(m as any).notes || (m as any).description}</span>}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: 20, fontSize: 12, color: 'var(--text-muted)' }}>
-                      <span>📅 Date: {m.date}</span>
-                      {m.next_service_date && <span>🔄 Next service: <strong style={{ color: '#fbbf24' }}>{m.next_service_date}</strong></span>}
-                      {m.notes && <span>📝 {m.notes}</span>}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

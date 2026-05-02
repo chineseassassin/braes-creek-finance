@@ -9,10 +9,11 @@ interface LivestockState {
   isLoading: boolean
   
   fetchUnits: () => Promise<void>
-  addUnit: (unit: Omit<LivestockUnit, 'id'>) => Promise<LivestockUnit | null>
+  addUnit: (unit: Omit<LivestockUnit, 'id' | 'workflow_status' | 'created_by' | 'created_at'>) => Promise<LivestockUnit | null>
   updateUnit: (id: string, updates: Partial<LivestockUnit>) => Promise<void>
-  deleteUnit: (id: string) => Promise<void>
+  updateStatus: (id: string, status: 'approved' | 'rejected') => Promise<void>
   approveUnit: (id: string) => Promise<void>
+  deleteUnit: (id: string) => Promise<void>
 }
 
 export const useLivestockStore = create<LivestockState>((set, get) => ({
@@ -26,8 +27,7 @@ export const useLivestockStore = create<LivestockState>((set, get) => ({
   },
 
   addUnit: async (unit) => {
-    const { currentUser, emitSystemEvent } = useAppStore.getState()
-    const { addApprovalRequest } = useWorkflowStore.getState()
+    const { currentUser } = useAppStore.getState()
     
     const isAdmin = currentUser.role === 'admin'
     const status = isAdmin ? 'approved' : 'pending'
@@ -42,64 +42,56 @@ export const useLivestockStore = create<LivestockState>((set, get) => ({
 
     set((state) => ({ units: [newUnit, ...state.units] }))
 
-    if (isAdmin) {
-      emitSystemEvent({
-        type: 'creation',
-        severity: 'success',
-        module: 'Livestock',
-        message: `New ${unit.animal_type} batch recorded: ${unit.batch_name || 'Unnamed'}`,
-        metadata: { id: newUnit.id, type: unit.animal_type, quantity: unit.quantity }
-      })
-      
-      // Trigger AI/Risk Assessment if Admin
-      emitSystemEvent({
-        type: 'recommendation',
-        severity: 'info',
-        module: 'Intelligence',
-        message: `Analyzing health and market risk for new ${unit.animal_type} livestock entry.`
-      })
-    } else {
-      addApprovalRequest({
-        entity_type: 'livestock',
-        entity_id: newUnit.id,
-        requester_id: currentUser.id,
-        priority: 'medium',
-        status: 'pending'
-      })
-      
-      emitSystemEvent({
-        type: 'creation',
-        severity: 'info',
-        module: 'Livestock',
-        message: `Livestock entry submitted for approval by ${currentUser.full_name}`,
-        metadata: { id: newUnit.id }
-      })
-    }
+    // AUDIT
+    useAppStore.getState().logEmployeeSubmission(
+      'Livestock',
+      'add',
+      'livestock',
+      newUnit.id,
+      { type: unit.animal_type, quantity: unit.quantity, batch: unit.batch_name }
+    );
 
     return newUnit
   },
 
   updateUnit: async (id, updates) => {
+    const old = get().units.find(u => u.id === id);
     set((state) => ({
       units: state.units.map(u => u.id === id ? { ...u, ...updates } : u)
+    }))
+
+    if (old) {
+       useAppStore.getState().logEmployeeSubmission(
+         'Livestock',
+         'update',
+         'livestock',
+         id,
+         { updates }
+       );
+    }
+  },
+
+  updateStatus: async (id, status) => {
+    set((state) => ({
+      units: state.units.map(u => u.id === id ? { ...u, workflow_status: status } : u)
     }))
   },
 
   approveUnit: async (id) => {
-     set((state) => ({
-       units: state.units.map(u => u.id === id ? { ...u, workflow_status: 'approved' } : u)
-     }))
-     
-     const unit = get().units.find(u => u.id === id)
-     if (unit) {
-        useAppStore.getState().emitSystemEvent({
-           type: 'approval',
-           severity: 'success',
-           module: 'Livestock',
-           message: `Livestock entry approved: ${unit.batch_name || unit.animal_type}`,
-           metadata: { id, quantity: unit.quantity }
-        })
-     }
+    const unit = get().units.find(u => u.id === id);
+    if (unit) {
+      set((state) => ({
+        units: state.units.map(u => u.id === id ? { ...u, workflow_status: 'approved' } : u)
+      }));
+      
+      useAppStore.getState().logEmployeeSubmission(
+        'Livestock',
+        'update',
+        'livestock',
+        id,
+        { action: 'approval', quantity: unit.quantity }
+      );
+    }
   },
 
   deleteUnit: async (id) => {

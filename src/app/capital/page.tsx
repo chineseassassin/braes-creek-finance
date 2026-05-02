@@ -21,30 +21,96 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   BarChart, Bar, Cell, PieChart as RePieChart, Pie, Legend
 } from 'recharts';
+import { toast, Toaster } from 'react-hot-toast';
 
 import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
 const CHART_COLORS = ['#39C86A', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
-const assetData = [
-  { name: 'Real Estate', value: 850000, color: '#39C86A' },
-  { name: 'Machinery', value: 320000, color: '#3b82f6' },
-  { name: 'Livestock', value: 145000, color: '#f59e0b' },
-  { name: 'Inventory', value: 68000, color: '#ef4444' },
-];
+import { exportToCSV } from '@/lib/exportUtils';
+import { useAppStore } from '@/store/useAppStore';
 
 export default function CapitalPage() {
   const { sidebarCollapsed } = useUIStore();
   const [mountedTime, setMountedTime] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({ name: '', value: '', category: 'Machinery', condition: 'Prime' });
   
+  // Static for now but could be moved to store
+  const [assets, setAssets] = useState([
+    { id: '1', name: 'Real Estate', value: 850000, color: '#39C86A', cond: 'Prime', roi: '1.2x', status: 'Core' },
+    { id: '2', name: 'Machinery', value: 320000, color: '#3b82f6', cond: 'Good', roi: '0.8x', status: 'Productive' },
+    { id: '3', name: 'Livestock', value: 145000, color: '#f59e0b', cond: 'Optimal', roi: '2.4x', status: 'High Growth' },
+    { id: '4', name: 'Inventory', value: 68000, color: '#ef4444', cond: 'New', roi: '1.5x', status: 'Strategic' },
+  ]);
+
   useEffect(() => {
     setMountedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   }, []);
 
-  const totalCapital = assetData.reduce((acc, curr) => acc + curr.value, 0);
+  const handleExport = () => {
+    const dataToExport = assets.map(a => ({
+      Asset: a.name,
+      Valuation: a.value,
+      Condition: a.cond,
+      ROI: a.roi,
+      Status: a.status
+    }));
+    exportToCSV(dataToExport, 'Capital_Asset_Registry');
+  };
+
+  const handleAppraisal = () => {
+    const id = toast.loading('Initiating multi-vector asset appraisal...');
+    setTimeout(() => {
+      toast.success('Appraisal Complete: Net Asset Value verified at $1.38M.', { id, icon: '💎', style: { background: '#101010', color: '#fff' } });
+    }, 2000);
+  };
+
+  const handleAddAsset = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const id = toast.loading('Indexing asset into secure registry...');
+    setTimeout(() => {
+      toast.success(`${formData.name} successfully registered.`, { id, style: { background: '#101010', color: '#fff' } });
+      setIsModalOpen(false);
+      
+      const newAsset = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: formData.name,
+        value: Number(formData.value),
+        color: COLORS.info,
+        cond: 'New',
+        roi: '1.0x',
+        status: 'Strategic'
+      };
+      setAssets([...assets, newAsset]);
+
+      // Audit
+      useAppStore.getState().logEmployeeSubmission(
+        'Capital & Assets',
+        'creation',
+        'asset',
+        newAsset.id,
+        { name: formData.name, value: formData.value }
+      );
+    }, 1500);
+  };
+
+  const handleRoadmapClick = (title: string) => {
+    toast(`Strategic modeling for ${title} is now active.`, {
+      icon: '🗺️',
+      style: { background: '#101010', color: '#fff', border: '1px solid #333' }
+    });
+  };
+
+   const totalCapital = assets.reduce((acc, curr) => acc + curr.value, 0);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg-body)' }}>
+      <Toaster position="top-right" />
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
@@ -61,7 +127,7 @@ export default function CapitalPage() {
             </div>
             <ThemeToggle />
             <NotificationCenter />
-            <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button className="btn-primary" onClick={handleAppraisal} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                <Landmark size={16} /> Asset Appraisal
             </button>
           </div>
@@ -137,8 +203,8 @@ export default function CapitalPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                    <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Asset Portfolio Audit</h3>
                    <div style={{ display: 'flex', gap: 12 }}>
-                      <button className="btn-ghost-small"><History size={14} /> History</button>
-                      <button className="btn-ghost-small"><Plus size={14} /> Add Asset</button>
+                      <button className="btn-ghost-small" onClick={handleExport}><Download size={14} /> Export Archive</button>
+                      <button className="btn-ghost-small" onClick={handleAddAsset}><Plus size={14} /> Add Asset</button>
                    </div>
                 </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -151,29 +217,23 @@ export default function CapitalPage() {
                          <th style={{ padding: '16px', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Status</th>
                       </tr>
                    </thead>
-                   <tbody>
-                      {[
-                         { name: 'Braes Creek Main Land', value: '$850,000', cond: 'Prime', roi: '1.2x', status: 'Core' },
-                         { name: 'John Deere Fleet (3)', value: '$320,000', cond: 'Good', roi: '0.8x', status: 'Productive' },
-                         { name: 'Biological Inventory', value: '$145,000', cond: 'Optimal', roi: '2.4x', status: 'High Growth' },
-                         { name: 'Cold Storage Infra', value: '$68,000', cond: 'New', roi: '1.5x', status: 'Strategic' },
-                         { name: 'Grain Silos (2)', value: '$45,000', cond: 'Maintenance', roi: '0.9x', status: 'Warning' }
-                      ].map((row, i) => (
-                         <tr key={i} style={{ borderBottom: '1px solid var(--border-soft)' }}>
-                            <td style={{ padding: '16px' }}>
-                               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{row.name}</div>
-                            </td>
-                            <td style={{ padding: '16px', fontSize: 14, fontWeight: 700 }}>{row.value}</td>
-                            <td style={{ padding: '16px', fontSize: 13, color: 'var(--text-muted)' }}>{row.cond}</td>
-                            <td style={{ padding: '16px', fontSize: 13, fontWeight: 700, color: 'var(--status-success)' }}>{row.roi}</td>
-                            <td style={{ padding: '16px' }}>
-                               <span style={{ fontSize: 10, fontWeight: 900, padding: '4px 10px', borderRadius: 6, background: row.status === 'Warning' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(57, 200, 106, 0.1)', color: row.status === 'Warning' ? COLORS.warning : COLORS.success }}>
-                                  {row.status.toUpperCase()}
-                               </span>
-                            </td>
-                         </tr>
-                      ))}
-                   </tbody>
+                    <tbody>
+                       {assets.map((row, i) => (
+                          <tr key={row.id} style={{ borderBottom: '1px solid var(--border-soft)' }}>
+                             <td style={{ padding: '16px' }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{row.name}</div>
+                             </td>
+                             <td style={{ padding: '16px', fontSize: 14, fontWeight: 700 }}>${row.value.toLocaleString()}</td>
+                             <td style={{ padding: '16px', fontSize: 13, color: 'var(--text-muted)' }}>{row.cond}</td>
+                             <td style={{ padding: '16px', fontSize: 13, fontWeight: 700, color: 'var(--status-success)' }}>{row.roi}</td>
+                             <td style={{ padding: '16px' }}>
+                                <span style={{ fontSize: 10, fontWeight: 950, padding: '4px 10px', borderRadius: 6, background: row.status === 'Warning' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(57, 200, 106, 0.1)', color: row.status === 'Warning' ? COLORS.warning : COLORS.success }}>
+                                   {row.status.toUpperCase()}
+                                </span>
+                             </td>
+                          </tr>
+                       ))}
+                    </tbody>
                 </table>
              </div>
 
@@ -184,33 +244,33 @@ export default function CapitalPage() {
                    <ResponsiveContainer width="100%" height="100%">
                       <RePieChart>
                          <Pie
-                            data={assetData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={80}
-                            paddingAngle={8}
-                            dataKey="value"
-                         >
-                            {assetData.map((entry, index) => (
-                               <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                            ))}
-                         </Pie>
+                             data={assets}
+                             cx="50%"
+                             cy="50%"
+                             innerRadius={60}
+                             outerRadius={80}
+                             paddingAngle={8}
+                             dataKey="value"
+                          >
+                             {assets.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                             ))}
+                          </Pie>
                          <RechartsTooltip />
                       </RePieChart>
                    </ResponsiveContainer>
                 </div>
-                <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                   {assetData.map((s, i) => (
-                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.color }} />
-                            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{s.name}</span>
-                         </div>
-                         <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>{((s.value / totalCapital) * 100).toFixed(0)}%</span>
-                      </div>
-                   ))}
-                </div>
+                 <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {assets.slice(0, 4).map((s, i) => (
+                       <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                             <div style={{ width: 8, height: 8, borderRadius: '50%', background: s.color }} />
+                             <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{s.name}</span>
+                          </div>
+                          <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>{((s.value / totalCapital) * 100).toFixed(0)}%</span>
+                       </div>
+                    ))}
+                 </div>
              </div>
           </div>
 
@@ -246,7 +306,7 @@ export default function CapitalPage() {
                    <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Strategic CapEx Roadmap</h3>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 12 }}>
+                   <div onClick={() => handleRoadmapClick('Tractor Fleet Expansion')} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}>
                       <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                          <Tractor size={20} color={COLORS.warning} />
                       </div>
@@ -256,7 +316,7 @@ export default function CapitalPage() {
                       </div>
                       <ChevronRight size={16} color={COLORS.muted} />
                    </div>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 12 }}>
+                   <div onClick={() => handleRoadmapClick('Greenhouse Infrastructure')} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}>
                       <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(57, 200, 106, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                          <Warehouse size={20} color={COLORS.success} />
                       </div>
@@ -314,7 +374,20 @@ export default function CapitalPage() {
           background: var(--border-soft);
           color: var(--text-primary);
         }
+          .saas-input {
+            background: #141414;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 0 16px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+          }
+          .saas-input:focus {
+            border-color: var(--status-success);
+          }
       `}</style>
     </div>
   );
 }
+

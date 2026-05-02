@@ -10,12 +10,14 @@ import {
   Target, Activity, Clock, CheckCircle2, ChevronRight, ShieldAlert,
   BarChart3, Sparkles, MessageSquare, History, Play
 } from "lucide-react";
+import { toast, Toaster } from 'react-hot-toast';
 
 export default function DecisionEnginePage() {
   const { sidebarCollapsed } = useUIStore();
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', maxWidth: '100vw', overflow: 'hidden' }}>
+      <Toaster position="top-right" />
       <Sidebar />
 
       <div style={{ 
@@ -138,10 +140,10 @@ export default function DecisionEnginePage() {
                           </div>
 
                           <div style={{ display: 'flex', gap: 12 }}>
-                             <button className="btn-primary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'var(--status-critical)', color: 'var(--text-inverse)', border: 'none', borderRadius: 10, cursor: 'pointer' }}>Open Module</button>
-                             <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Create Task</button>
-                             <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Send Alert</button>
-                             <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Mark Reviewed</button>
+                             <button onClick={() => window.location.href = '/livestock'} className="btn-primary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'var(--status-critical)', color: 'var(--text-inverse)', border: 'none', borderRadius: 10, cursor: 'pointer' }}>Open Module</button>
+                             <button onClick={() => toast.success('Task created: Review feed supplier')} className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Create Task</button>
+                             <button onClick={() => toast.success('Alert broadcasted to Livestock team')} className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Send Alert</button>
+                             <button onClick={() => toast.success('Decision marked as reviewed')} className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Mark Reviewed</button>
                           </div>
                        </div>
                     </div>
@@ -174,10 +176,10 @@ export default function DecisionEnginePage() {
                           </div>
 
                           <div style={{ display: 'flex', gap: 12 }}>
-                             <button className="btn-primary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'var(--status-success)', color: 'var(--text-inverse)', border: 'none', borderRadius: 10, cursor: 'pointer' }}>Open Module</button>
-                             <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Create Task</button>
-                             <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Send Alert</button>
-                             <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Mark Reviewed</button>
+                             <button onClick={() => window.location.href = '/expenses'} className="btn-primary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'var(--status-success)', color: 'var(--text-inverse)', border: 'none', borderRadius: 10, cursor: 'pointer' }}>Open Module</button>
+                             <button onClick={() => toast.success('Task created: Draft renegotiation letter')} className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Create Task</button>
+                             <button onClick={() => toast.success('Alert broadcasted to Finance team')} className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Send Alert</button>
+                             <button onClick={() => toast.success('Decision marked as reviewed')} className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Mark Reviewed</button>
                           </div>
                        </div>
                     </div>
@@ -210,10 +212,10 @@ export default function DecisionEnginePage() {
                           </div>
 
                           <div style={{ display: 'flex', gap: 12 }}>
-                             <button className="btn-primary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'var(--status-warning)', color: 'var(--text-inverse)', border: 'none', borderRadius: 10, cursor: 'pointer' }}>Open Module</button>
-                             <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Create Task</button>
-                             <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Send Alert</button>
-                             <button className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Mark Reviewed</button>
+                             <button onClick={() => window.location.href = '/infrastructure'} className="btn-primary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'var(--status-warning)', color: 'var(--text-inverse)', border: 'none', borderRadius: 10, cursor: 'pointer' }}>Open Module</button>
+                             <button onClick={() => toast.success('Task created: Delay tractor maintenance')} className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Create Task</button>
+                             <button onClick={() => toast.success('Alert broadcasted to Operations team')} className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Send Alert</button>
+                             <button onClick={() => toast.success('Decision marked as reviewed')} className="btn-secondary" style={{ padding: '12px 24px', fontSize: 14, fontWeight: 800, background: 'rgba(255,255,255,0.05)' }}>Mark Reviewed</button>
                           </div>
                        </div>
                     </div>

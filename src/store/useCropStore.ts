@@ -10,6 +10,7 @@ interface CropState {
   fetchCrops: () => Promise<void>
   addCrop: (crop: Omit<CropType, 'id'>) => Promise<CropType | null>
   updateCrop: (id: string, updates: Partial<CropType>) => Promise<void>
+  updateStatus: (id: string, status: 'approved' | 'rejected') => Promise<void>
   deleteCrop: (id: string) => Promise<void>
   approveCrop: (id: string) => Promise<void>
 }
@@ -50,39 +51,16 @@ export const useCropStore = create<CropState>((set, get) => ({
     } as CropType
 
     set((state) => ({ crops: [newCrop, ...state.crops] }))
-
-    if (isAdmin) {
-      emitSystemEvent({
-        type: 'creation',
-        severity: 'success',
-        module: 'Crops',
-        message: `New crop cycle started: ${crop.name} (${crop.variety || 'Standard'})`,
-        metadata: { id: newCrop.id, name: crop.name, acres: crop.area_acres }
-      })
-      
-      emitSystemEvent({
-        type: 'recommendation',
-        severity: 'info',
-        module: 'Intelligence',
-        message: `Analyzing yield projection and market conditions for new ${crop.name} planting.`
-      })
-    } else {
-      addApprovalRequest({
-        entity_type: 'crop',
-        entity_id: newCrop.id,
-        requester_id: currentUser.id,
-        priority: 'medium',
-        status: 'pending'
-      })
-      
-      emitSystemEvent({
-        type: 'creation',
-        severity: 'info',
-        module: 'Crops',
-        message: `New crop record submitted for approval by ${currentUser.full_name}`,
-        metadata: { id: newCrop.id }
-      })
-    }
+    
+    // ── AUDIT & APPROVAL REACTIONS ──────────────────────────────
+    useAppStore.getState().logEmployeeSubmission(
+      'Crops',
+      'add',
+      'crop',
+      newCrop.id,
+      { name: crop.name, variety: crop.variety, area: crop.area_acres }
+    );
+    // ────────────────────────────────────────────────────────────────
 
     return newCrop
   },
@@ -105,8 +83,25 @@ export const useCropStore = create<CropState>((set, get) => ({
   },
 
   updateCrop: async (id, updates) => {
+    const old = get().crops.find(c => c.id === id);
     set((state) => ({
       crops: state.crops.map(c => c.id === id ? { ...c, ...updates } : c)
+    }))
+
+    if (old) {
+       useAppStore.getState().logEmployeeSubmission(
+         'Crops',
+         'update',
+         'crop',
+         id,
+         { updates }
+       );
+    }
+  },
+
+  updateStatus: async (id, status) => {
+    set((state) => ({
+      crops: state.crops.map(c => c.id === id ? { ...c, workflow_status: status } : c)
     }))
   },
 

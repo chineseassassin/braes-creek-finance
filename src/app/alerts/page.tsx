@@ -22,6 +22,27 @@ export default function AlertHub() {
   const [mountedTime, setMountedTime] = useState("");
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isAuditSettingsOpen, setIsAuditSettingsOpen] = useState(false);
+  const [isMonitoringEnabled, setIsMonitoringEnabled] = useState(true);
+
+  const [signalForm, setSignalForm] = useState({
+    title: '', message: '', category: 'system' as AlertCategory, severity: 'warning' as AlertSeverity, recommended_action: '', priority_score: 50
+  });
+
+  const handleCreateSignal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await addAlert({
+      title: signalForm.title,
+      message: signalForm.message,
+      category: signalForm.category,
+      severity: signalForm.severity,
+      recommended_action: signalForm.recommended_action,
+      priority_score: signalForm.priority_score,
+      why_it_matters: 'Manually created signal by user.'
+    });
+    setIsCreateModalOpen(false);
+    setSignalForm({ title: '', message: '', category: 'system', severity: 'warning', recommended_action: '', priority_score: 50 });
+  };
 
   useEffect(() => {
     fetchAlerts();
@@ -91,7 +112,7 @@ export default function AlertHub() {
                   <button className="btn-primary" onClick={() => setIsCreateModalOpen(true)}>
                     <Plus size={16} /> Create Signal
                   </button>
-                  <button className="btn-secondary">
+                  <button className="btn-secondary" onClick={() => setIsAuditSettingsOpen(true)}>
                     <Settings size={16} /> Audit Settings
                   </button>
                 </div>
@@ -226,6 +247,115 @@ export default function AlertHub() {
            </div>
         </main>
       </div>
+
+      {/* CREATE SIGNAL MODAL */}
+      {isCreateModalOpen && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setIsCreateModalOpen(false)}>
+          <div className="modal" style={{ maxWidth: 500 }}>
+            <div className="modal-header">
+              <div className="modal-title">Create Manual Risk Signal</div>
+              <button className="btn-ghost" style={{ padding: 4 }} onClick={() => setIsCreateModalOpen(false)}><X size={20} /></button>
+            </div>
+            <form onSubmit={handleCreateSignal}>
+              <div className="modal-body">
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label className="form-label">Signal Title *</label>
+                  <input className="saas-input" value={signalForm.title} onChange={e => setSignalForm(p => ({ ...p, title: e.target.value }))} required />
+                </div>
+                <div className="form-group" style={{ marginBottom: 16 }}>
+                  <label className="form-label">Description *</label>
+                  <textarea className="saas-input" rows={3} value={signalForm.message} onChange={e => setSignalForm(p => ({ ...p, message: e.target.value }))} required />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                  <div className="form-group">
+                    <label className="form-label">Category</label>
+                    <select className="saas-input" value={signalForm.category} onChange={e => setSignalForm(p => ({ ...p, category: e.target.value as AlertCategory }))}>
+                      <option value="system">System</option>
+                      <option value="loans">Loans</option>
+                      <option value="security">Security</option>
+                      <option value="spending">Spending</option>
+                      <option value="livestock">Livestock</option>
+                      <option value="payroll">Payroll</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Severity</label>
+                    <select className="saas-input" value={signalForm.severity} onChange={e => setSignalForm(p => ({ ...p, severity: e.target.value as AlertSeverity }))}>
+                      <option value="info">Info</option>
+                      <option value="warning">Warning</option>
+                      <option value="critical">Critical</option>
+                      <option value="emergency">Emergency</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Recommended Action</label>
+                  <input className="saas-input" value={signalForm.recommended_action} onChange={e => setSignalForm(p => ({ ...p, recommended_action: e.target.value }))} />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn-secondary" onClick={() => setIsCreateModalOpen(false)}>Cancel</button>
+                <button type="submit" className="btn-primary">Broadcast Signal</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* AUDIT SETTINGS MODAL */}
+      {isAuditSettingsOpen && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setIsAuditSettingsOpen(false)}>
+          <div className="modal" style={{ maxWidth: 400 }}>
+            <div className="modal-header">
+              <div className="modal-title">Audit Engine Settings</div>
+              <button className="btn-ghost" style={{ padding: 4 }} onClick={() => setIsAuditSettingsOpen(false)}><X size={20} /></button>
+            </div>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+               <div style={{ padding: 16, background: 'var(--bg-card-elevated)', borderRadius: 12, border: '1px solid var(--border-soft)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                     <div style={{ fontWeight: 800, color: 'var(--text-primary)' }}>AI Neural Monitoring</div>
+                     <div 
+                        onClick={() => setIsMonitoringEnabled(!isMonitoringEnabled)}
+                        style={{ 
+                           width: 40, height: 24, 
+                           background: isMonitoringEnabled ? 'var(--status-success)' : 'var(--bg-card)', 
+                           borderRadius: 12, position: 'relative', cursor: 'pointer',
+                           border: isMonitoringEnabled ? 'none' : '1px solid var(--border-soft)',
+                           transition: 'all 0.2s ease'
+                        }}>
+                        <div style={{ 
+                           position: 'absolute', 
+                           right: isMonitoringEnabled ? 2 : 'auto', 
+                           left: isMonitoringEnabled ? 'auto' : 2,
+                           top: isMonitoringEnabled ? 2 : 1, 
+                           width: isMonitoringEnabled ? 20 : 18, 
+                           height: isMonitoringEnabled ? 20 : 18, 
+                           background: isMonitoringEnabled ? '#fff' : 'var(--text-muted)', 
+                           borderRadius: '50%',
+                           transition: 'all 0.2s ease'
+                        }} />
+                     </div>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Continuous real-time scanning for financial anomalies.</div>
+               </div>
+               <div style={{ padding: 16, background: 'var(--bg-card-elevated)', borderRadius: 12, border: '1px solid var(--border-soft)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                     <div style={{ fontWeight: 800, color: 'var(--text-primary)' }}>Escalation Protocol</div>
+                     <select className="saas-input" style={{ width: 120, padding: '4px 8px', height: 'auto', fontSize: 12 }}>
+                        <option>Aggressive</option>
+                        <option>Standard</option>
+                        <option>Lenient</option>
+                     </select>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Defines the threshold for escalating unresolved signals.</div>
+               </div>
+            </div>
+            <div className="modal-footer">
+               <button className="btn-primary" style={{ width: '100%' }} onClick={() => setIsAuditSettingsOpen(false)}>Save Settings</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .animate-spin { animation: spin 1s linear infinite; }

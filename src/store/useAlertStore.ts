@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { supabase } from '@/lib/supabase'
 import { useNotificationStore } from './useNotificationStore'
 import { useActivityStore } from './useActivityStore'
@@ -59,7 +60,9 @@ interface AlertState {
   evaluateEscalations: () => void
 }
 
-export const useAlertStore = create<AlertState>((set, get) => ({
+export const useAlertStore = create<AlertState>()(
+  persist(
+    (set, get) => ({
   alerts: [],
   isLoading: false,
   error: null,
@@ -183,7 +186,7 @@ export const useAlertStore = create<AlertState>((set, get) => ({
     
     // 🧠 PHASE 4: Emit central event
     (require('./useAppStore')).useAppStore.getState().emitSystemEvent({
-      type: 'ALERT_CREATED',
+      type: 'alert',
       severity: newAlert.severity as any,
       module: newAlert.category.charAt(0).toUpperCase() + newAlert.category.slice(1),
       message: `${newAlert.title}: ${newAlert.message}`,
@@ -645,8 +648,8 @@ export const useAlertStore = create<AlertState>((set, get) => ({
           category: 'system',
           severity: 'critical',
           priority_score: 95,
-          title: `Predicted Stockout: ${item_name}`,
-          message: `At current usage rates, ${item_name} will be completely depleted in less than 72 hours.`,
+          title: `Predicted Stockout: ${item.itemName}`,
+          message: `At current usage rates, ${item.itemName} will be completely depleted in less than 72 hours.`,
           why_it_matters: 'Immediate operational freeze is imminent. Replacement lead times exceed current stock duration.',
           recommended_action: 'Emergency procurement required within 12 hours.',
           related_table: 'inventory',
@@ -658,8 +661,8 @@ export const useAlertStore = create<AlertState>((set, get) => ({
           category: 'system',
           severity: 'warning',
           priority_score: 75,
-          title: `Stock Depletion Warning: ${item_name}`,
-          message: `${item_name} is projected to run out in ${daysRemaining.toFixed(1)} days.`,
+          title: `Stock Depletion Warning: ${item.itemName}`,
+          message: `${item.itemName} is projected to run out in ${daysRemaining.toFixed(1)} days.`,
           why_it_matters: 'Normal reorder cycles may be too slow to prevent a stockout event.',
           recommended_action: 'Verify replenishment shipment status or initiate priority order.',
           related_table: 'inventory',
@@ -763,4 +766,10 @@ export const useAlertStore = create<AlertState>((set, get) => ({
       })
     }))
   }
-}))
+    }),
+    {
+      name: 'braes-creek-alert-storage',
+      partialize: (state) => ({ alerts: state.alerts }),
+    }
+  )
+)

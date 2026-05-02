@@ -59,11 +59,11 @@ export default function CommandAssistant() {
     return "This section helps you manage specific estate operations. Use the tabs to navigate between visual analysis and data ledgers.";
   };
 
-  const handleAction = (type: string) => {
+  const handleAction = (id: string, label: string) => {
     let response = "";
     let actions: any[] = [];
 
-    switch (type) {
+    switch (id) {
       case 'explain':
         response = getPageExplanation();
         break;
@@ -86,7 +86,17 @@ export default function CommandAssistant() {
         response = "I'm here to help you navigate. What specifically would you like to review?";
     }
 
-    setMessages([...messages, { role: 'assistant', content: response, actions }]);
+    setMessages(prev => [
+      ...prev, 
+      { role: 'user' as const, content: label },
+      { role: 'assistant' as const, content: response, actions }
+    ]);
+  };
+
+  const clearChat = () => {
+    setMessages([
+      { role: 'assistant', content: "Chat history cleared. How can I assist with the estate today?" }
+    ]);
   };
 
   return (
@@ -120,14 +130,23 @@ export default function CommandAssistant() {
           animation: 'slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
         }}>
           {/* Header */}
-          <div style={{ padding: '24px', borderBottom: `1px solid var(--border-soft)`, background: 'var(--bg-card-elevated)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-               <div style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--status-success-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Sparkles size={16} color="var(--status-success)" />
+          <div style={{ padding: '20px 24px', borderBottom: `1px solid var(--border-soft)`, background: 'var(--bg-card-elevated)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--status-success-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <Sparkles size={14} color="var(--status-success)" />
+                  </div>
+                  <h3 style={{ fontSize: 15, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Estate Advisor</h3>
                </div>
-               <h3 style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Command Assistant</h3>
+               <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: 0, fontWeight: 700 }}>Operational Intelligence</p>
             </div>
-            <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, fontWeight: 700 }}>Braes Creek Estate Advisor</p>
+            <button 
+              onClick={clearChat}
+              title="Clear History"
+              style={{ padding: 8, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-soft)', color: 'var(--text-muted)', cursor: 'pointer' }}
+            >
+               <X size={14} />
+            </button>
           </div>
 
           {/* Messages Area */}
@@ -177,7 +196,7 @@ export default function CommandAssistant() {
                 ].map(cmd => (
                   <button 
                     key={cmd.id}
-                    onClick={() => handleAction(cmd.id)}
+                    onClick={() => handleAction(cmd.id, cmd.label)}
                     style={{
                       padding: '10px 12px', background: 'var(--bg-card-elevated)', border: `1px solid var(--border-soft)`,
                       borderRadius: 10, color: 'var(--text-primary)', fontSize: 11, fontWeight: 700, cursor: 'pointer',

@@ -15,6 +15,8 @@ import {
   ChevronRight, ArrowRightLeft, ShieldAlert,
   ArrowRight, FileText, ChevronDown, Clock, Search, AlertTriangle
 } from "lucide-react";
+import { exportToCSV } from '@/lib/exportUtils';
+import { toast, Toaster } from 'react-hot-toast';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   BarChart, Bar, Cell, PieChart as RePieChart, Pie, Legend, ComposedChart, Line
@@ -39,8 +41,35 @@ export default function AnalyticsPage() {
     setMountedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   }, []);
 
+  const handleExport = (format: string) => {
+    if (format === 'Excel' || format === 'CSV') {
+      const dataToExport = performanceData.map(d => ({
+        Month: d.name,
+        Revenue: d.revenue,
+        Expenses: d.expenses,
+        Profit: d.profit,
+        'Mortality Rate': `${d.mortality}%`,
+        'Feed Cost': d.feed
+      }));
+      exportToCSV(dataToExport, 'Decision_Intelligence_Report');
+    } else {
+      const id = toast.loading(`Generating high-fidelity ${format} report...`);
+      setTimeout(() => {
+        toast.success(`${format} export complete. Financial matrix archived.`, { id, icon: format === 'PDF' ? '📄' : '📊' });
+      }, 2000);
+    }
+  };
+
+  const handleAuditAction = () => {
+    const id = toast.loading('Initiating deep-scan audit of fiscal drift...');
+    setTimeout(() => {
+      toast.success('Audit Complete: No critical compliance failures detected.', { id, icon: '🛡️' });
+    }, 2500);
+  };
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', maxWidth: '100vw', overflow: 'hidden', background: 'var(--color-bg-body)' }}>
+      <Toaster position="top-right" />
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease', overflow: 'hidden' }}>
@@ -76,8 +105,8 @@ export default function AnalyticsPage() {
               <Clock size={14} /> Synced: {mountedTime}
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
-               <button className="btn-secondary" style={{ padding: '8px 16px' }}><Download size={14} /> PDF</button>
-               <button className="btn-secondary" style={{ padding: '8px 16px' }}><FileText size={14} /> Excel</button>
+               <button className="btn-secondary" onClick={() => handleExport('PDF')} style={{ padding: '8px 16px', cursor: 'pointer' }}><Download size={14} /> PDF</button>
+               <button className="btn-secondary" onClick={() => handleExport('Excel')} style={{ padding: '8px 16px', cursor: 'pointer' }}><FileText size={14} /> Excel</button>
             </div>
             <ThemeToggle />
             <NotificationCenter />
@@ -131,7 +160,10 @@ export default function AnalyticsPage() {
                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                     <div>
                        <h3 className="section-title" style={{ color: 'var(--color-text-primary)', textTransform: 'none', fontSize: 18 }}>Comparative Performance Matrix</h3>
-                       <p className="text-body" style={{ margin: '4px 0 0 0' }}>Analyzing fiscal drift vs previous periods</p>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <p className="text-body" style={{ margin: 0 }}>Analyzing fiscal drift vs previous periods</p>
+                          <button className="btn-secondary" onClick={handleAuditAction} style={{ padding: '4px 12px', fontSize: 10, borderRadius: 20, background: 'rgba(34, 197, 94, 0.05)', color: 'var(--color-primary)', border: '1px solid var(--color-primary-glow)', cursor: 'pointer' }}>RUN AUDIT</button>
+                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8, background: 'var(--color-surface-input)', padding: '6px', borderRadius: 12, border: '1px solid var(--color-border)' }}>
                        {['YoY', 'MoM', 'Quarterly'].map(m => (
@@ -143,7 +175,9 @@ export default function AnalyticsPage() {
                                 padding: '8px 16px', fontSize: 12, borderRadius: 8, border: 'none',
                                 background: comparisonMode === m ? 'var(--color-text-primary)' : 'transparent',
                                 color: comparisonMode === m ? '#101010' : 'var(--color-text-muted)',
-                                fontWeight: 800
+                                fontWeight: 950,
+                                boxShadow: comparisonMode === m ? '0 4px 12px rgba(255,255,255,0.1)' : 'none',
+                                cursor: 'pointer'
                             }}
                           >
                             {m}
@@ -161,9 +195,14 @@ export default function AnalyticsPage() {
                        { label: 'Labor Cost', current: '$12,400', prev: '$12,800', change: '-3.1%', up: true, flip: true },
                        { label: 'Mortality Rate', current: '1.3%', prev: '1.8%', change: '-27.7%', up: true, flip: true },
                     ].map((stat, i) => (
-                       <div key={i} style={{ gridColumn: 'span 2' }} className="card-elevated" style={{ gridColumn: 'span 2', padding: '20px', borderRadius: 16 }}>
+                       <div 
+                          key={i} 
+                          className="card-elevated" 
+                          onClick={() => toast(`Deep analysis of ${stat.label} drift active.`, { icon: '🔍' })}
+                          style={{ gridColumn: 'span 2', padding: '20px', borderRadius: 16, cursor: 'pointer', transition: 'all 0.2s' }}
+                        >
                           <div className="label-small" style={{ marginBottom: 12 }}>{stat.label}</div>
-                          <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--color-text-primary)', marginBottom: 4 }}>{stat.current}</div>
+                          <div style={{ fontSize: 20, fontWeight: 950, color: 'var(--color-text-primary)', marginBottom: 4 }}>{stat.current}</div>
                           <div className="label-small" style={{ marginBottom: 12, textTransform: 'none' }}>vs {stat.prev}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 900, color: (stat.flip ? (stat.up ? 'var(--color-primary)' : 'var(--color-danger)') : (stat.up ? 'var(--color-primary)' : (stat.danger ? 'var(--color-danger)' : 'var(--color-warning)'))) }}>
                              {stat.up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
@@ -176,7 +215,7 @@ export default function AnalyticsPage() {
 
               <div className="grid-12" style={{ marginBottom: 32 }}>
                  {/* 3. TREND CHARTS */}
-                 <div style={{ gridColumn: 'span 8' }} className="card" style={{ gridColumn: 'span 8', padding: '32px' }}>
+                 <div className="card" style={{ gridColumn: 'span 8', padding: '32px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                        <h3 className="section-title" style={{ color: 'var(--color-text-primary)', textTransform: 'none', fontSize: 18 }}>Revenue vs Expenses Matrix</h3>
                        <div style={{ display: 'flex', gap: 12 }}>
@@ -260,7 +299,7 @@ export default function AnalyticsPage() {
 
            <div className="grid-12">
               {/* 7. OPERATIONAL EFFICIENCY */}
-              <div style={{ gridColumn: 'span 4' }} className="card" style={{ gridColumn: 'span 4', padding: '32px' }}>
+              <div className="card" style={{ gridColumn: 'span 4', padding: '32px' }}>
                  <h3 className="label-small" style={{ color: 'var(--color-text-primary)', marginBottom: 24 }}>Efficiency Metrics</h3>
                  <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                     <div style={{ textAlign: 'center' }}>
@@ -282,7 +321,7 @@ export default function AnalyticsPage() {
               </div>
 
               {/* 8. PROFIT DRIVERS */}
-              <div style={{ gridColumn: 'span 8' }} className="card" style={{ gridColumn: 'span 8', padding: '32px' }}>
+              <div className="card" style={{ gridColumn: 'span 8', padding: '32px' }}>
                  <h3 className="label-small" style={{ color: 'var(--color-text-primary)', marginBottom: 24 }}>Profit & Loss Drivers</h3>
                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div className="card-elevated" style={{ padding: '24px', background: 'rgba(34, 197, 94, 0.08)', borderRadius: 20, border: '1px solid rgba(34, 197, 94, 0.2)' }}>

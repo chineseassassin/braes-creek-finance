@@ -1,8 +1,10 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { useAlertStore } from './useAlertStore'
 import { useActivityStore } from './useActivityStore'
 import { useWorkflowStore } from './useWorkflowStore'
-import { SystemEvent } from '@/lib/types'
+import { ApprovalRequest, AIRecommendation, SystemEvent, WorkflowStatus, EntityType } from '@/lib/types'
+import { toast } from 'react-hot-toast'
 
 /**
  * ── BRAES CREEK COMMAND CENTER ──────────────────────────────────────────
@@ -39,28 +41,32 @@ interface AppState {
   // Placeholder Wiring for future phases
   requestApproval: (entityType: string, entityId: string, metadata?: any) => void;
   emitSystemEvent: (event: Omit<SystemEvent, 'id' | 'timestamp'>) => void;
+  logEmployeeSubmission: (module: string, action: string, entityType: EntityType, entityId: string, metadata?: any) => void;
+  processApproval: (requestId: string, status: 'approved' | 'rejected', comment?: string) => void;
   evaluateOperationalContext: () => void;
 }
 
-export const useAppStore = create<AppState>((set, get) => ({
-  isInitialized: false,
-  systemStatus: 'nominal',
-  currentUser: {
-    id: 'user-admin-1',
-    name: 'Peter Admin',
-    role: 'admin'
-  },
-  theme: (typeof window !== 'undefined' && localStorage.getItem('braes-creek-theme') as 'dark' | 'light') || 'dark',
+export const useAppStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      isInitialized: false,
+      systemStatus: 'nominal',
+      currentUser: {
+        id: 'user-admin-1',
+        name: 'Peter Admin',
+        role: 'admin'
+      },
+      theme: 'dark',
 
-  switchRole: (role) => {
-    const identities = {
-      'admin': { id: 'user-admin-1', name: 'Peter Admin', role: 'admin' as const },
-      'data-entry': { id: 'user-de-1', name: 'Mary Operator', role: 'data-entry' as const },
-      'viewer': { id: 'user-view-1', name: 'James Observer', role: 'viewer' as const },
-      'restricted': { id: 'user-res-1', name: 'Staff Member', role: 'restricted' as const }
-    };
-    set({ currentUser: identities[role] });
-  },
+      switchRole: (role) => {
+        const identities = {
+          'admin': { id: 'user-admin-1', name: 'Peter Admin', role: 'admin' as const },
+          'data-entry': { id: 'user-de-1', name: 'Mary Operator', role: 'data-entry' as const },
+          'viewer': { id: 'user-view-1', name: 'James Observer', role: 'viewer' as const },
+          'restricted': { id: 'user-res-1', name: 'Staff Member', role: 'restricted' as const }
+        };
+        set({ currentUser: identities[role] });
+      },
 
   setTheme: (theme) => {
     set({ theme });
@@ -91,17 +97,149 @@ export const useAppStore = create<AppState>((set, get) => ({
     console.log(`[Foundation] Syncing ${alerts.length} operational signals...`);
   },
 
-  requestApproval: (entityType, entityId, metadata) => {
-    // Placeholder Wiring: Future Phase 2 will connect this to UI notifications
-    console.log(`[Foundation] Approval Requested: ${entityType} -> ${entityId}`);
+  logEmployeeSubmission: (module, action, entityType, entityId, metadata) => {
+    const { currentUser } = get();
+    const isUpdate = action === 'update';
+    const isAdmin = currentUser.role === 'admin';
     
-    useWorkflowStore.getState().addApprovalRequest({
-      entity_type: entityType as any,
-      entity_id: entityId,
-      requester_id: 'system-agent',
-      priority: 'medium',
-      status: 'pending'
+    // 1. Create Pending Approval Request (if not admin)
+    const { useWorkflowStore } = (require('./useWorkflowStore'));
+    const { useNotificationStore } = (require('./useNotificationStore'));
+    const { useActivityStore } = (require('./useActivityStore'));
+
+    if (!isAdmin) {
+      useWorkflowStore.getState().addApprovalRequest({
+        entity_type: entityType,
+        entity_id: entityId,
+        requester_id: currentUser.id,
+        priority: metadata?.priority || 'medium',
+        status: 'pending'
+      });
+
+      // 2. Create Owner Notification
+      useNotificationStore.getState().addNotification({
+        title: isUpdate ? `Pending Update: ${module}` : `New Submission: ${module}`,
+        message: `${currentUser.name} ${isUpdate ? 'updated a pending' : 'submitted a new'} ${module} record. Action required.`,
+        category: module,
+        priority: metadata?.priority === 'high' ? 'critical' : 'info'
+      });
+
+      // 3. Add Activity Feed event
+      useActivityStore.getState().addLog({
+        title: `${currentUser.name} submitted ${module} ${isUpdate ? 'update' : 'entry'} — Pending approval`,
+        module: module,
+        user: currentUser.name,
+        status: 'Pending',
+        severity: 'info'
+      });
+
+      // 5. Show employee confirmation toast
+      toast.success('Submitted for owner approval.');
+    } else {
+       // Admin action - log as approved/direct
+       useActivityStore.getState().addLog({
+         title: `${currentUser.name} ${isUpdate ? 'updated' : 'added'} ${module} record`,
+         module: module,
+         user: currentUser.name,
+         status: 'Approved',
+         severity: 'success'
+       });
+    }
+
+    // 4. Add Audit History event (Permanent for every action)
+    useWorkflowStore.getState().logEvent({
+      type: isUpdate ? 'update' : 'creation',
+      severity: isAdmin ? 'info' : 'warning',
+      module: module,
+      message: `${currentUser.name} performed ${action} on ${entityType} (${entityId})`,
+      user_id: currentUser.id,
+      metadata: { ...metadata, status: isAdmin ? 'Approved' : 'Pending', device: 'Studio OS Hub' }
     });
+  },
+
+  processApproval: (requestId, status, comment) => {
+    const { useWorkflowStore } = (require('./useWorkflowStore'));
+    const { useActivityStore } = (require('./useActivityStore'));
+    const { useNotificationStore } = (require('./useNotificationStore'));
+    const { currentUser } = get();
+
+    const request = useWorkflowStore.getState().approvals.find((a: any) => a.id === requestId);
+    if (!request) return;
+
+    // Update Workflow Status
+    useWorkflowStore.getState().updateApprovalStatus(requestId, status as any, comment);
+
+    // Orchestrate cross-module updates
+    const moduleStoreMap: any = {
+      'expense': './useDashboardStore',
+      'livestock': './useLivestockStore',
+      'crop': './useCropStore',
+      'inventory': './useInventoryStore',
+      'infrastructure': './useInfrastructureStore',
+      'maintenance': './useInfrastructureStore',
+      'payroll': './useDashboardStore',
+      'loan': './useLoanStore',
+      'labor': './useDashboardStore'
+    };
+
+    const storePath = moduleStoreMap[request.entity_type];
+    if (storePath) {
+      const store = (require(storePath));
+      const storeKey = Object.keys(store).find(k => k.toLowerCase().includes('store'));
+      if (storeKey) {
+        const targetStore = store[storeKey];
+        const state = targetStore.getState();
+        // Standardized polymorphic update
+        if (request.entity_type === 'maintenance' && state.updateMaintenanceStatus) {
+           state.updateMaintenanceStatus(request.entity_id, status);
+        } else if (state.updateStatus) {
+           state.updateStatus(request.entity_id, status);
+        } else if (state.updateTransactionStatus) {
+           state.updateTransactionStatus(request.entity_id, status);
+        } else if (state.approveUnit && status === 'approved') {
+           state.approveUnit(request.entity_id);
+        } else if (state.approveCrop && status === 'approved') {
+           state.approveCrop(request.entity_id);
+        } else if (state.approveItem && status === 'approved') {
+           state.approveItem(request.entity_id);
+        } else if (state.approveAsset && status === 'approved') {
+           state.approveAsset(request.entity_id);
+        }
+      }
+    }
+
+    // Log Activity
+    useActivityStore.getState().addLog({
+      title: `Owner ${status} ${request.entity_type} submission from ${request.requester_id}`,
+      module: 'System Intelligence',
+      user: currentUser.name,
+      status: status.toUpperCase(),
+      severity: status === 'approved' ? 'success' : 'critical'
+    });
+
+    // Permanent Audit Trail
+    useWorkflowStore.getState().logEvent({
+      type: status === 'approved' ? 'approval' : 'rejection',
+      severity: status === 'approved' ? 'info' : 'critical',
+      module: 'Audit History',
+      message: `Owner ${status} ${request.entity_type} record (${request.entity_id})`,
+      user_id: currentUser.id,
+      metadata: { requestId, comment, actioned_by: currentUser.name }
+    });
+
+    // Notify Requester (Self-closing if not real-time, but toast is enough for now)
+    toast[status === 'approved' ? 'success' : 'error'](`Record ${status.toUpperCase()}`);
+
+    // AI Re-evaluation trigger
+    if (status === 'approved') {
+       get().emitSystemEvent({
+          type: 'approval',
+          severity: 'info',
+          module: 'Intelligence Hub',
+          message: `Recalculating P&L and AI signals after ${request.entity_type} approval.`,
+          entity_id: request.entity_id
+       });
+    }
   },
 
   emitSystemEvent: (event) => {
@@ -189,4 +327,9 @@ export const useAppStore = create<AppState>((set, get) => ({
        console.log("[Foundation] High-load context detected. Preparing AI optimization signals...");
     }
   }
-}))
+    }),
+    {
+      name: 'braes-creek-app-storage',
+    }
+  )
+)

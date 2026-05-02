@@ -13,10 +13,11 @@ import {
   TrendingDown, Star, Clock, MoreVertical,
   Mail, Phone, MapPin, User, ChevronRight,
   ShieldAlert, Activity, DollarSign, Zap, X,
-  Globe, Briefcase, Info
+  Globe, Briefcase, Info, Download
 } from "lucide-react";
 import { SAMPLE_SEGMENTS } from '@/lib/sample-data';
 import { toast, Toaster } from 'react-hot-toast';
+import { exportToCSV } from '@/lib/exportUtils';
 
 import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
@@ -28,6 +29,7 @@ export default function VendorIntelligencePage() {
   
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('All');
 
   // Form State
   const [form, setForm] = useState({
@@ -43,12 +45,19 @@ export default function VendorIntelligencePage() {
   });
 
   const filtered = useMemo(() => {
-    return vendors.filter(v => 
-      v.name.toLowerCase().includes(search.toLowerCase()) ||
-      (v.contact_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
-      (v.notes ?? '').toLowerCase().includes(search.toLowerCase())
-    );
-  }, [vendors, search]);
+    return vendors.filter(v => {
+      const matchesSearch = v.name.toLowerCase().includes(search.toLowerCase()) ||
+        (v.contact_name ?? '').toLowerCase().includes(search.toLowerCase()) ||
+        (v.notes ?? '').toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = activeCategory === 'All' || (v as any).category === activeCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [vendors, search, activeCategory]);
+
+  const categories = useMemo(() => {
+    const cats = new Set(vendors.map(v => (v as any).category).filter(Boolean));
+    return ['All', ...Array.from(cats)];
+  }, [vendors]);
 
   const metrics = useMemo(() => {
     const totalSpend = vendors.reduce((s, v) => s + (v as any).total_spend || 0, 0);
@@ -93,9 +102,22 @@ export default function VendorIntelligencePage() {
     }
   };
 
+  const handleExport = () => {
+    const data = filtered.map(v => ({
+      Vendor: v.name,
+      Category: (v as any).category || 'N/A',
+      Contact: v.contact_name || 'N/A',
+      Email: v.email || 'N/A',
+      Phone: v.phone || 'N/A',
+      TotalSpend: (v as any).total_spend || 0,
+      Reliability: (v as any).reliability || '5.0',
+      Risk: (v as any).risk || 'Low'
+    }));
+    exportToCSV(data, 'Vendor_Intelligence_Registry');
+  };
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)' }}>
-      <Toaster position="top-right" />
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
@@ -150,7 +172,26 @@ export default function VendorIntelligencePage() {
                          style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--text-primary)', fontSize: 13, width: '100%' }}
                        />
                     </div>
-                    <button className="btn-filter"><Filter size={14}/> Filters</button>
+                    <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: 8 }} onClick={handleExport}>
+                       <Download size={16} /> Export
+                    </button>
+                    <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }} className="no-scrollbar">
+                        {categories.map(cat => (
+                           <button 
+                             key={cat}
+                             onClick={() => setActiveCategory(cat)}
+                             style={{
+                                padding: '8px 16px', borderRadius: 10, fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap',
+                                background: activeCategory === cat ? 'var(--status-success)' : 'var(--bg-card-elevated)',
+                                color: activeCategory === cat ? 'var(--text-inverse)' : 'var(--text-muted)',
+                                border: `1px solid ${activeCategory === cat ? 'var(--status-success)' : 'var(--border-soft)'}`,
+                                cursor: 'pointer', transition: 'all 0.2s'
+                             }}
+                           >
+                              {cat}
+                           </button>
+                        ))}
+                    </div>
                  </div>
 
                  <div className="grid-12" style={{ gap: 16 }}>
@@ -185,7 +226,12 @@ export default function VendorIntelligencePage() {
 
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 16, borderTop: `1px solid var(--border-soft)` }}>
                              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Trend: <span style={{ color: (v as any).cost_trend === 'up' ? COLORS.danger : COLORS.success }}>{((v as any).cost_trend || 'stable').toUpperCase()}</span></div>
-                             <button className="btn-view">Details <ChevronRight size={12}/></button>
+                             <button 
+                                className="btn-view"
+                                onClick={() => toast.success(`Intelligence report generated for ${v.name}`)}
+                             >
+                                Details <ChevronRight size={12}/>
+                             </button>
                           </div>
                        </div>
                     ))}
@@ -446,4 +492,3 @@ export default function VendorIntelligencePage() {
     </div>
   );
 }
-

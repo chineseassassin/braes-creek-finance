@@ -10,6 +10,7 @@ interface InventoryState {
   fetchItems: () => Promise<void>
   addItem: (item: Omit<InventoryItem, 'id' | 'workflow_status' | 'created_by' | 'created_at'>) => Promise<InventoryItem | null>
   updateStock: (id: string, amount: number, type: 'add' | 'use') => Promise<void>
+  updateStatus: (id: string, status: 'approved' | 'rejected') => Promise<void>
   approveItem: (id: string) => Promise<void>
   deleteItem: (id: string) => Promise<void>
 }
@@ -51,41 +52,15 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
 
     set((state) => ({ items: [newItem, ...state.items] }))
 
-    if (isAdmin) {
-      emitSystemEvent({
-        type: 'creation',
-        severity: 'success',
-        module: 'Inventory',
-        message: `New inventory item: ${item.itemName} (${item.category})`,
-        metadata: { id: newItem.id, name: item.itemName, quantity: item.quantity }
-      })
-      
-      // Auto-check if approved item is below threshold
-      if (newItem.quantity <= newItem.criticalThreshold) {
-         emitSystemEvent({
-            type: 'alert',
-            severity: 'critical',
-            module: 'Inventory',
-            message: `CRITICAL STOCK ALERT: ${newItem.itemName} is at ${newItem.quantity} ${newItem.unit}.`
-         })
-      }
-    } else {
-      addApprovalRequest({
-        entity_type: 'inventory' as any,
-        entity_id: newItem.id,
-        requester_id: currentUser.id,
-        priority: 'medium',
-        status: 'pending'
-      })
-      
-      emitSystemEvent({
-        type: 'creation',
-        severity: 'info',
-        module: 'Inventory',
-        message: `New inventory item submitted for approval: ${item.itemName}`,
-        metadata: { id: newItem.id }
-      })
-    }
+    // ── AUDIT & APPROVAL REACTIONS ──────────────────────────────
+    useAppStore.getState().logEmployeeSubmission(
+      'Inventory',
+      'add',
+      'inventory',
+      newItem.id,
+      { name: item.itemName, quantity: item.quantity, category: item.category }
+    );
+    // ────────────────────────────────────────────────────────────────
 
     return newItem
   },
@@ -146,6 +121,12 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
           metadata: { id, quantity: item.quantity }
        })
     }
+  },
+
+  updateStatus: async (id, status) => {
+     set((state) => ({
+       items: state.items.map(i => i.id === id ? { ...i, workflow_status: status } : i)
+     }))
   },
 
   deleteItem: async (id) => {

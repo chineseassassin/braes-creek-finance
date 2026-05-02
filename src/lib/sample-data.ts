@@ -245,3 +245,27 @@ export const MONTHLY_TREND = [
   { month: 'Nov', expenses: 58400, revenue: 66000, labor: 17350 },
   { month: 'Dec', expenses: 52000, revenue: 72000, labor: 15500 },
 ]
+
+// ── Infrastructure Assets ──────────────────────────────────────────────────────
+export const SAMPLE_INFRASTRUCTURE: InfrastructureAsset[] = [
+  { id: 'infra-1', name: 'Main Irrigation Pump', type: 'Pump', location: 'Section A - River Side', status: 'operational', replacement_value: 12500, last_inspection: '2024-10-20', health_index: 92, workflow_status: 'approved', created_by: 'user-1', created_at: '2024-01-10' },
+  { id: 'infra-2', name: 'Generator 50kVA', type: 'Generator', location: 'Main Utility Room', status: 'maintenance', replacement_value: 35000, last_inspection: '2024-11-05', health_index: 78, workflow_status: 'approved', created_by: 'user-1', created_at: '2024-01-15' },
+  { id: 'infra-3', name: 'Poultry Cold Storage', type: 'Storage', location: 'Main Facility', status: 'operational', replacement_value: 85000, last_inspection: '2024-11-12', health_index: 95, workflow_status: 'approved', created_by: 'user-2', created_at: '2024-02-01' },
+  { id: 'infra-4', name: 'Massey Ferguson Tractor', type: 'Tractor', location: 'Equipment Shed', status: 'critical', replacement_value: 120000, last_inspection: '2024-11-18', health_index: 35, workflow_status: 'approved', created_by: 'user-1', created_at: '2024-03-10' },
+  { id: 'infra-5', name: 'Solar Array B', type: 'Other', location: 'South Field', status: 'operational', replacement_value: 45000, last_inspection: '2024-10-15', health_index: 98, workflow_status: 'approved', created_by: 'user-2', created_at: '2024-05-20' },
+]
+
+// ── Users & Audit ──────────────────────────────────────────────────────────────
+export const SAMPLE_USERS = [
+  { id: 'user-1', name: 'Admin User', email: 'admin@agrofarm.tt', role: 'admin', lastLogin: '2024-12-10', status: 'active' },
+  { id: 'user-2', name: 'Mary Joseph', email: 'mary@agrofarm.tt', role: 'manager', lastLogin: '2024-12-09', status: 'active' },
+  { id: 'user-3', name: 'James Ali', email: 'james@agrofarm.tt', role: 'viewer', lastLogin: '2024-12-01', status: 'active' },
+]
+
+export const SAMPLE_AUDIT = [
+  { id: 1, user: 'Admin User', action: 'Created expense', table: 'expenses', record: 'exp-20', time: '2024-12-10 14:32' },
+  { id: 2, user: 'Mary Joseph', action: 'Added labor entry', table: 'labor_entries', record: 'lab-8', time: '2024-12-09 09:15' },
+  { id: 3, user: 'Admin User', action: 'Recorded loan payment', table: 'loan_payments', record: 'lp-5', time: '2024-11-10 11:00' },
+  { id: 4, user: 'Admin User', action: 'Updated livestock unit', table: 'livestock_units', record: 'ls-1', time: '2024-11-05 16:20' },
+  { id: 5, user: 'Mary Joseph', action: 'Added payroll record', table: 'payroll', record: 'pay-4', time: '2024-12-01 08:45' },
+]

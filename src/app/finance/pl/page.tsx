@@ -9,12 +9,14 @@ import { useDashboardStore } from '@/store/useDashboardStore';
 import { useUIStore } from '@/store/useUIStore';
 import { useAlertStore } from '@/store/useAlertStore';
 import {
-  FileText, TrendingUp, TrendingDown, DollarSign, PieChart, 
+  FileText, TrendingUp, TrendingDown, DollarSign, PieChart as PieIcon, 
   ArrowLeft, Download, Filter, RefreshCw, Calendar, ChevronRight,
   Calculator, Receipt, Building2, Briefcase, Sparkles, Plus
 } from "lucide-react";
+import { toast, Toaster } from 'react-hot-toast';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  PieChart as RechartsPieChart, Pie
 } from 'recharts';
 
 import { THEME_COLORS, TC } from '@/lib/theme-colors';
@@ -25,8 +27,33 @@ const COLORS = {
   net: 'var(--status-info)',
   muted: 'var(--text-muted)',
   border: 'var(--border-soft)',
-  card: 'var(--bg-card)'
+  card: 'var(--bg-card)',
+  warning: '#f59e0b'
 };
+
+const PieChartComponent = ({ data }: { data: any[] }) => (
+  <RechartsPieChart>
+    <Pie
+      data={data}
+      cx="50%"
+      cy="50%"
+      innerRadius={60}
+      outerRadius={80}
+      paddingAngle={5}
+      dataKey="value"
+    >
+      {data.map((entry, index) => (
+        <Cell key={`cell-${index}`} fill={['#39C86A', '#f59e0b', '#3b82f6', '#ef4444'][index % 4]} />
+      ))}
+    </Pie>
+    <Tooltip 
+      contentStyle={{ background: 'var(--bg-card-elevated)', border: '1px solid var(--border-soft)', borderRadius: 12 }}
+      itemStyle={{ fontSize: 12, fontWeight: 700 }}
+    />
+  </RechartsPieChart>
+);
+
+import { exportToCSV } from '@/lib/exportUtils';
 
 export default function PLStatementPage() {
   const { transactions, fetchTransactions } = useDashboardStore();
@@ -46,7 +73,6 @@ export default function PLStatementPage() {
     const totalExpenses = exp.reduce((s, t) => s + Number(t.amount), 0);
     const netProfit = totalRevenue - totalExpenses;
 
-    // Grouping by category
     const incomeByCat = Array.from(new Set(inc.map(t => t.category || 'Other'))).map(cat => ({
       name: cat,
       val: inc.filter(t => t.category === cat).reduce((s, t) => s + Number(t.amount), 0)
@@ -60,6 +86,14 @@ export default function PLStatementPage() {
     return { totalRevenue, totalExpenses, netProfit, incomeByCat, expenseByCat };
   }, [transactions]);
 
+  const handleExport = () => {
+    const dataToExport = [
+      ...plData.incomeByCat.map(i => ({ Category: i.name, Type: 'Income', Amount: i.val })),
+      ...plData.expenseByCat.map(e => ({ Category: e.name, Type: 'Expense', Amount: e.val }))
+    ];
+    exportToCSV(dataToExport, 'Profit_And_Loss_Statement');
+  };
+
   const chartData = [
     { name: 'Revenue', val: plData.totalRevenue, fill: COLORS.income },
     { name: 'Expenses', val: plData.totalExpenses, fill: COLORS.expense },
@@ -69,6 +103,7 @@ export default function PLStatementPage() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)', color: 'var(--text-primary)' }}>
       <Sidebar />
+      <Toaster position="top-right" />
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
         
         <header style={{ height: 72, background: 'var(--bg-body)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid var(--border-soft)` }}>
@@ -82,7 +117,7 @@ export default function PLStatementPage() {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-             <button className="btn-ghost" style={{ padding: '8px 16px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+             <button className="btn-ghost" onClick={handleExport} style={{ padding: '8px 16px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Download size={14} /> Export Report
              </button>
              <ThemeToggle />
@@ -280,7 +315,7 @@ export default function PLStatementPage() {
                   ) : (
                     <div style={{ textAlign: 'center' }}>
                        <div style={{ width: 120, height: 120, borderRadius: '50%', border: '8px solid rgba(255,255,255,0.03)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <PieChart size={40} color="rgba(255,255,255,0.1)" />
+                        <PieIcon size={40} color="rgba(255,255,255,0.1)" />
                        </div>
                        <div style={{ fontSize: 13, color: COLORS.muted, marginBottom: 12 }}>No budget allocation yet — start logging costs</div>
                        <Link href="/finance" style={{ textDecoration: 'none' }}>

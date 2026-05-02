@@ -9,17 +9,19 @@ import { toast, Toaster } from 'react-hot-toast'
 import { 
   Sprout, Calendar, TrendingUp, TrendingDown, 
   Map, Activity, ClipboardList, Info, AlertTriangle,
-  Clock, CheckCircle2, ChevronRight
+  Clock, CheckCircle2, ChevronRight, Download
 } from 'lucide-react'
 import React from 'react'
+import { exportToCSV } from '@/lib/exportUtils'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n)
 
 export default function CropsPage() {
-  const { crops, addCrop, isLoading } = useCropStore()
+  const { crops, addCrop, updateCrop, isLoading } = useCropStore()
   const { currentUser } = useAppStore()
   const [showModal, setShowModal] = useState(false)
+  const [editingCropId, setEditingCropId] = useState<string | null>(null)
   const [form, setForm] = useState({
     name: '', variety: '', area_acres: '', planting_date: new Date().toISOString().split('T')[0],
     expected_harvest: '', expected_yield: '', actual_yield: '',
@@ -48,21 +50,42 @@ export default function CropsPage() {
       labor_cost: parseFloat(form.labor_cost) || 0,
     }
 
-    const result = await addCrop(payload as any)
-    if (result) {
-      if (currentUser.role === 'admin') {
-        toast.success('Crop record saved & approved')
-      } else {
-        toast.success('Submitted for approval')
+    if (editingCropId) {
+      await updateCrop(editingCropId, payload as any)
+      toast.success('Crop cycle updated')
+    } else {
+      const result = await addCrop(payload as any)
+      if (result) {
+        if (currentUser.role === 'admin') {
+          toast.success('Crop record saved & approved')
+        } else {
+          toast.success('Submitted for approval')
+        }
       }
-      setShowModal(false)
-      setForm({
-        name: '', variety: '', area_acres: '', planting_date: new Date().toISOString().split('T')[0],
-        expected_harvest: '', expected_yield: '', actual_yield: '',
-        input_costs: '', labor_cost: '', status: 'growing', notes: ''
-      })
     }
+    setShowModal(false)
+    setEditingCropId(null)
+    setForm({
+      name: '', variety: '', area_acres: '', planting_date: new Date().toISOString().split('T')[0],
+      expected_harvest: '', expected_yield: '', actual_yield: '',
+      input_costs: '', labor_cost: '', status: 'growing', notes: ''
+    })
   }
+
+  const handleExport = () => {
+    const data = crops.map(c => ({
+      Crop: c.name,
+      Variety: c.variety || 'N/A',
+      Acres: c.area_acres,
+      Status: c.status.toUpperCase(),
+      PlantingDate: c.planting_date,
+      ExpectedHarvest: c.expected_harvest,
+      InputCosts: c.input_costs,
+      LaborCost: c.labor_cost,
+      TotalInvestment: c.input_costs + c.labor_cost
+    }));
+    exportToCSV(data, 'Crop_Production_Cycles');
+  };
 
   return (
     <div className="app-shell">
@@ -72,7 +95,20 @@ export default function CropsPage() {
         <Topbar
           title="Crop Management"
           subtitle="Field production, yield tracking, and resource efficiency"
-          actions={<button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>+ Add Crop Cycle</button>}
+          actions={
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-secondary btn-sm" onClick={handleExport}><Download size={14} /> Export Report</button>
+              <button className="btn btn-primary btn-sm" onClick={() => {
+                setEditingCropId(null);
+                setForm({
+                  name: '', variety: '', area_acres: '', planting_date: new Date().toISOString().split('T')[0],
+                  expected_harvest: '', expected_yield: '', actual_yield: '',
+                  input_costs: '', labor_cost: '', status: 'growing', notes: ''
+                });
+                setShowModal(true);
+              }}>+ Add Crop Cycle</button>
+            </div>
+          }
         />
         <div className="page-container">
           <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
@@ -112,6 +148,7 @@ export default function CropsPage() {
                       contentStyle={{ background: '#1f1f23', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
                       itemStyle={{ color: 'var(--text-primary)' }}
                       labelStyle={{ color: 'var(--text-primary)' }}
+                      cursor={false}
                     />
                     <Bar dataKey="cost" fill="var(--status-success)" radius={[4, 4, 0, 0]} fillOpacity={0.8} />
                   </BarChart>
@@ -193,8 +230,16 @@ export default function CropsPage() {
                       {crop.notes && <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>📝 {crop.notes}</div>}
 
                       <div style={{ display: 'flex', gap: 8 }}>
-                         <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>✏️ Edit Cycle</button>
-                         <button className="btn btn-secondary btn-sm" style={{ flex: 1 }}>📊 Projections</button>
+                         <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => {
+                            setForm({
+                               name: crop.name, variety: crop.variety || '', area_acres: crop.area_acres.toString(), planting_date: crop.planting_date || '',
+                               expected_harvest: crop.expected_harvest || '', expected_yield: crop.expected_yield || '', actual_yield: crop.actual_yield || '',
+                               input_costs: crop.input_costs.toString(), labor_cost: crop.labor_cost.toString(), status: crop.status || 'growing', notes: crop.notes || ''
+                            });
+                            setEditingCropId(crop.id);
+                            setShowModal(true);
+                         }}>✏️ Edit Cycle</button>
+                         <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => toast.success(`Viewing projections for ${crop.name}`)}>📊 Projections</button>
                       </div>
                    </div>
                  </div>
@@ -208,7 +253,7 @@ export default function CropsPage() {
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
           <div className="modal" style={{ maxWidth: 640 }}>
             <div className="modal-header">
-              <div className="modal-title">Initialize New Crop Cycle</div>
+              <div className="modal-title">{editingCropId ? 'Edit Crop Cycle' : 'Initialize New Crop Cycle'}</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
@@ -274,7 +319,7 @@ export default function CropsPage() {
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={isLoading}>
-                   {isLoading ? 'Saving...' : 'Initialize Crop Cycle'}
+                   {isLoading ? 'Saving...' : editingCropId ? 'Save Changes' : 'Initialize Crop Cycle'}
                 </button>
               </div>
             </form>

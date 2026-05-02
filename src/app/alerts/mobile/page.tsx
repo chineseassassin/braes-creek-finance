@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Sidebar from "@/components/Sidebar";
 import NotificationCenter from "@/components/NotificationCenter";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -9,8 +9,9 @@ import {
   Smartphone, Bell, Zap, 
   ShieldAlert, Clock, CheckCircle2,
   ChevronRight, RefreshCw, Settings, 
-  Smartphone as PhoneIcon, TriangleAlert, Plus, ArrowRight, Sparkles, Target, Activity, MessageSquare
+  Smartphone as PhoneIcon, AlertTriangle, Plus, ArrowRight, Sparkles, Target, Activity, MessageSquare
 } from "lucide-react";
+import { toast, Toaster } from 'react-hot-toast';
 
 import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 
@@ -22,6 +23,9 @@ export default function MobileAlertsPage() {
     setMountedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
   }, []);
 
+  const [activeTab, setActiveTab] = useState('App Push');
+  const [isRoutingActive, setIsRoutingActive] = useState(true);
+
   const [alerts, setAlerts] = useState([
      { id: 1, title: 'Cash Flow Warning', severity: 'Critical', source: 'Capital', action: 'Review expenses today', time: '10:30 AM', status: 'Sent' },
      { id: 2, title: 'Loan Payment Due', severity: 'High', source: 'Loans', action: 'Confirm cash reserve', time: '09:15 AM', status: 'Scheduled' },
@@ -31,6 +35,7 @@ export default function MobileAlertsPage() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)', color: 'var(--text-primary)' }}>
+      <Toaster position="top-right" />
       <Sidebar />
 
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease', overflow: 'hidden' }}>
@@ -111,12 +116,12 @@ export default function MobileAlertsPage() {
                           </div>
                        </div>
                        <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${COLORS.border}`, paddingTop: 24 }}>
-                          <div style={{ display: 'flex', gap: 12 }}>
-                             <button className="tab-pill active">App Push</button>
-                             <button className="tab-pill">SMS</button>
-                             <button className="tab-pill">WhatsApp</button>
-                          </div>
-                          <button className="btn-saas-primary">Deploy Rule</button>
+                           <div style={{ display: 'flex', gap: 12 }}>
+                              <button className={`tab-pill ${activeTab === 'App Push' ? 'active' : ''}`} onClick={() => setActiveTab('App Push')}>App Push</button>
+                              <button className={`tab-pill ${activeTab === 'SMS' ? 'active' : ''}`} onClick={() => setActiveTab('SMS')}>SMS</button>
+                              <button className={`tab-pill ${activeTab === 'WhatsApp' ? 'active' : ''}`} onClick={() => setActiveTab('WhatsApp')}>WhatsApp</button>
+                           </div>
+                           <button className="btn-saas-primary" onClick={() => toast.success('Intelligence Rule Deployed')}>Deploy Rule</button>
                        </div>
                     </div>
 
@@ -151,8 +156,8 @@ export default function MobileAlertsPage() {
                                       </span>
                                    </div>
                                    <div style={{ display: 'flex', gap: 10, marginLeft: 20 }}>
-                                      <button className="icon-btn-ghost"><CheckCircle2 size={14} /></button>
-                                      <button className="icon-btn-ghost"><ArrowRight size={14} /></button>
+                                      <button className="icon-btn-ghost" onClick={() => toast.success('Alert marked as resolved')}><CheckCircle2 size={14} /></button>
+                                      <button className="icon-btn-ghost" onClick={() => toast.success('Viewing alert details')}><ArrowRight size={14} /></button>
                                    </div>
                                 </div>
                              );
@@ -215,10 +220,10 @@ export default function MobileAlertsPage() {
                              <label className="input-label">Operational SMS Gateway</label>
                              <input className="saas-input" placeholder="+1 (555) 000-0000" />
                           </div>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>AI Neural Routing</span>
-                             <div className="toggle active"><div /></div>
-                          </div>
+                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>AI Neural Routing</span>
+                              <div className={`toggle ${isRoutingActive ? 'active' : ''}`} onClick={() => setIsRoutingActive(!isRoutingActive)}><div /></div>
+                           </div>
                           <div style={{ height: 1, background: COLORS.border }} />
                           <div style={{ fontSize: 11, color: COLORS.muted, lineHeight: 1.6, fontWeight: 500 }}>
                              Omni-channel tactical routing is active. Critical signals will bypass device 'Silent' profiles on verified terminals.
@@ -233,7 +238,7 @@ export default function MobileAlertsPage() {
         </main>
       </div>
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{__html: `
         .card-glass { background: var(--bg-card); backdrop-filter: blur(40px); border: 1px solid var(--border-soft); border-radius: 20px; box-shadow: var(--shadow-medium); }
         .premium-badge { font-size: 8px; font-weight: 950; padding: 6px 14px; background: var(--status-success-glow); color: var(--status-success); border: 1px solid var(--border-soft); border-radius: 30px; letter-spacing: 0.1em; }
         .input-label { display: block; font-size: 9px; font-weight: 900; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em; }
@@ -272,9 +277,7 @@ export default function MobileAlertsPage() {
         @media (max-width: 1200px) {
            .grid-responsive { grid-template-columns: 1fr !important; }
         }
-      `}</style>
+      `}} />
     </div>
   );
 }
-
-import React from 'react';

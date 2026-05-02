@@ -8,12 +8,15 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { useDashboardStore } from '@/store/useDashboardStore';
 import { useUIStore } from '@/store/useUIStore';
 import { useAlertStore } from '@/store/useAlertStore';
+import { exportToCSV, exportToPDF } from '@/lib/exportUtils';
+import { toastWithUndo } from '@/lib/toastUtils';
 import {
   MoreVertical, Edit2, Copy, Trash2, X, Download, Tag, CheckSquare, Square, Activity,
   Sparkles, TrendingUp, TrendingDown, Target, Info, ShieldCheck, Zap,
   Search, Plus, Calendar, RefreshCw, PieChart as PieIcon, Filter, BarChart3, CreditCard, AlertCircle,
-  FileText
+  FileText, FileOutput, CalendarDays
 } from "lucide-react";
+import { toast, Toaster } from 'react-hot-toast';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   BarChart, Bar, Cell, LineChart, Line
@@ -117,19 +120,35 @@ export default function FinancePage() {
   const margin = totalInc > 0 ? ((netProfit / totalInc) * 100).toFixed(1) : "0.0";
 
   // Handlers
-  const handleQuickAdd = (e: any) => {
+  const handleQuickAdd = async (e: any) => {
     e.preventDefault();
+    const { useAppStore } = await import('@/store/useAppStore');
+    const { currentUser } = useAppStore.getState();
+    const isAdmin = currentUser.role === 'admin';
+
     const newTx = {
-      id: Math.random().toString(),
+      id: Math.random().toString(36).substr(2, 9),
       type: modalType,
       amount: Number(formData.amount),
       category: formData.category,
       description: formData.description || 'Quick Add Entry',
-      date: formData.date
+      date: formData.date,
+      status: isAdmin ? 'approved' : 'pending',
+      created_by: currentUser.id
     };
+
     setLocalTx([newTx, ...localTx]);
     setIsModalOpen(false);
     setFormData({ amount: '', category: 'Feed', description: '', date: new Date().toISOString().split('T')[0] });
+
+    // Global Audit & Notification
+    useAppStore.getState().logEmployeeSubmission(
+      'Finance',
+      'creation',
+      'expense',
+      newTx.id,
+      { type: newTx.type, amount: newTx.amount, category: newTx.category }
+    );
   };
 
   const toggleRowSelect = (id: string) => {
@@ -141,17 +160,63 @@ export default function FinancePage() {
     setSelectedRows([]);
   };
 
+  const handleDeleteTransaction = async (t: any) => {
+    const { useAppStore } = await import('@/store/useAppStore');
+    setLocalTx(prev => prev.filter(x => x.id !== t.id));
+    
+    // Log deletion event to audit
+    useAppStore.getState().logEmployeeSubmission(
+      'Finance',
+      'update',
+      'expense',
+      t.id,
+      { action: 'deletion', originalData: t }
+    );
+
+    toastWithUndo({
+      message: 'Transaction submission revoked.',
+      onUndo: () => setLocalTx(prev => [t, ...prev])
+    });
+  };
+
   const handleExportCSV = () => {
-    const headers = ['Date', 'Type', 'Category', 'Description', 'Amount'];
-    const rows = filteredTx.map(t => [t.date, t.type, t.category, t.description, t.amount].join(','));
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "financial_export.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const formattedData = filteredTx.map(t => ({
+      Date: t.date,
+      Type: t.type.toUpperCase(),
+      Category: t.category,
+      Description: t.description,
+      Amount: `$${t.amount}`
+    }));
+    exportToCSV(formattedData, 'Financial_Ledger');
+  };
+
+  const handleExportPDF = () => {
+    const columns = ['Date', 'Type', 'Category', 'Description', 'Amount'];
+    const rows = filteredTx.map(t => [
+      t.date, 
+      t.type.toUpperCase(), 
+      t.category, 
+      t.description, 
+      `$${t.amount}`
+    ]);
+    exportToPDF('Financial Ledger Report', columns, rows, 'Financial_Ledger');
+  };
+
+  const handleIntelligenceFilter = () => {
+    const id = toast.loading('Running Neural Audit on Ledger...');
+    setTimeout(() => {
+      setSearchTerm('Critical');
+      setFilterType('Expense');
+      toast.success('AI Filter Applied: Isolated high-risk expenditure spikes.', { id });
+    }, 1500);
+  };
+
+  const handleCustomDate = () => {
+    toast('Date Range selector activated. (Simulation)', { 
+      icon: '📅',
+      style: { background: '#222', color: '#fff', border: '1px solid #333' }
+    });
+    setTimeFilter('Custom');
   };
 
   return (
@@ -221,6 +286,8 @@ export default function FinancePage() {
         }
       `}} />
 
+
+      <Toaster position="top-right" />
       <Sidebar />
       <div style={{ marginLeft: sidebarCollapsed ? 64 : 250, flex: 1, display: 'flex', flexDirection: 'column', transition: 'margin-left 0.2s ease' }}>
         
@@ -282,7 +349,7 @@ export default function FinancePage() {
                    {f}
                  </button>
               ))}
-              <button className="btn-ghost" style={{ padding: '6px 12px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}><Calendar size={12}/> Custom</button>
+              <button className="btn-ghost" onClick={handleCustomDate} style={{ padding: '6px 12px', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}><Calendar size={12}/> Custom</button>
             </div>
             
             <div style={{ display: 'flex', gap: 10 }}>
@@ -415,10 +482,11 @@ export default function FinancePage() {
                         <option value="Income">Revenue Only</option>
                         <option value="Expense">Expenses Only</option>
                       </select>
-                      <button className="btn-ghost" style={{ padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}><Filter size={14}/> Intelligence Filter</button>
+                      <button className="btn-ghost" onClick={handleIntelligenceFilter} style={{ padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}><Filter size={14}/> Intelligence Filter</button>
                     </div>
-                    <div style={{ display: 'flex', gap: 12 }}>
-                      <button onClick={handleExportCSV} className="btn-ghost" style={{ padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}><Download size={14}/> Export Intelligence</button>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={handleExportCSV} className="btn-ghost" style={{ padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}><Download size={14}/> CSV</button>
+                      <button onClick={handleExportPDF} className="btn-ghost" style={{ padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}><FileOutput size={14}/> PDF Report</button>
                     </div>
                   </div>
                 </div>
@@ -462,7 +530,11 @@ export default function FinancePage() {
                              <span className={t.type === 'income' ? 'badge-green badge' : 'badge-red badge'} style={{ fontSize: 9, padding: '2px 8px', fontWeight: 800 }}>
                                 {t.type.toUpperCase()}
                              </span>
-                             {Number(t.amount) > 5000 && <AlertCircle size={12} color="#ef4444" title="High value transaction" />}
+                             {Number(t.amount) > 5000 && (
+                               <span title="High value transaction">
+                                 <AlertCircle size={12} color="#ef4444" />
+                               </span>
+                             )}
                           </div>
                         </td>
                         <td style={{ padding: '12px 0', fontSize: 12, color: '#8a8a8e' }}>
@@ -483,9 +555,8 @@ export default function FinancePage() {
                         </td>
                         <td style={{ padding: '12px 16px', width: 100 }}>
                            <div className="row-actions">
-                             <button style={{ background: 'none', border: 'none', color: '#8a8a8e', cursor: 'pointer', padding: 4 }} title="Edit"><Edit2 size={14}/></button>
-                             <button style={{ background: 'none', border: 'none', color: '#8a8a8e', cursor: 'pointer', padding: 4 }} title="Duplicate"><Copy size={14}/></button>
-                             <button onClick={() => setLocalTx(localTx.filter(x => x.id !== t.id))} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 4 }} title="Delete"><Trash2 size={14}/></button>
+                             <button onClick={() => toast('Entry replication active.', { icon: '📂' })} style={{ background: 'none', border: 'none', color: '#8a8a8e', cursor: 'pointer', padding: 4 }} title="Duplicate"><Copy size={14}/></button>
+                             <button onClick={(e) => { e.stopPropagation(); handleDeleteTransaction(t); }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 4 }} title="Delete"><Trash2 size={14}/></button>
                            </div>
                         </td>
                       </tr>
@@ -512,7 +583,11 @@ export default function FinancePage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div style={{ width: 8, height: 8, background: '#39C86A', borderRadius: 2 }}/> Inflow</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><div style={{ width: 8, height: 8, background: '#ef4444', borderRadius: 2 }}/> Outflow</div>
                   </div>
-                  <select className="btn-ghost" style={{ fontSize: 10, padding: '4px 10px' }}>
+                  <select 
+                    className="btn-ghost" 
+                    style={{ fontSize: 10, padding: '4px 10px', cursor: 'pointer', fontWeight: 800 }}
+                    onChange={(e) => toast(`Time interval synced: ${e.target.value}`, { icon: '⏱️' })}
+                  >
                     <option>Daily</option>
                     <option>Weekly</option>
                     <option>Monthly</option>

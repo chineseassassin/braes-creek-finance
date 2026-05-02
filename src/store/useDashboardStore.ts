@@ -11,6 +11,13 @@ interface Transaction {
   date: string
   attachment_url?: string
   status?: 'pending' | 'approved' | 'rejected'
+  segment_id?: string
+  category_id?: string
+  vendor_id?: string
+  payment_method?: string
+  is_recurring?: boolean
+  recurring_frequency?: string
+  created_by?: string
   metadata?: any
 }
 
@@ -21,8 +28,9 @@ interface DashboardState {
   
   // Actions
   fetchTransactions: () => Promise<void>
-  addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<void>
+  addTransaction: (transaction: Omit<Transaction, 'id'>) => Promise<Transaction | null>
   updateTransactionStatus: (id: string, status: Transaction['status']) => Promise<void>
+  updateStatus: (id: string, status: Transaction['status']) => Promise<void>
   updateTransaction: (id: string, updates: Partial<Transaction>) => Promise<void>
   deleteTransaction: (id: string) => Promise<void>
   
@@ -65,26 +73,14 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     } else if (data) {
       const newRecord = data[0];
       
-      // ── PHASE 4 REACTIONS ───────────────────────────────────────────
-      if (newRecord.status === 'approved') {
-        useAppStore.getState().emitSystemEvent({
-          type: 'DATA_APPROVED',
-          severity: 'info',
-          module: transaction.category === 'Payroll' ? 'Payroll' : 'Expenses',
-          message: `${transaction.category === 'Payroll' ? 'Payroll' : 'Expense'} approved: ${transaction.description}`,
-          entity_id: newRecord.id,
-          metadata: { id: newRecord.id, amount: transaction.amount }
-        });
-      } else if (newRecord.status === 'pending') {
-        useAppStore.getState().emitSystemEvent({
-          type: 'SUBMITTED',
-          severity: 'info',
-          module: transaction.category === 'Payroll' ? 'Payroll' : 'Expenses',
-          message: `${transaction.category === 'Payroll' ? 'Payroll' : 'Expense'} submitted for verification: ${transaction.description}`,
-          entity_id: newRecord.id,
-          metadata: { id: newRecord.id, amount: transaction.amount }
-        });
-      }
+      // ── AUDIT & APPROVAL REACTIONS ──────────────────────────────
+      useAppStore.getState().logEmployeeSubmission(
+        transaction.category === 'Payroll' ? 'Payroll' : 'Expenses',
+        'add',
+        transaction.category === 'Payroll' ? 'payroll' : 'expense',
+        newRecord.id,
+        { amount: transaction.amount, description: transaction.description }
+      );
       // ────────────────────────────────────────────────────────────────
 
       set((state) => ({ transactions: [newRecord, ...state.transactions] }))
@@ -94,8 +90,6 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   },
 
   updateTransactionStatus: async (id, status) => {
-    const transaction = get().transactions.find(t => t.id === id);
-    
     // Optimistic update
     set((state) => ({
       transactions: state.transactions.map(t => t.id === id ? { ...t, status } : t)
@@ -108,17 +102,11 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     
     if (error) {
       console.error("Status update failed:", error.message)
-    } else if (status === 'approved' && transaction) {
-      // 🧠 PHASE 4: REACTION ON APPROVAL
-      useAppStore.getState().emitSystemEvent({
-        type: 'DATA_APPROVED',
-        severity: 'success',
-        module: transaction.category === 'Payroll' ? 'Payroll' : 'Expenses',
-        message: `${transaction.category === 'Payroll' ? 'Payroll' : 'Expense'} entry finalized and approved`,
-        entity_id: id,
-        metadata: { id, amount: transaction.amount }
-      });
     }
+  },
+
+  updateStatus: async (id, status) => {
+    await get().updateTransactionStatus(id, status);
   },
 
   updateTransaction: async (id, updates) => {
@@ -135,13 +123,13 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     if (error) {
       set({ error: error.message })
     } else if (old) {
-      useAppStore.getState().emitSystemEvent({
-        type: 'DATA_UPDATED',
-        severity: 'info',
-        module: old.category === 'Payroll' ? 'Payroll' : 'Expenses',
-        message: `Transaction record updated: ${old.description}`,
-        metadata: { id, updates }
-      });
+      useAppStore.getState().logEmployeeSubmission(
+        old.category === 'Payroll' ? 'Payroll' : 'Expenses',
+        'update',
+        old.category === 'Payroll' ? 'payroll' : 'expense',
+        id,
+        { updates }
+      );
     }
   },
 

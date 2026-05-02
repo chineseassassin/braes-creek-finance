@@ -13,11 +13,13 @@ interface InfrastructureState {
   // Asset Actions
   addAsset: (asset: Omit<InfrastructureAsset, 'id' | 'workflow_status' | 'created_by' | 'created_at'>) => Promise<InfrastructureAsset | null>
   updateAssetStatus: (id: string, status: InfrastructureAsset['status']) => Promise<void>
+  updateStatus: (id: string, status: 'approved' | 'rejected') => Promise<void>
   approveAsset: (id: string) => Promise<void>
   deleteAsset: (id: string) => Promise<void>
   
   // Maintenance Actions
   addMaintenanceLog: (log: Omit<MaintenanceRecord, 'id' | 'workflow_status' | 'created_by' | 'created_at'>) => Promise<MaintenanceRecord | null>
+  updateMaintenanceStatus: (id: string, status: 'approved' | 'rejected') => Promise<void>
   approveMaintenance: (id: string) => Promise<void>
   markMaintenanceCompleted: (id: string) => Promise<void>
 }
@@ -60,31 +62,15 @@ export const useInfrastructureStore = create<InfrastructureState>((set, get) => 
 
     set((state) => ({ assets: [newAsset, ...state.assets] }))
 
-    if (isAdmin) {
-      emitSystemEvent({
-        type: 'creation',
-        severity: 'success',
-        module: 'Infrastructure',
-        message: `New asset commissioned: ${asset.name} (${asset.type})`,
-        metadata: { id: newAsset.id, name: asset.name }
-      })
-    } else {
-      addApprovalRequest({
-        entity_type: 'maintenance' as any, // mapping for simplicity in existing request types or add 'asset'
-        entity_id: newAsset.id,
-        requester_id: currentUser.id,
-        priority: 'medium',
-        status: 'pending'
-      })
-      
-      emitSystemEvent({
-        type: 'creation',
-        severity: 'info',
-        module: 'Infrastructure',
-        message: `New asset record submitted for approval: ${asset.name}`,
-        metadata: { id: newAsset.id }
-      })
-    }
+    // ── AUDIT & APPROVAL REACTIONS ──────────────────────────────
+    useAppStore.getState().logEmployeeSubmission(
+      'Infrastructure',
+      'add',
+      'infrastructure',
+      newAsset.id,
+      { name: asset.name, type: asset.type }
+    );
+    // ────────────────────────────────────────────────────────────────
 
     return newAsset
   },
@@ -122,6 +108,12 @@ export const useInfrastructureStore = create<InfrastructureState>((set, get) => 
     }
   },
 
+  updateStatus: async (id, status) => {
+    set((state) => ({
+      assets: state.assets.map(a => a.id === id ? { ...a, workflow_status: status } : a)
+    }))
+  },
+
   deleteAsset: async (id) => {
     set((state) => ({
       assets: state.assets.filter(a => a.id !== id)
@@ -129,8 +121,7 @@ export const useInfrastructureStore = create<InfrastructureState>((set, get) => 
   },
 
   addMaintenanceLog: async (log) => {
-    const { currentUser, emitSystemEvent } = useAppStore.getState()
-    const { addApprovalRequest } = useWorkflowStore.getState()
+    const { currentUser } = useAppStore.getState()
     
     const isAdmin = currentUser.role === 'admin'
     const status = isAdmin ? 'approved' : 'pending'
@@ -145,23 +136,15 @@ export const useInfrastructureStore = create<InfrastructureState>((set, get) => 
 
     set((state) => ({ maintenanceLogs: [newLog, ...state.maintenanceLogs] }))
 
-    if (isAdmin) {
-      emitSystemEvent({
-        type: 'creation',
-        severity: 'success',
-        module: 'Infrastructure',
-        message: `Maintenance recorded for ${get().assets.find(a => a.id === log.asset_id)?.name}`,
-        metadata: { id: newLog.id, asset_id: log.asset_id, cost: log.cost }
-      })
-    } else {
-      addApprovalRequest({
-        entity_type: 'maintenance',
-        entity_id: newLog.id,
-        requester_id: currentUser.id,
-        priority: 'high',
-        status: 'pending'
-      })
-    }
+    // ── AUDIT & APPROVAL REACTIONS ──────────────────────────────
+    useAppStore.getState().logEmployeeSubmission(
+      'Maintenance',
+      'add',
+      'maintenance',
+      newLog.id,
+      { asset_id: log.asset_id, cost: log.cost, type: log.maintenance_type }
+    );
+    // ────────────────────────────────────────────────────────────────
 
     return newLog
   },
@@ -181,6 +164,12 @@ export const useInfrastructureStore = create<InfrastructureState>((set, get) => 
            metadata: { id, cost: log.cost }
         })
      }
+  },
+
+  updateMaintenanceStatus: async (id, status) => {
+     set((state) => ({
+       maintenanceLogs: state.maintenanceLogs.map(l => l.id === id ? { ...l, workflow_status: status } : l)
+     }))
   },
 
   markMaintenanceCompleted: async (id) => {

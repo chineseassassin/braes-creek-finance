@@ -10,6 +10,7 @@ import { useDashboardStore } from '@/store/useDashboardStore'
 import { useAppStore } from '@/store/useAppStore'
 import { useWorkflowStore } from '@/store/useWorkflowStore'
 import { toast, Toaster } from 'react-hot-toast'
+import { exportToCSV } from '@/lib/exportUtils'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n)
@@ -59,7 +60,7 @@ export default function ExpensesPage() {
 
   const filtered = expenses.filter(e => {
     const matchSearch = e.description.toLowerCase().includes(search.toLowerCase())
-    const matchSeg = segFilter === 'all' || (e as any).segment_id === segFilter
+    const matchSeg = segFilter === 'all' || e.segment_id === segFilter
     return matchSearch && matchSeg
   })
 
@@ -87,8 +88,13 @@ export default function ExpensesPage() {
       created_by: currentUser.id,
     } as any)
 
+    if (!newRecord?.id) {
+       toast.error('Expense could not be created');
+       return;
+    }
+
     // 2. If Data Entry, create Approval Request
-    if (isDataEntry && newRecord) {
+    if (isDataEntry) {
        addApprovalRequest({
           entity_type: 'expense',
           entity_id: newRecord.id,
@@ -97,12 +103,28 @@ export default function ExpensesPage() {
           status: 'pending'
        })
        toast.success('Submitted for approval', { icon: '⏳', style: { background: '#101010', color: '#fff' } })
-    } else if (!isDataEntry) {
+    } else {
        toast.success('Expense recorded and approved', { icon: '✅', style: { background: '#101010', color: '#fff' } })
     }
 
     setShowModal(false)
     setForm({ date: new Date().toISOString().split('T')[0], description: '', amount: '', category_id: '', segment_id: '', vendor_id: '', payment_method: 'cash', is_recurring: false, recurring_frequency: 'monthly', notes: '' })
+  }
+
+  const handleExportCSV = () => {
+    const data = filtered.map(e => {
+      const segName = SAMPLE_SEGMENTS.find(s => s.id === e.segment_id)?.name || e.segment_id
+      return {
+        Date: e.date,
+        Description: e.description,
+        Segment: segName,
+        Status: e.status.toUpperCase(),
+        PaymentMethod: e.payment_method || 'N/A',
+        Recurring: e.is_recurring ? 'Yes' : 'No',
+        Amount: e.amount
+      }
+    })
+    exportToCSV(data, 'Expense_Ledger_Export')
   }
 
   return (
@@ -200,7 +222,7 @@ export default function ExpensesPage() {
                   <option key={s.id} value={s.id}>{s.icon} {s.name}</option>
                 ))}
               </select>
-              <button className="btn btn-secondary btn-sm">📥 Export CSV</button>
+              <button className="btn btn-secondary btn-sm" onClick={handleExportCSV}>📥 Export CSV</button>
               <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>
                 {filtered.length} results · {fmt(totalFiltered)}
               </span>
@@ -222,7 +244,7 @@ export default function ExpensesPage() {
                 </thead>
                 <tbody>
                   {filtered.map(exp => {
-                    const seg = SAMPLE_SEGMENTS.find(s => s.id === (exp as any).segment_id)
+                    const seg = SAMPLE_SEGMENTS.find(s => s.id === exp.segment_id)
                     const isPending = exp.status === 'pending'
                     return (
                       <tr id={`row-${exp.id}`} key={exp.id} style={{ opacity: isPending ? 0.7 : 1 }}>
@@ -241,12 +263,12 @@ export default function ExpensesPage() {
                         </td>
                         <td>
                           <span className="badge badge-neutral" style={{ textTransform: 'capitalize' }}>
-                            {(exp as any).payment_method?.replace(/_/g, ' ') ?? '—'}
+                            {exp.payment_method?.replace(/_/g, ' ') ?? '—'}
                           </span>
                         </td>
                         <td>
-                          {(exp as any).is_recurring
-                            ? <span className="badge badge-info">🔄 {(exp as any).recurring_frequency}</span>
+                          {exp.is_recurring
+                            ? <span className="badge badge-info">🔄 {exp.recurring_frequency}</span>
                             : <span className="badge badge-neutral">One-time</span>}
                         </td>
                         <td className="amount expense">{fmt(exp.amount)}</td>
@@ -266,7 +288,7 @@ export default function ExpensesPage() {
       {/* Add Expense Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
-          <div className="modal">
+          <div className="modal" style={{ maxWidth: 640 }}>
             <div className="modal-header">
               <div className="modal-title">Add New Expense</div>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>

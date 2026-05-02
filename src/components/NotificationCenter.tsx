@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { Bell, X, Check, Trash2, Plus, AlertCircle, Info, FileText } from 'lucide-react';
 import Link from 'next/link';
+import { toastWithUndo } from '@/lib/toastUtils';
 
 export default function NotificationCenter() {
   const { 
@@ -43,6 +44,26 @@ export default function NotificationCenter() {
     warning: 'var(--status-warning)',
     info: 'var(--status-info)',
     task: 'var(--status-success)'
+  };
+
+  const handleDeleteNotification = (n: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteNotification(n.id);
+    toastWithUndo({
+      message: 'Notification removed',
+      onUndo: () => {
+        // We recreate it but keep the same data. Note: store addNotification generates a new ID, 
+        // so it might appear at the top. This is acceptable for a simple undo.
+        addNotification({
+          title: n.title,
+          message: n.message,
+          category: n.category,
+          priority: n.priority,
+          dueDate: n.dueDate,
+          amount: n.amount
+        });
+      }
+    });
   };
 
   return (
@@ -104,7 +125,7 @@ export default function NotificationCenter() {
                        {n.priority === 'task' && n.status !== 'completed' && (
                          <button onClick={(e) => { e.stopPropagation(); markAsCompleted(n.id); }} style={{ background: 'none', border: 'none', color: '#39C86A', cursor: 'pointer', padding: 4 }} title="Mark Complete"><Check size={14}/></button>
                        )}
-                       <button onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 4 }} title="Delete"><Trash2 size={14}/></button>
+                       <button onClick={(e) => handleDeleteNotification(n, e)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 4 }} title="Delete"><Trash2 size={14}/></button>
                      </div>
                      
                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
