@@ -1,6 +1,7 @@
 import "./globals.css";
 import CommandAssistant from "@/components/CommandAssistant";
 import CommandPalette from "@/components/CommandPalette";
+import MobileFieldMode from "@/components/MobileFieldMode";
 import { Toaster } from "react-hot-toast";
 
 export const metadata = {
@@ -20,6 +21,7 @@ export default function RootLayout({
         {children}
         <CommandPalette />
         <CommandAssistant />
+        <MobileFieldMode />
       </body>
     </html>
   );
