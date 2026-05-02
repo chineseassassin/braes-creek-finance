@@ -8,6 +8,7 @@
   --bg-sidebar: #101010;
   --bg-card: #1E1E1E;
   --bg-card-elevated: #242424;
+  --bg-surface: #181818;
   --bg-input: #202020;
   
   --text-primary: #F5F5F5;
@@ -87,6 +88,7 @@
   --bg-sidebar:      #FFFFFF;
   --bg-card:         #FFFFFF;
   --bg-card-elevated:#F8FAFC;
+  --bg-surface:      #F3F4F6;
   --bg-input:        #FFFFFF;
 
   /* Text — high contrast, no pale grays on important labels */

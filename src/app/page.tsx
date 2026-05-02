@@ -506,7 +506,7 @@ export default function Home() {
         </main>
       </div>
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{__html: `
         .animate-alert-entrance {
           animation: aggressiveShake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
         }
@@ -662,7 +662,7 @@ export default function Home() {
            .grid-12 { grid-template-columns: 1fr !important; }
            .grid-12 > div { grid-column: span 12 !important; }
         }
-      `}</style>
+      `}} />
     </div>
   );
 }

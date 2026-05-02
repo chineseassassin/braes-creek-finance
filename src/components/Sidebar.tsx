@@ -131,6 +131,11 @@ export default function Sidebar() {
         .main-content {
           margin-left: ${w}px !important;
         }
+        .logo-container:hover {
+          transform: scale(1.05) translateY(-2px);
+          border-color: rgba(var(--status-success-rgb), 0.4) !important;
+          background: rgba(255,255,255,0.06) !important;
+        }
       `}} />
 
       <aside style={{
@@ -146,8 +151,27 @@ export default function Sidebar() {
           borderBottom: '1px solid var(--border-soft)',
           justifyContent: sidebarCollapsed ? 'center' : 'flex-start', gap: 12,
         }}>
-          <div style={{ width: 42, height: 42, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <img src="/bc-logo.png" alt="BC Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <div 
+            className="logo-container"
+            style={{ 
+              width: 60, height: 60, borderRadius: 16, overflow: 'hidden', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              flexShrink: 0, transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              background: 'rgba(255,255,255,0.03)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 0 20px rgba(255,255,255,0.02)',
+              cursor: 'pointer'
+            }}
+          >
+            <img 
+              src="/bc-logo.png" 
+              alt="BC Logo" 
+              style={{ 
+                width: '90%', height: '90%', objectFit: 'contain',
+                filter: 'drop-shadow(0 0 8px var(--status-success-glow))'
+              }} 
+            />
           </div>
           {!sidebarCollapsed && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>

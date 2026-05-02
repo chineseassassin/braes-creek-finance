@@ -25,6 +25,7 @@ import { useCropStore } from '@/store/useCropStore'
 import { useInfrastructureStore } from '@/store/useInfrastructureStore'
 import { useVendorStore } from '@/store/useVendorStore'
 import { useAppStore } from '@/store/useAppStore'
+import { useUIStore } from '@/store/useUIStore'
 import { useWorkflowStore } from '@/store/useWorkflowStore'
 import { exportToCSV } from '@/lib/exportUtils'
 import { toast, Toaster } from 'react-hot-toast'
@@ -59,6 +60,7 @@ export default function ReportsPage() {
   const { assets, maintenanceLogs } = useInfrastructureStore()
   const { vendors } = useVendorStore()
   const { emitSystemEvent } = useAppStore()
+  const { sidebarCollapsed } = useUIStore()
 
   useEffect(() => {
     fetchTransactions()
@@ -461,7 +463,7 @@ export default function ReportsPage() {
         accept=".pdf,.xlsx,.xls,.csv"
       />
 
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{__html: `
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
@@ -483,7 +485,7 @@ export default function ReportsPage() {
           .card { border: 1px solid #ddd !important; box-shadow: none !important; margin-bottom: 20px !important; }
           body { background: #fff !important; }
         }
-      `}</style>
+      `}} />
     </div>
   )
 }

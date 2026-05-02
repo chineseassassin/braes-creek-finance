@@ -35,6 +35,21 @@ export default function SettingsPage() {
   const [currency, setCurrency] = useState('USD')
   const [timezone, setTimezone] = useState('America/Port_of_Spain')
   const [fiscalStart, setFiscalStart] = useState('January')
+
+  // Notification toggle state
+  const [notifState, setNotifState] = useState<Record<string, boolean>>({
+    'Overdue loan alerts': true,
+    'Budget overrun warnings': true,
+    'Maintenance reminders': true,
+    'Payroll pending notices': false,
+    'Harvest countdown alerts': true,
+    'Weekly spend summary': false,
+  });
+  const toggleNotif = (label: string) => {
+    const next = !notifState[label];
+    setNotifState(prev => ({ ...prev, [label]: next }));
+    toast.success(`${label} ${next ? 'enabled' : 'disabled'}`);
+  };
   
   // Category Modal State
   const [showCatModal, setShowCatModal] = useState(false)
@@ -437,7 +452,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <style jsx>{`
+              <style dangerouslySetInnerHTML={{__html: `
                  .settings-switch {
                     position: relative; display: inline-block; width: 36px; height: 20px;
                  }
@@ -452,7 +467,7 @@ export default function SettingsPage() {
                  }
                  input:checked + .settings-slider { background-color: #22c55e; }
                  input:checked + .settings-slider:before { transform: translateX(16px); }
-              `}</style>
+              `}} />
             </div>
           )}
 
@@ -521,13 +536,13 @@ export default function SettingsPage() {
                   <div key={seg.id} className="card" style={{ borderLeft: `4px solid ${seg.color}`, padding: '24px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                        <div style={{ fontSize: 32 }}>{seg.icon}</div>
-                       <button className="btn-secondary" style={{ padding: '6px', borderRadius: 8 }}><Edit2 size={12}/></button>
+                       <button className="btn-secondary" style={{ padding: '6px', borderRadius: 8 }} onClick={() => toast.success(`Editing segment: ${seg.name}`)}><Edit2 size={12}/></button>
                     </div>
                     <h4 style={{ fontSize: 15, fontWeight: 950, color: 'var(--text-primary)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{seg.name}</h4>
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 20 }}>{seg.description}</p>
-                    <div style={{ pt: 16, borderTop: '1px solid var(--border-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ borderTop: '1px solid var(--border-soft)', paddingTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                        <span style={{ fontSize: 9, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Active Records</span>
-                       <span style={{ fontSize: 13, fontWeight: 900, color: seg.color }}>{Math.floor(Math.random() * 50) + 10}</span>
+                       <span style={{ fontSize: 13, fontWeight: 900, color: seg.color }}>{categories.filter(c => c.segment_id === seg.id).length || 0}</span>
                     </div>
                   </div>
                 ))}
@@ -541,33 +556,43 @@ export default function SettingsPage() {
               <div className="card-header"><div className="card-title">🔔 Notification Preferences</div></div>
               <div className="card-body">
                 {[
-                  { label: 'Overdue loan alerts', desc: 'Get notified when a loan payment is past due', def: true },
-                  { label: 'Budget overrun warnings', desc: 'Alert when spending exceeds budget by more than 10%', def: true },
-                  { label: 'Maintenance reminders', desc: 'Equipment service due date reminders', def: true },
-                  { label: 'Payroll pending notices', desc: 'Reminder to process pending payroll records', def: false },
-                  { label: 'Harvest countdown alerts', desc: 'Notify 30 days before expected harvest date', def: true },
-                  { label: 'Weekly spend summary', desc: 'Email summary of weekly expenses every Monday', def: false },
-                ].map(item => (
-                  <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid var(--border-subtle)' }}>
-                    <div>
-                      <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13 }}>{item.label}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{item.desc}</div>
-                    </div>
-                    <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24, cursor: 'pointer' }}>
-                      <input type="checkbox" defaultChecked={item.def} style={{ opacity: 0, width: 0, height: 0 }} onChange={(e) => toast.success(`${item.label} ${e.target.checked ? 'enabled' : 'disabled'}`)} />
-                      <span style={{
-                        position: 'absolute', inset: 0, background: '#242424',
-                        borderRadius: 24, border: '1px solid var(--border-soft)',
-                        transition: 'background 0.2s'
-                      }}>
-                        <span style={{
-                          position: 'absolute', top: 3, left: 3, width: 16, height: 16,
-                          background: 'white', borderRadius: '50%', transition: 'left 0.2s'
+                  { label: 'Overdue loan alerts',      desc: 'Get notified when a loan payment is past due' },
+                  { label: 'Budget overrun warnings',   desc: 'Alert when spending exceeds budget by more than 10%' },
+                  { label: 'Maintenance reminders',     desc: 'Equipment service due date reminders' },
+                  { label: 'Payroll pending notices',   desc: 'Reminder to process pending payroll records' },
+                  { label: 'Harvest countdown alerts',  desc: 'Notify 30 days before expected harvest date' },
+                  { label: 'Weekly spend summary',      desc: 'Email summary of weekly expenses every Monday' },
+                ].map(item => {
+                  const on = notifState[item.label] ?? false;
+                  return (
+                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid var(--border-soft)' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13 }}>{item.label}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{item.desc}</div>
+                      </div>
+                      <div
+                        onClick={() => toggleNotif(item.label)}
+                        style={{
+                          position: 'relative', width: 44, height: 24, borderRadius: 24,
+                          background: on ? 'var(--status-success)' : 'var(--bg-card-elevated)',
+                          border: `1px solid ${on ? 'var(--status-success)' : 'var(--border-soft)'}`,
+                          cursor: 'pointer', transition: 'background 0.25s, border-color 0.25s',
+                          flexShrink: 0,
+                          boxShadow: on ? '0 0 8px var(--status-success-glow)' : 'none'
+                        }}
+                      >
+                        <div style={{
+                          position: 'absolute', top: 3,
+                          left: on ? 23 : 3,
+                          width: 16, height: 16,
+                          background: 'white', borderRadius: '50%',
+                          transition: 'left 0.25s cubic-bezier(0.4,0,0.2,1)',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
                         }} />
-                      </span>
-                    </label>
-                  </div>
-                ))}
+                      </div>
+                    </div>
+                  );
+                })}
                 <button className="btn btn-primary" style={{ marginTop: 20 }} onClick={() => toast.success('Notification preferences saved')}>Save Preferences</button>
               </div>
             </div>
