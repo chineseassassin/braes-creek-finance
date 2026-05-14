@@ -6,7 +6,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 // Handle invalid/placeholder credentials gracefully to prevent runtime crash
 const isValid = supabaseUrl && supabaseUrl.startsWith('http') && supabaseUrl !== 'your_supabase_project_url'
 
-if (!isValid) {
+if (!supabaseUrl && !supabaseAnonKey) {
   console.warn('⚠️ SUPABASE ERROR: Invalid or missing NEXT_PUBLIC_SUPABASE_URL. Dashboard will operate in read-only/demo mode.')
 }
 
