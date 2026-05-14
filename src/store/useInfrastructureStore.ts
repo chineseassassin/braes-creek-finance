@@ -28,12 +28,12 @@ export const useInfrastructureStore = create<InfrastructureState>((set, get) => 
   assets: [
     { 
       id: 'ast-1', name: 'John Deere Tractor 5075E', type: 'Tractor', location: 'Barn A', 
-      status: 'active', purchase_value: 45000, purchase_date: '2023-05-15', 
+      status: 'operational', replacement_value: 45000, last_inspection: '2023-05-15', health_index: 95,
       workflow_status: 'approved', created_by: 'system', created_at: new Date().toISOString() 
     },
     { 
       id: 'ast-2', name: 'Backup Generator 50kW', type: 'Generator', location: 'Utility Shed', 
-      status: 'needs_service', purchase_value: 12000, purchase_date: '2022-11-20', 
+      status: 'maintenance', replacement_value: 12000, last_inspection: '2022-11-20', health_index: 65,
       workflow_status: 'approved', created_by: 'system', created_at: new Date().toISOString() 
     }
   ],
@@ -84,7 +84,7 @@ export const useInfrastructureStore = create<InfrastructureState>((set, get) => 
      const asset = get().assets.find(a => a.id === id)
      emitSystemEvent({
         type: 'update',
-        severity: status === 'down' ? 'critical' : (status === 'needs_service' ? 'warning' : 'info'),
+        severity: status === 'critical' ? 'critical' : (status === 'maintenance' ? 'warning' : 'info'),
         module: 'Infrastructure',
         message: `Asset status changed: ${asset?.name} is now ${status.replace('_', ' ')}`,
         metadata: { id, status }
@@ -100,7 +100,7 @@ export const useInfrastructureStore = create<InfrastructureState>((set, get) => 
     if (asset) {
        useAppStore.getState().emitSystemEvent({
           type: 'approval',
-          severity: 'success',
+          severity: 'info',
           module: 'Infrastructure',
           message: `Asset approved: ${asset.name}`,
           metadata: { id }
@@ -158,7 +158,7 @@ export const useInfrastructureStore = create<InfrastructureState>((set, get) => 
      if (log) {
         useAppStore.getState().emitSystemEvent({
            type: 'approval',
-           severity: 'success',
+           severity: 'info',
            module: 'Infrastructure',
            message: `Maintenance log approved for asset ID: ${log.asset_id}`,
            metadata: { id, cost: log.cost }
@@ -181,7 +181,7 @@ export const useInfrastructureStore = create<InfrastructureState>((set, get) => 
      if (log) {
         useAppStore.getState().emitSystemEvent({
            type: 'update',
-           severity: 'success',
+           severity: 'info',
            module: 'Infrastructure',
            message: `Maintenance task completed for asset ID: ${log.asset_id}`,
            metadata: { id }

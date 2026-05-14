@@ -9,6 +9,8 @@ interface Transaction {
   category: string
   description: string
   date: string
+  reference?: string
+  notes?: string
   attachment_url?: string
   status?: 'pending' | 'approved' | 'rejected'
   segment_id?: string

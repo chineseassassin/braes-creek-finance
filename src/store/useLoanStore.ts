@@ -11,6 +11,8 @@ export interface Loan {
   due_date: string
   status: 'active' | 'paid' | 'overdue'
   loan_type?: string
+  term_months?: number
+  notes?: string
   monthly_payment?: number
   workflow_status?: 'pending' | 'approved' | 'rejected'
   created_at?: string

@@ -60,7 +60,7 @@ export default function DebtLoanCommandCenter() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const result = await addLoan({
+    await addLoan({
       lender_name: form.lender_name,
       loan_type: form.loan_type,
       amount: parseFloat(form.amount),
@@ -72,21 +72,19 @@ export default function DebtLoanCommandCenter() {
       notes: form.notes
     });
 
-    if (result || true) { // addLoan returns void in the store, but we can assume success if no throw
-      toast.success('Debt obligation registered successfully', {
-        style: { background: '#101010', color: '#fff', border: '1px solid var(--status-success)' }
-      });
-      setShowModal(false);
-      setForm({
-        lender_name: '',
-        loan_type: 'Bank',
-        amount: '',
-        interest_rate: '',
-        term_months: '',
-        due_date: new Date().toISOString().split('T')[0],
-        notes: ''
-      });
-    }
+    toast.success('Debt obligation registered successfully', {
+      style: { background: '#101010', color: '#fff', border: '1px solid var(--status-success)' }
+    });
+    setShowModal(false);
+    setForm({
+      lender_name: '',
+      loan_type: 'Bank',
+      amount: '',
+      interest_rate: '',
+      term_months: '',
+      due_date: new Date().toISOString().split('T')[0],
+      notes: ''
+    });
   };
 
   const handleExport = () => {
@@ -197,9 +195,9 @@ export default function DebtLoanCommandCenter() {
               </div>
 
               <div className="col-3">
-                 <div className="glass-card" style={{ padding: '24px', borderLeft: `3px solid ${COLORS.ai}` }}>
+                 <div className="glass-card" style={{ padding: '24px', borderLeft: `3px solid ${COLORS.info}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                       <Sparkles size={16} color={COLORS.ai} />
+                       <Sparkles size={16} color={COLORS.info} />
                        <h3 style={{ fontSize: 14, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Leverage Intelligence</h3>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

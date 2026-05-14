@@ -87,8 +87,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     const newRecs: AIRecommendation[] = [];
 
     // 1. RULE: Expense Spike Analysis
-    const spendingAlerts = activeAlerts.filter(a => a.category === 'spending' && a.severity !== 'info');
-    spendingAlerts.forEach(alert => {
+    const spendingAlerts = activeAlerts.filter((a: any) => a.category === 'spending' && a.severity !== 'info');
+    spendingAlerts.forEach((alert: any) => {
        const existing = currentRecs.find(r => r.title.includes(alert.title));
        if (existing) return;
 
@@ -109,8 +109,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     });
 
     // 2. RULE: Payroll Audit Signal
-    const payrollAlerts = activeAlerts.filter(a => a.category === 'payroll' && (a.severity === 'critical' || a.severity === 'warning'));
-    payrollAlerts.forEach(alert => {
+    const payrollAlerts = activeAlerts.filter((a: any) => a.category === 'payroll' && (a.severity === 'critical' || a.severity === 'warning'));
+    payrollAlerts.forEach((alert: any) => {
        const existing = currentRecs.find(r => r.title.includes('Labor Audit'));
        if (existing) return;
 
@@ -131,8 +131,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     });
 
     // 3. RULE: Livestock Mortality Crisis
-    const mortalityAlerts = activeAlerts.filter(a => a.category === 'livestock' && a.title.includes('Mortality'));
-    mortalityAlerts.forEach(alert => {
+    const mortalityAlerts = activeAlerts.filter((a: any) => a.category === 'livestock' && a.title.includes('Mortality'));
+    mortalityAlerts.forEach((alert: any) => {
        const existing = currentRecs.find(r => r.title.includes('Biosecurity'));
        if (existing) return;
 
@@ -153,7 +153,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     });
 
     // 4. RULE: Low Production Output
-    if (activeAlerts.some(a => a.category === 'livestock' && a.message.includes('output'))) {
+    if (activeAlerts.some((a: any) => a.category === 'livestock' && a.message.includes('output'))) {
        const existing = currentRecs.find(r => r.title.includes('Output Optimization'));
        if (!existing) {
           newRecs.push({
@@ -174,8 +174,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     }
 
     // 5. RULE: Crop Yield Recovery
-    const yieldAlerts = activeAlerts.filter(a => a.related_table === 'crops' && a.title.includes('Yield'));
-    yieldAlerts.forEach(alert => {
+    const yieldAlerts = activeAlerts.filter((a: any) => a.related_table === 'crops' && a.title.includes('Yield'));
+    yieldAlerts.forEach((alert: any) => {
        const existing = currentRecs.find(r => r.title.includes('Yield Recovery'));
        if (existing) return;
 
@@ -196,8 +196,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     });
 
     // 6. RULE: Labor vs Crop Efficiency
-    if (activeAlerts.some(a => a.category === 'payroll' && a.severity === 'critical') && 
-        activeAlerts.some(a => a.related_table === 'crops' && a.severity === 'warning')) {
+    if (activeAlerts.some((a: any) => a.category === 'payroll' && a.severity === 'critical') && 
+        activeAlerts.some((a: any) => a.related_table === 'crops' && a.severity === 'warning')) {
        const existing = currentRecs.find(r => r.title.includes('Labor Efficiency'));
        if (!existing) {
           newRecs.push({
@@ -218,8 +218,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     }
 
     // 7. RULE: Inventory Usage Velocity
-    const usageAlerts = activeAlerts.filter(a => a.related_table === 'inventory' && a.title.includes('Usage Rate'));
-    usageAlerts.forEach(alert => {
+    const usageAlerts = activeAlerts.filter((a: any) => a.related_table === 'inventory' && a.title.includes('Usage Rate'));
+    usageAlerts.forEach((alert: any) => {
        const existing = currentRecs.find(r => r.title.includes('Procurement Audit'));
        if (existing) return;
 
@@ -240,7 +240,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     });
 
     // 8. RULE: Stock Replenishment Optimization
-    const lowStockAlerts = activeAlerts.filter(a => a.related_table === 'inventory' && a.severity === 'critical');
+    const lowStockAlerts = activeAlerts.filter((a: any) => a.related_table === 'inventory' && a.severity === 'critical');
     if (lowStockAlerts.length >= 2) {
        const existing = currentRecs.find(r => r.title.includes('Replenishment'));
        if (!existing) {
@@ -262,8 +262,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     }
 
     // 9. RULE: Repeated Infrastructure Repair Cost
-    const repairCostAlerts = activeAlerts.filter(a => a.related_table === 'infrastructure' && a.title.includes('Cost Variance'));
-    repairCostAlerts.forEach(alert => {
+    const repairCostAlerts = activeAlerts.filter((a: any) => a.related_table === 'infrastructure' && a.title.includes('Cost Variance'));
+    repairCostAlerts.forEach((alert: any) => {
        const existing = currentRecs.find(r => r.title.includes('Asset Lifecycle Audit'));
        if (existing) return;
 
@@ -284,7 +284,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     });
 
     // 10. RULE: Critical Operational Risk (Overdue Critical Assets)
-    const criticalInfraAlerts = activeAlerts.filter(a => a.related_table === 'infrastructure' && a.severity === 'critical');
+    const criticalInfraAlerts = activeAlerts.filter((a: any) => a.related_table === 'infrastructure' && a.severity === 'critical');
     if (criticalInfraAlerts.length > 0) {
        const existing = currentRecs.find(r => r.title.includes('Operational Continuity'));
        if (!existing) {
@@ -306,8 +306,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     }
 
     // 11. RULE: Predictive Supply Chain Management
-    const predStockAlerts = activeAlerts.filter(a => a.related_record_id?.toString().startsWith('pred-inv-') && a.severity === 'critical');
-    predStockAlerts.forEach(alert => {
+    const predStockAlerts = activeAlerts.filter((a: any) => a.related_record_id?.toString().startsWith('pred-inv-') && a.severity === 'critical');
+    predStockAlerts.forEach((alert: any) => {
        const existing = currentRecs.find(r => r.title.includes('Just-in-Time Procurement'));
        if (existing) return;
 
@@ -328,7 +328,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     });
 
     // 12. RULE: Cash Flow Protection Strategy
-    if (activeAlerts.some(a => a.related_record_id === 'pred-cash-flow')) {
+    if (activeAlerts.some((a: any) => a.related_record_id === 'pred-cash-flow')) {
        const existing = currentRecs.find(r => r.title.includes('Liquidity Protection'));
        if (!existing) {
           newRecs.push({

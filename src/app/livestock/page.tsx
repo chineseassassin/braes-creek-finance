@@ -230,7 +230,7 @@ export default function LivestockPage() {
                        <div style={{ background: 'var(--bg-card-elevated)', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border-soft)' }}>
                           <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>Quantity</div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>{unit.quantity} head</div>
-                          {unit.mortality_count > 0 && <div style={{ fontSize: 10, color: 'var(--status-critical)' }}>💀 {unit.mortality_count} mortality</div>}
+                          {(unit.mortality_count || 0) > 0 && <div style={{ fontSize: 10, color: 'var(--status-critical)' }}>💀 {unit.mortality_count} mortality</div>}
                        </div>
                        <div style={{ background: 'var(--bg-card-elevated)', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border-soft)' }}>
                           <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>Market Value</div>

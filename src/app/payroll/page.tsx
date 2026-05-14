@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from "@/components/Sidebar";
@@ -25,7 +25,7 @@ import {
 import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
 import { exportToCSV } from '@/lib/exportUtils';
 
-export default function PayrollPage() {
+function PayrollContent() {
   const searchParams = useSearchParams();
   const highlightId = searchParams.get('highlight');
   const { transactions, fetchTransactions, addTransaction, updateTransaction, updateTransactionStatus, deleteTransaction } = useDashboardStore();
@@ -121,7 +121,7 @@ export default function PayrollPage() {
     const totalPay = (h * r) + (o * r * 1.5);
 
     const isDataEntry = currentUser.role === 'data-entry';
-    const status = isDataEntry ? 'pending' : 'approved';
+    const status: 'pending' | 'approved' = isDataEntry ? 'pending' : 'approved';
 
     const payload = {
       type: 'expense' as const,
@@ -713,6 +713,14 @@ export default function PayrollPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function PayrollPage() {
+  return (
+    <Suspense fallback={<div>Loading payroll...</div>}>
+      <PayrollContent />
+    </Suspense>
   );
 }
 

@@ -430,7 +430,10 @@ export default function ReportsPage() {
              {activeReport !== 'pl' && activeReport !== 'audit' && (
                <div className="card" style={{ padding: 100, textAlign: 'center', border: '1px dashed var(--border-soft)' }}>
                   <div style={{ background: 'var(--status-info-glow)', width: 80, height: 80, borderRadius: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px', color: 'var(--status-info)', border: '1px solid var(--status-info-glow)' }}>
-                     {React.cloneElement(REPORT_TYPES.find(r => r.id === activeReport)?.icon as React.ReactElement, { size: 32 })}
+                   {(() => {
+                     const Icon = REPORT_TYPES.find(r => r.id === activeReport)?.icon;
+                     return Icon ? React.cloneElement(Icon as React.ReactElement<{ size?: number }>, { size: 32 }) : null;
+                   })()}
                   </div>
                   <h3 style={{ fontSize: 24, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 12 }}>{REPORT_TYPES.find(r => r.id === activeReport)?.label} Analytics Hub</h3>
                   <p className="text-body" style={{ maxWidth: 500, margin: '0 auto 32px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>

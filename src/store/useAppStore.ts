@@ -236,8 +236,7 @@ export const useAppStore = create<AppState>()(
           type: 'approval',
           severity: 'info',
           module: 'Intelligence Hub',
-          message: `Recalculating P&L and AI signals after ${request.entity_type} approval.`,
-          entity_id: request.entity_id
+          message: `Recalculating P&L and AI signals after ${request.entity_type} approval.`
        });
     }
   },
@@ -259,62 +258,22 @@ export const useAppStore = create<AppState>()(
     });
 
     // 3. Reaction Engine
-    if (event.type === 'DATA_APPROVED') {
-       const transactionId = event.entity_id;
-       const { transactions } = (require('./useDashboardStore')).useDashboardStore.getState();
-       const transaction = transactions.find((t: any) => t.id === transactionId);
-       
-       if (transaction) {
-          // Trigger Alert Engine check
-          useAlertStore.getState().evaluateTransaction(transaction, transactions);
-       }
+    if (event.type === 'approval') {
+        // AI Reaction Engine: Record-specific re-evaluation
+        // Disabled until SystemEvent metadata/entity mapping is standardized
+        /*
+        const transactionId = (event as any).entity_id;
+        // ... (lookups disabled)
+        */
 
-       // 🧠 PHASE 6A: Trigger Livestock Engine if entity_type is livestock
-       if (event.metadata?.entity_type === 'livestock') {
-          const { livestockUnits } = (require('./useDashboardStore')).useDashboardStore.getState();
-          const record = livestockUnits.find((r: any) => r.id === event.entity_id);
-          if (record) {
-             useAlertStore.getState().evaluateLivestockRecord(record, livestockUnits);
-          }
-       }
+         // 🧠 PHASE 7: Run Predictive Intelligence Engine
+         useAlertStore.getState().runPredictiveAudit();
 
-       // 🧠 PHASE 6B: Trigger Crop Engine if entity_type is crop
-       if (event.metadata?.entity_type === 'crop') {
-          const { crops } = (require('./useDashboardStore')).useDashboardStore.getState();
-          const record = crops.find((r: any) => r.id === event.entity_id);
-          if (record) {
-             useAlertStore.getState().evaluateCropRecord(record, crops);
-          }
-       }
+         // 🧠 PHASE 5: Trigger AI Engine recalculation
+         useWorkflowStore.getState().generateRecommendations();
+      }
 
-       // 🧠 PHASE 6C: Trigger Inventory Engine if entity_type is inventory
-       if (event.metadata?.entity_type === 'inventory') {
-          const { inventory } = (require('./useDashboardStore')).useDashboardStore.getState();
-          const record = inventory.find((r: any) => r.id === event.entity_id);
-          if (record) {
-             useAlertStore.getState().evaluateInventoryRecord(record, inventory);
-          }
-       }
-
-       // 🧠 PHASE 6D: Trigger Infrastructure Engine if entity_type is infrastructure
-        if (event.metadata?.entity_type === 'infrastructure') {
-           const { infrastructure } = (require('./useDashboardStore')).useDashboardStore.getState();
-           const record = infrastructure.find((r: any) => r.id === event.entity_id);
-           if (record) {
-              useAlertStore.getState().evaluateInfrastructureRecord(record, infrastructure);
-           }
-        }
-
-        // 🧠 PHASE 7: Run Predictive Intelligence Engine
-        useAlertStore.getState().runPredictiveAudit();
-
-        // 🧠 PHASE 5: Trigger AI Engine recalculation
-        useWorkflowStore.getState().generateRecommendations();
-     }
-
-    if (event.type === 'ALERT_CREATED') {
-       // Future: Trigger high-priority mobile notifications or sound alerts
-       
+    if (event.type === 'alert') {
        // 🧠 PHASE 5: Trigger AI Engine recalculation
        useWorkflowStore.getState().generateRecommendations();
     }
@@ -326,6 +285,19 @@ export const useAppStore = create<AppState>()(
     if (alerts.length > 5) {
        console.log("[Foundation] High-load context detected. Preparing AI optimization signals...");
     }
+  },
+  
+  requestApproval: (entityType, entityId, metadata) => {
+    const { useWorkflowStore } = (require('./useWorkflowStore'));
+    const { currentUser } = get();
+    
+    useWorkflowStore.getState().addApprovalRequest({
+      entity_type: entityType as any,
+      entity_id: entityId,
+      requester_id: currentUser.id,
+      priority: metadata?.priority || 'medium',
+      status: 'pending'
+    });
   }
     }),
     {

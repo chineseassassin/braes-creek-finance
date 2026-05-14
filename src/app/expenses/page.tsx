@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 import Topbar from '@/components/Topbar'
@@ -22,7 +22,7 @@ const fmtShort = (n: number) => {
 
 const PAYMENT_METHODS = ['cash', 'bank_transfer', 'check', 'credit_card', 'other']
 
-export default function ExpensesPage() {
+function ExpensesContent() {
   const searchParams = useSearchParams()
   const highlightId = searchParams.get('highlight')
   const { transactions, addTransaction, getTotalExpenses } = useDashboardStore()
@@ -118,7 +118,7 @@ export default function ExpensesPage() {
         Date: e.date,
         Description: e.description,
         Segment: segName,
-        Status: e.status.toUpperCase(),
+        Status: (e.status || 'pending').toUpperCase(),
         PaymentMethod: e.payment_method || 'N/A',
         Recurring: e.is_recurring ? 'Yes' : 'No',
         Amount: e.amount
@@ -384,3 +384,11 @@ const styles = `
     animation: highlight-flash 3s ease-out;
   }
 `;
+
+export default function ExpensesPage() {
+  return (
+    <Suspense fallback={<div>Loading expenses...</div>}>
+      <ExpensesContent />
+    </Suspense>
+  );
+}

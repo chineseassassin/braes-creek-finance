@@ -36,7 +36,10 @@ export const useCategoryStore = create<CategoryState>()(
   persist(
     (set) => ({
       categories: SAMPLE_CATEGORIES,
-      segments: SAMPLE_SEGMENTS,
+      segments: SAMPLE_SEGMENTS.map(s => ({
+        ...s,
+        description: s.description || ''
+      })),
 
       addCategory: (category) => {
         const newCat = { ...category, id: `cat-${Date.now()}` }

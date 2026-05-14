@@ -173,7 +173,7 @@ export const useAlertStore = create<AlertState>()(
       }
     ]
 
-    set({ alerts: mockAlerts, isLoading: false })
+    set({ alerts: mockAlerts, isLoading: false });
   },
 
   addAlert: async (alert) => {
@@ -181,11 +181,13 @@ export const useAlertStore = create<AlertState>()(
       ...alert,
       id: Math.random().toString(36).substring(7),
       status: 'active',
+      escalation_level: 1,
       created_at: new Date().toISOString()
-    }
+    };
     
     // 🧠 PHASE 4: Emit central event
-    (require('./useAppStore')).useAppStore.getState().emitSystemEvent({
+    const appStore = require('./useAppStore');
+    appStore.useAppStore.getState().emitSystemEvent({
       type: 'alert',
       severity: newAlert.severity as any,
       module: newAlert.category.charAt(0).toUpperCase() + newAlert.category.slice(1),
@@ -311,8 +313,7 @@ export const useAlertStore = create<AlertState>()(
             why_it_matters: 'Severe budget deviation detected. This could indicate vendor error or unplanned major cost.',
             recommended_action: 'Audit invoice and verify delivery',
             related_table: 'transactions',
-            related_record_id: id,
-            escalation_level: 3
+            related_record_id: id
           });
         } else if (ratio > 1.5) {
           await get().addAlert({
@@ -324,8 +325,7 @@ export const useAlertStore = create<AlertState>()(
             why_it_matters: 'Moderate spending increase may impact monthly liquidity targets.',
             recommended_action: 'Review category budget allocation',
             related_table: 'transactions',
-            related_record_id: id,
-            escalation_level: 2
+            related_record_id: id
           });
         }
       }
@@ -350,8 +350,7 @@ export const useAlertStore = create<AlertState>()(
             why_it_matters: 'Labor is a primary cost driver. Rapid increases threaten operational sustainability.',
             recommended_action: 'Review overtime logs and shift schedules',
             related_table: 'transactions',
-            related_record_id: id,
-            escalation_level: 3
+            related_record_id: id
           });
         }
       }
@@ -383,8 +382,7 @@ export const useAlertStore = create<AlertState>()(
           why_it_matters: 'High mortality indicates severe health issues or environmental stress requiring immediate vet intervention.',
           recommended_action: 'Quarantine affected units and call Veterinary Services.',
           related_table: 'livestock',
-          related_record_id: id,
-          escalation_level: 3
+          related_record_id: id
         });
       } else if (mortalityRate > 5) { // Warning
         await get().addAlert({
@@ -396,8 +394,7 @@ export const useAlertStore = create<AlertState>()(
           why_it_matters: 'Rising mortality rates often precede a larger outbreak.',
           recommended_action: 'Review sanitation protocols and monitor water quality.',
           related_table: 'livestock',
-          related_record_id: id,
-          escalation_level: 2
+          related_record_id: id
         });
       }
     }
@@ -427,8 +424,7 @@ export const useAlertStore = create<AlertState>()(
           why_it_matters: 'Severe yield gaps indicate significant crop failure or resource inefficiencies.',
           recommended_action: 'Conduct soil and pest audit. Adjust revenue forecasts.',
           related_table: 'crops',
-          related_record_id: id,
-          escalation_level: 3
+          related_record_id: id
         });
       } else if (yieldPerformance < 80) {
         await get().addAlert({
@@ -440,8 +436,7 @@ export const useAlertStore = create<AlertState>()(
           why_it_matters: 'Sub-optimal yields reduce overall profitability and supply chain reliability.',
           recommended_action: 'Analyze nutrient application and climate variance.',
           related_table: 'crops',
-          related_record_id: id,
-          escalation_level: 2
+          related_record_id: id
         });
       }
     }
@@ -462,8 +457,7 @@ export const useAlertStore = create<AlertState>()(
           why_it_matters: 'Over-maturation leads to quality degradation and complete loss of market value.',
           recommended_action: 'Deploy harvest teams immediately.',
           related_table: 'crops',
-          related_record_id: id,
-          escalation_level: 4
+          related_record_id: id
         });
       } else if (daysToHarvest <= 7 && daysToHarvest > 0 && record.harvest_status !== 'completed') {
         await get().addAlert({
@@ -475,8 +469,7 @@ export const useAlertStore = create<AlertState>()(
           why_it_matters: 'Timely harvest is critical for peak flavor, nutrient density, and shelf life.',
           recommended_action: 'Confirm labor availability and transport logistics.',
           related_table: 'crops',
-          related_record_id: id,
-          escalation_level: 2
+          related_record_id: id
         });
       }
     }
@@ -494,8 +487,7 @@ export const useAlertStore = create<AlertState>()(
           why_it_matters: 'Excessive production costs erode farm margins and impact liquidity for the next cycle.',
           recommended_action: 'Freeze discretionary spending for this cycle and audit input costs.',
           related_table: 'crops',
-          related_record_id: id,
-          escalation_level: 3
+          related_record_id: id
         });
       } else if (costRatio > 1.25) {
         await get().addAlert({
@@ -507,8 +499,7 @@ export const useAlertStore = create<AlertState>()(
           why_it_matters: 'Cost drift reduces the ROI for this specific crop rotation.',
           recommended_action: 'Review resource allocation and optimize input efficiency.',
           related_table: 'crops',
-          related_record_id: id,
-          escalation_level: 2
+          related_record_id: id
         });
       }
     }
@@ -532,8 +523,7 @@ export const useAlertStore = create<AlertState>()(
         why_it_matters: 'Stock depletion will cause immediate operational downtime and fulfillment delays.',
         recommended_action: 'Emergency reorder required immediately.',
         related_table: 'inventory',
-        related_record_id: id,
-        escalation_level: 3
+        related_record_id: id
       });
     } 
     // 2. Low Stock Check
@@ -547,8 +537,7 @@ export const useAlertStore = create<AlertState>()(
         why_it_matters: 'Low stock levels increase the risk of stockouts during peak demand periods.',
         recommended_action: 'Prepare procurement order for next cycle.',
         related_table: 'inventory',
-        related_record_id: id,
-        escalation_level: 2
+        related_record_id: id
       });
     }
 
@@ -563,8 +552,7 @@ export const useAlertStore = create<AlertState>()(
         why_it_matters: 'Rapid inventory turnover may indicate waste, theft, or unforeseen operational bottlenecks.',
         recommended_action: 'Audit usage logs and verify distribution protocols.',
         related_table: 'inventory',
-        related_record_id: id,
-        escalation_level: 2
+        related_record_id: id
       });
     }
   },
@@ -593,8 +581,7 @@ export const useAlertStore = create<AlertState>()(
           : 'Deferred maintenance increases the risk of premature asset failure and higher repair costs.',
         recommended_action: 'Allocate maintenance crew immediately. Verify backup system readiness.',
         related_table: 'infrastructure',
-        related_record_id: id,
-        escalation_level: criticality === 'high' ? 4 : 2
+        related_record_id: id
       });
     }
     // 2. Upcoming Maintenance
@@ -608,8 +595,7 @@ export const useAlertStore = create<AlertState>()(
         why_it_matters: 'Proactive maintenance ensures continuous operational availability and extends asset lifespan.',
         recommended_action: 'Confirm parts availability and schedule technical staff.',
         related_table: 'infrastructure',
-        related_record_id: id,
-        escalation_level: 2
+        related_record_id: id
       });
     }
 
@@ -624,8 +610,7 @@ export const useAlertStore = create<AlertState>()(
         why_it_matters: 'Unforecasted maintenance expenses impact the operational cash reserve for the current quarter.',
         recommended_action: 'Review vendor invoice for unexpected line items. Audit asset repair history.',
         related_table: 'infrastructure',
-        related_record_id: id,
-        escalation_level: 2
+        related_record_id: id
       });
     }
   },
@@ -653,8 +638,7 @@ export const useAlertStore = create<AlertState>()(
           why_it_matters: 'Immediate operational freeze is imminent. Replacement lead times exceed current stock duration.',
           recommended_action: 'Emergency procurement required within 12 hours.',
           related_table: 'inventory',
-          related_record_id: alertId,
-          escalation_level: 3
+          related_record_id: alertId
         });
       } else if (daysRemaining < 7) {
         await get().addAlert({
@@ -666,8 +650,7 @@ export const useAlertStore = create<AlertState>()(
           why_it_matters: 'Normal reorder cycles may be too slow to prevent a stockout event.',
           recommended_action: 'Verify replenishment shipment status or initiate priority order.',
           related_table: 'inventory',
-          related_record_id: alertId,
-          escalation_level: 2
+          related_record_id: alertId
         });
       }
     });
@@ -689,8 +672,7 @@ export const useAlertStore = create<AlertState>()(
         why_it_matters: 'Insufficient cash flow will halt payroll and critical procurement cycles.',
         recommended_action: 'Defer non-essential capital expenditure. Accelerate accounts receivable collection.',
         related_table: 'finance',
-        related_record_id: 'pred-cash-flow',
-        escalation_level: 3
+        related_record_id: 'pred-cash-flow'
       });
     }
 

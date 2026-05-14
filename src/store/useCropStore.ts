@@ -74,7 +74,7 @@ export const useCropStore = create<CropState>((set, get) => ({
     if (crop) {
        useAppStore.getState().emitSystemEvent({
           type: 'approval',
-          severity: 'success',
+          severity: 'info',
           module: 'Crops',
           message: `Crop planting approved: ${crop.name}`,
           metadata: { id, acres: crop.area_acres }

@@ -155,7 +155,7 @@ export default function SettingsPage() {
 
               <div className="card" style={{ marginBottom: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                  <div style={{ p: 10, borderRadius: 10, background: 'var(--status-success-glow)', color: 'var(--status-success)' }}>
+                  <div style={{ padding: 10, borderRadius: 10, background: 'var(--status-success-glow)', color: 'var(--status-success)' }}>
                     <Palette size={18} />
                   </div>
                   <h3 style={{ fontSize: 15, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Visual Architecture</h3>
@@ -173,7 +173,7 @@ export default function SettingsPage() {
                        }}
                        onClick={() => setTheme('dark')}
                      >
-                        <div style={{ p: 8, borderRadius: '50%', background: theme === 'dark' ? 'var(--status-success-glow)' : 'rgba(255,255,255,0.05)', color: theme === 'dark' ? 'var(--status-success)' : 'inherit' }}>
+                        <div style={{ padding: 8, borderRadius: '50%', background: theme === 'dark' ? 'var(--status-success-glow)' : 'rgba(255,255,255,0.05)', color: theme === 'dark' ? 'var(--status-success)' : 'inherit' }}>
                            <Moon size={20} />
                         </div>
                         <div style={{ fontWeight: 850, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Studio Dark</div>
@@ -189,7 +189,7 @@ export default function SettingsPage() {
                        }}
                        onClick={() => setTheme('light')}
                      >
-                        <div style={{ p: 8, borderRadius: '50%', background: theme === 'light' ? 'var(--status-success-glow)' : 'rgba(15, 23, 42, 0.05)', color: theme === 'light' ? 'var(--status-success)' : 'inherit' }}>
+                        <div style={{ padding: 8, borderRadius: '50%', background: theme === 'light' ? 'var(--status-success-glow)' : 'rgba(15, 23, 42, 0.05)', color: theme === 'light' ? 'var(--status-success)' : 'inherit' }}>
                            <Sun size={20} />
                         </div>
                         <div style={{ fontWeight: 850, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Professional Light</div>
@@ -203,7 +203,7 @@ export default function SettingsPage() {
 
               <div className="card" style={{ border: '1px solid rgba(239, 68, 68, 0.2)', background: 'linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, transparent 100%)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                  <div style={{ p: 10, borderRadius: 10, background: 'rgba(239, 68, 68, 0.1)', color: 'var(--status-critical)' }}>
+                  <div style={{ padding: 10, borderRadius: 10, background: 'rgba(239, 68, 68, 0.1)', color: 'var(--status-critical)' }}>
                     <AlertTriangle size={18} />
                   </div>
                   <h3 style={{ fontSize: 15, fontWeight: 900, color: 'var(--status-critical)', margin: 0 }}>Critical Operations</h3>

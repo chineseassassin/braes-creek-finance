@@ -12,6 +12,7 @@ import {
   LoanPayment,
   LivestockUnit,
   CropType,
+  InfrastructureAsset,
 } from './types'
 
 // ── Business Segments ──────────────────────────────────────────────────────────
@@ -197,13 +198,13 @@ export const SAMPLE_LIVESTOCK: LivestockUnit[] = [
 
 // ── Crops ──────────────────────────────────────────────────────────────────────
 export const SAMPLE_CROPS: CropType[] = [
-  { id: 'crop-1', name: 'Cassava', variety: 'TMS 30572', planting_date: '2024-09-01', expected_harvest: '2025-03-01', area_acres: 3, notes: 'Main staple crop', created_at: '2024-09-01' },
-  { id: 'crop-2', name: 'Sweet Potato', variety: 'Beauregard', planting_date: '2024-10-01', expected_harvest: '2025-01-15', area_acres: 1.5, created_at: '2024-10-01' },
-  { id: 'crop-3', name: 'Tomato', variety: 'UC-82', planting_date: '2024-10-15', expected_harvest: '2025-01-01', area_acres: 0.75, notes: 'Greenhouse grown', created_at: '2024-10-15' },
-  { id: 'crop-4', name: 'Cucumber', variety: 'Long Green', planting_date: '2024-11-01', expected_harvest: '2024-12-20', area_acres: 0.5, created_at: '2024-11-01' },
-  { id: 'crop-5', name: 'Bell Pepper', variety: 'California Wonder', planting_date: '2024-09-15', expected_harvest: '2024-12-15', area_acres: 0.5, created_at: '2024-09-15' },
-  { id: 'crop-6', name: 'Sorrel', planting_date: '2024-08-01', expected_harvest: '2024-12-01', area_acres: 0.25, notes: 'Christmas harvest target', created_at: '2024-08-01' },
-  { id: 'crop-7', name: 'Scotch Bonnet Pepper', variety: 'Trinidad Perfume', planting_date: '2024-10-20', expected_harvest: '2025-01-20', area_acres: 0.25, notes: 'High-value crop', created_at: '2024-10-20' },
+  { id: 'crop-1', name: 'Cassava', variety: 'TMS 30572', planting_date: '2024-09-01', expected_harvest: '2025-03-01', area_acres: 3, input_costs: 0, labor_cost: 0, status: 'growing', notes: 'Main staple crop', created_at: '2024-09-01' },
+  { id: 'crop-2', name: 'Sweet Potato', variety: 'Beauregard', planting_date: '2024-10-01', expected_harvest: '2025-01-15', area_acres: 1.5, input_costs: 0, labor_cost: 0, status: 'growing', created_at: '2024-10-01' },
+  { id: 'crop-3', name: 'Tomato', variety: 'UC-82', planting_date: '2024-10-15', expected_harvest: '2025-01-01', area_acres: 0.75, input_costs: 0, labor_cost: 0, status: 'growing', notes: 'Greenhouse grown', created_at: '2024-10-15' },
+  { id: 'crop-4', name: 'Cucumber', variety: 'Long Green', planting_date: '2024-11-01', expected_harvest: '2024-12-20', area_acres: 0.5, input_costs: 0, labor_cost: 0, status: 'growing', created_at: '2024-11-01' },
+  { id: 'crop-5', name: 'Bell Pepper', variety: 'California Wonder', planting_date: '2024-09-15', expected_harvest: '2024-12-15', area_acres: 0.5, input_costs: 0, labor_cost: 0, status: 'growing', created_at: '2024-09-15' },
+  { id: 'crop-6', name: 'Sorrel', planting_date: '2024-08-01', expected_harvest: '2024-12-01', area_acres: 0.25, input_costs: 0, labor_cost: 0, status: 'growing', notes: 'Christmas harvest target', created_at: '2024-08-01' },
+  { id: 'crop-7', name: 'Scotch Bonnet Pepper', variety: 'Trinidad Perfume', planting_date: '2024-10-20', expected_harvest: '2025-01-20', area_acres: 0.25, input_costs: 0, labor_cost: 0, status: 'growing', notes: 'High-value crop', created_at: '2024-10-20' },
 ]
 
 // ── Feed Purchases ─────────────────────────────────────────────────────────────

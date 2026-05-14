@@ -115,7 +115,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     if (item) {
        useAppStore.getState().emitSystemEvent({
           type: 'approval',
-          severity: 'success',
+          severity: 'info',
           module: 'Inventory',
           message: `Inventory item approved: ${item.itemName}`,
           metadata: { id, quantity: item.quantity }

@@ -70,6 +70,7 @@ export interface Loan {
   principal_amount: number
   interest_rate: number
   repayment_terms: string
+  term_months?: number
   due_date: string
   total_repaid: number
   remaining_balance: number
@@ -107,6 +108,7 @@ export interface LaborEntry {
   hourly_rate: number
   total_cost: number
   segment_id: string
+  status?: 'pending' | 'approved' | 'rejected'
   notes?: string
   created_by: string
   created_at: string
@@ -137,6 +139,7 @@ export interface LivestockUnit {
   id: string
   animal_type: 'broiler' | 'layer' | 'goat' | 'pig' | 'cattle' | 'other'
   batch_name?: string
+  breed?: string
   quantity: number
   mortality_count?: number
   feed_cost?: number
@@ -210,6 +213,7 @@ export interface InfrastructureAsset {
   replacement_value: number
   last_inspection: string
   health_index: number
+  health?: string
   vendor_name?: string
   notes?: string
   workflow_status: 'pending' | 'approved' | 'rejected'
@@ -279,7 +283,7 @@ export interface KPIData {
 // ── Phase 1 Foundation Types ───────────────────────────────────────────
 
 export type WorkflowStatus = 'pending' | 'approved' | 'rejected' | 'escalated' | 'resolved';
-export type EntityType = 'expense' | 'loan' | 'labor' | 'livestock' | 'crop' | 'maintenance' | 'task';
+export type EntityType = 'expense' | 'loan' | 'labor' | 'livestock' | 'crop' | 'maintenance' | 'task' | 'asset' | 'inventory' | 'infrastructure' | 'payroll';
 
 export interface ApprovalRequest {
   id: string;
