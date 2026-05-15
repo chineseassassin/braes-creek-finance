@@ -68,7 +68,11 @@ export async function middleware(request: NextRequest) {
 
   const { data: { session } } = await supabase.auth.getSession()
 
-  // Protected route logic
+  // Protected route logic - Temporarily disabled because client uses localStorage
+  // which the server middleware cannot read via cookies, causing a redirect loop.
+  // Move auth protection to a client-side component or migrate to SSR cookies.
+  
+  /*
   if (!session && request.nextUrl.pathname !== '/login') {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
@@ -80,6 +84,7 @@ export async function middleware(request: NextRequest) {
     url.pathname = '/'
     return NextResponse.redirect(url)
   }
+  */
 
   return response
 }

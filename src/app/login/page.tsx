@@ -29,6 +29,15 @@ export default function LoginPage() {
       setError(error.message);
       setLoginState('idle');
     } else {
+      // Verify session exists
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData.session) {
+        setError('Login succeeded but no session was created.');
+        setLoginState('idle');
+        return;
+      }
+
       // Successful login -> trigger cinematic animation sequence
       setLoginState('scanning');
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -36,7 +45,7 @@ export default function LoginPage() {
       setLoginState('granted');
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      router.push('/');
+      window.location.replace('/');
     }
   };
 
@@ -54,7 +63,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 font-inter relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-black flex flex-col items-center pt-[8vh] pb-12 px-4 font-inter relative overflow-y-auto overflow-x-hidden">
       <style>{`
         @keyframes scan {
           0% { top: -10%; opacity: 0; }
@@ -76,17 +85,17 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-stars pointer-events-none opacity-50" />
 
       {/* Dynamic Ambient Glow */}
-      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] blur-[150px] rounded-full pointer-events-none transition-colors duration-700 ease-in-out ${getGlowStyle()}`} />
+      <div className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] blur-[150px] rounded-full pointer-events-none transition-colors duration-700 ease-in-out ${getGlowStyle()}`} />
 
       {/* Main Layout Container */}
       <div className="w-full max-w-[430px] relative z-10 flex flex-col items-center">
         
         {/* Brand Header */}
-        <div className="flex flex-col items-center mb-16 w-full">
+        <div className="flex flex-col items-center w-full" style={{ marginBottom: '40px' }}>
           <img 
             src="/bc-logo.png" 
             alt="Braes Creek Estate" 
-            className="w-[240px] md:w-[260px] object-contain mb-8 drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]" 
+            className="w-[240px] object-contain mb-6 drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]" 
           />
           
           <div className="px-5 py-1.5 rounded-full border border-white/10 bg-white/5 text-[10px] font-bold text-white/60 uppercase tracking-[0.2em] backdrop-blur-md">
@@ -95,7 +104,7 @@ export default function LoginPage() {
         </div>
 
         {/* Login Card - Glassmorphism Navy */}
-        <div className="w-full bg-[#0B1120]/80 backdrop-blur-xl border border-white/10 rounded-[32px] py-[48px] px-[40px] shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col min-h-[560px]">
+        <div className="w-full min-h-[500px] bg-[#0B1120]/80 backdrop-blur-xl border border-white/10 rounded-[32px] px-[40px] py-[48px] shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col gap-4">
           
           {/* Scanning Line Overlay */}
           {loginState === 'scanning' && (
@@ -106,20 +115,20 @@ export default function LoginPage() {
             <div className="absolute inset-0 bg-green-500/10 z-50 pointer-events-none transition-all duration-500" />
           )}
 
-          <div className="text-center mb-10">
+          <div className="text-center mb-4">
             <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">Welcome</h2>
             <p className="text-white/50 text-sm">Sign in to the Intelligence Hub</p>
           </div>
 
-          <form onSubmit={handleLogin} className="w-full space-y-6 flex-1 flex flex-col justify-center">
+          <form onSubmit={handleLogin} className="w-full flex flex-col gap-6">
             {error && (
               <div className="w-full p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold text-center">
                 {error}
               </div>
             )}
 
-            <div className="w-full space-y-5">
-              <div className="space-y-2">
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-bold text-white/70 uppercase tracking-widest pl-1">ID ACCESS</label>
                 <input 
                   type="email" 
@@ -127,12 +136,12 @@ export default function LoginPage() {
                   value={email}
                   disabled={loginState !== 'idle'}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full h-14 bg-black/50 border border-white/10 rounded-xl px-4 text-sm text-white placeholder-white/30 focus:outline-none focus:border-cyan-400 transition-all"
+                  className="w-full h-12 bg-black/50 border border-white/10 rounded-xl px-4 text-sm text-white placeholder-white/30 focus:outline-none focus:border-cyan-400 transition-all"
                   placeholder="Enter your ID"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-bold text-white/70 uppercase tracking-widest pl-1">SECURITY PASS</label>
                 <div className="relative">
                   <input 
@@ -141,7 +150,7 @@ export default function LoginPage() {
                     value={password}
                     disabled={loginState !== 'idle'}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full h-14 bg-black/50 border border-white/10 rounded-xl pl-4 pr-12 text-sm text-white placeholder-white/30 focus:outline-none focus:border-cyan-400 transition-all tracking-wider"
+                    className="w-full h-12 bg-black/50 border border-white/10 rounded-xl pl-4 pr-12 text-sm text-white placeholder-white/30 focus:outline-none focus:border-cyan-400 transition-all tracking-wider"
                     placeholder="••••••••"
                   />
                   <button 
@@ -158,7 +167,7 @@ export default function LoginPage() {
             <button 
               type="submit"
               disabled={loginState !== 'idle'}
-              className="w-full h-14 mt-8 bg-[#06b6d4] text-black font-black rounded-xl text-xs uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-100 disabled:scale-100 relative overflow-hidden flex items-center justify-center"
+              className="w-full h-12 bg-[#06b6d4] text-black font-black rounded-xl text-xs uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-100 disabled:scale-100 relative overflow-hidden flex items-center justify-center mt-2"
             >
               <span className="relative z-10">
                 {loginState === 'idle' && 'INITIALIZE ACCESS'}
@@ -174,7 +183,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="flex items-center gap-4 my-8 w-full">
+          <div className="flex items-center gap-4 my-2 w-full">
             <div className="h-px bg-white/10 flex-1"></div>
             <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">OR</span>
             <div className="h-px bg-white/10 flex-1"></div>
@@ -184,9 +193,9 @@ export default function LoginPage() {
             type="button"
             onClick={handleGoogleLogin}
             disabled={loginState !== 'idle'}
-            className="w-full h-14 bg-transparent border border-white/20 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-3 hover:bg-white/5 transition-colors disabled:opacity-50"
+            className="w-full h-12 bg-transparent border border-white/20 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-3 hover:bg-white/5 transition-colors disabled:opacity-50"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />

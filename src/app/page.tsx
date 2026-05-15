@@ -25,7 +25,10 @@ export default function Home() {
   const { recommendations, updateRecommendationStatus, generateRecommendations } = useWorkflowStore();
   const { initializeEngine } = useAppStore();
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     initializeEngine();
   }, [initializeEngine]);
   
@@ -135,9 +138,9 @@ export default function Home() {
            <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%', overflowX: 'hidden' }}>
               
               {/* 1. ALERT ESCALATION SYSTEM BANNER */}
-              {highestAlert && highestAlert.severity === 'emergency' && (
+              {mounted && highestAlert && highestAlert.severity === 'emergency' && (
                 <div 
-                  className="card animate-alert-entrance animate-siren animate-periodic-glitch" 
+                  className={`card ${mounted ? 'animate-alert-entrance animate-siren animate-periodic-glitch' : ''}`} 
                   style={{ marginBottom: 32, padding: '24px 32px', background: 'var(--status-critical-glow)', border: '3px solid var(--status-critical)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 0 60px var(--status-critical-glow)', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
                   onClick={() => {
                     if (highestAlert.category === 'spending' && highestAlert.related_record_id) window.location.href = `/expenses?highlight=${highestAlert.related_record_id}`;
@@ -162,14 +165,14 @@ export default function Home() {
                 </div>
               )}
 
-              {highestAlert && highestAlert.severity === 'critical' && (
+              {mounted && highestAlert && highestAlert.severity === 'critical' && (
                 <div 
                   onClick={() => {
                     if (highestAlert.category === 'spending' && highestAlert.related_record_id) window.location.href = `/expenses?highlight=${highestAlert.related_record_id}`;
                     else if (highestAlert.category === 'payroll' && highestAlert.related_record_id) window.location.href = `/payroll?highlight=${highestAlert.related_record_id}`;
                     else router.push('/alerts');
                   }} 
-                  className="animate-alert-entrance critical-hover" 
+                  className={`${mounted ? 'animate-alert-entrance' : ''} critical-hover`} 
                   style={{ marginBottom: 32, padding: '14px 24px', background: 'var(--status-critical-glow)', border: '1px solid var(--status-critical)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 0 30px var(--status-critical-glow)', cursor: 'pointer' }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -187,14 +190,14 @@ export default function Home() {
                 </div>
               )}
 
-              {highestAlert && highestAlert.severity === 'warning' && (
+              {mounted && highestAlert && highestAlert.severity === 'warning' && (
                 <div 
                   onClick={() => {
                     if (highestAlert.category === 'spending' && highestAlert.related_record_id) window.location.href = `/expenses?highlight=${highestAlert.related_record_id}`;
                     else if (highestAlert.category === 'payroll' && highestAlert.related_record_id) window.location.href = `/payroll?highlight=${highestAlert.related_record_id}`;
                     else router.push('/alerts');
                   }} 
-                  className="animate-alert-entrance animate-soft-pulse" 
+                  className={mounted ? 'animate-alert-entrance animate-soft-pulse' : ''} 
                   style={{ cursor: 'pointer', marginBottom: 32, padding: '12px 20px', background: 'var(--bg-card)', border: '1px solid var(--border-soft)', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 14 }}
                 >
                    <div className="pulse-dot" style={{ background: 'var(--status-warning)', width: 10, height: 10 }} />
@@ -205,7 +208,7 @@ export default function Home() {
                 </div>
               )}
                        {/* 2. AI NEURAL HUB: ACTIONABLE INTELLIGENCE */}
-               <div className="card neural-card animate-soft-pulse" style={{ marginBottom: 40, padding: '40px', border: '1px solid var(--status-info)', position: 'relative', overflow: 'hidden' }}>
+               <div className={`card neural-card ${mounted ? 'animate-soft-pulse' : ''}`} style={{ marginBottom: 40, padding: '40px', border: '1px solid var(--status-info)', position: 'relative', overflow: 'hidden' }}>
                   <div style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '100%', background: 'radial-gradient(circle at 100% 0%, var(--status-info-glow) 0%, transparent 70%)', pointerEvents: 'none' }} />
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
@@ -227,11 +230,11 @@ export default function Home() {
                             fontWeight: 900,
                             letterSpacing: '0.05em',
                             height: 'fit-content'
-                         }}>{activeRecs.length} RECOMMENDATIONS</div>
+                         }}>{mounted ? activeRecs.length : 0} RECOMMENDATIONS</div>
                      </div>
                   </div>
 
-                  {activeRecs.length === 0 ? (
+                  {(mounted ? activeRecs.length : 0) === 0 ? (
                      <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
                         <Sparkles size={32} style={{ marginBottom: 16, opacity: 0.3 }} />
                         <div style={{ fontSize: 16, fontWeight: 600 }}>System Health Optimal</div>
@@ -294,12 +297,18 @@ export default function Home() {
                  </div>
                  <div style={{ position: 'relative', width: '100%' }}>
                     <div style={{ display: 'flex', gap: 16, overflowX: 'auto', overflowY: 'hidden', paddingBottom: 16, width: '100%', boxSizing: 'border-box' }} className="no-scrollbar">
-                    {activeAlerts.map((a, i) => {
+                    {/* Priority Alert Loop */}
+                     {(mounted ? activeAlerts : [
+                        { title: 'System Monitoring', severity: 'info', recommended_action: 'Operational scan active' },
+                        { title: 'Financial Watch', severity: 'warning', recommended_action: 'Monitoring expense activity' },
+                        { title: 'Priority Alert', severity: 'critical', recommended_action: 'Review critical farm signals' }
+                     ]).map((a, i) => {
                        const isCrit = a.severity.toLowerCase() === 'critical';
                        const isWarn = a.severity.toLowerCase() === 'warning';
                        const color = isCrit ? 'var(--status-critical)' : isWarn ? 'var(--status-warning)' : 'var(--status-info)';
                        const glow = isCrit ? 'var(--status-critical-glow)' : isWarn ? 'var(--status-warning-glow)' : 'var(--status-info-glow)';
-                       return <div key={i} onClick={() => router.push('/alerts')} className={`card priority-alert-card ${isCrit ? 'critical-hover' : isWarn ? 'warning-hover' : 'info-hover'}`} style={{ width: 240, flexShrink: 0, padding: 0, overflow: 'hidden', cursor: 'pointer', transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                        const hoverClass = isCrit ? 'critical-hover' : isWarn ? 'warning-hover' : 'info-hover';
+                        return <div key={i} onClick={() => router.push('/alerts')} className={`card priority-alert-card ${mounted ? hoverClass : ''}`} style={{ width: 240, flexShrink: 0, padding: 0, overflow: 'hidden', cursor: 'pointer', transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
                               <div style={{ padding: '16px 20px', borderLeft: `3px solid ${color}`, background: isCrit ? `linear-gradient(90deg, ${glow} 0%, transparent 100%)` : 'none', transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -393,7 +402,7 @@ export default function Home() {
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                              <div className="card-elevated" style={{ padding: 20, borderRadius: 16 }}>
                                 <div className="label-small" style={{ marginBottom: 6 }}>Alerts</div>
-                                <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)' }}>{activeAlerts.length}</div>
+                                <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--text-primary)' }}>{mounted ? activeAlerts.length : 0}</div>
                              </div>
                              <div className="card-elevated" style={{ padding: 20, borderRadius: 16 }}>
                                 <div className="label-small" style={{ marginBottom: 6 }}>Neural Conf.</div>
@@ -454,7 +463,7 @@ export default function Home() {
                  </div>
                  <div className="card" style={{ padding: '32px 40px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                       {logs.slice(0, 6).map((evt, i) => (
+                       {(mounted ? logs.slice(0, 6) : []).map((evt, i) => (
                           <div key={evt.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 20, position: 'relative' }}>
                              {i !== logs.slice(0, 6).length - 1 && <div style={{ position: 'absolute', top: 40, bottom: -24, left: 19, width: 2, background: 'var(--border-soft)' }} />}
                              <div style={{ 
@@ -475,7 +484,7 @@ export default function Home() {
                              <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                                    <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text-primary)' }}>{evt.title}</div>
-                                   <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{new Date(evt.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                   <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{mounted ? new Date(evt.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</div>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, fontWeight: 600 }}>
                                    <span style={{ color: 'var(--text-secondary)' }}>{evt.module}</span>
