@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { exportToCSV } from '@/lib/exportUtils'
 import { useAppStore } from '@/store/useAppStore'
+import type { InfrastructureAsset } from '@/lib/types'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n)
@@ -63,16 +64,16 @@ export default function InfrastructurePage() {
       return;
     }
 
-    const newAsset = {
+    const newAsset: InfrastructureAsset = {
       id: `infra-${Date.now()}`,
       name: formData.name,
-      type: formData.type,
+      type: formData.type as InfrastructureAsset['type'],
       location: formData.location,
-      status: formData.status as any,
+      status: formData.status as InfrastructureAsset['status'],
       replacement_value: Number(formData.replacement_value),
       last_inspection: new Date().toISOString().split('T')[0],
       health_index: Number(formData.health_index),
-      workflow_status: 'approved' as const,
+      workflow_status: 'approved',
       created_by: 'user-1',
       created_at: new Date().toISOString()
     };
