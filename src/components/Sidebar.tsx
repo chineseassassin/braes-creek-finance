@@ -9,7 +9,7 @@ import {
   Circle, ChevronLeft, ChevronRight as CR, Bell, FileText,
   TrendingDown, Zap, ArrowRightLeft, Smartphone, DollarSign, 
   Package, LineChart, Landmark, Building2, ShieldAlert,
-  ClipboardList, Truck, ShieldCheck
+  ClipboardList, Truck, ShieldCheck, LogOut
 } from 'lucide-react'
 
 const GROUPS = [
@@ -64,6 +64,7 @@ const GROUPS = [
       { href: '/inventory', label: 'Inventory', icon: Package },
       { href: '/vendors',   label: 'Vendors',   icon: Truck },
       { href: '/settings',  label: 'Settings',  icon: Settings },
+      { href: '/login',     label: 'Log Out',   icon: LogOut },
     ]
   }
 ]
