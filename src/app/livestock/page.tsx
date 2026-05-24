@@ -24,6 +24,7 @@ export default function LivestockPage() {
   const { currentUser } = useAppStore()
   const [showModal, setShowModal] = useState(false)
   const [editingUnitId, setEditingUnitId] = useState<string | null>(null)
+  const [historyUnit, setHistoryUnit] = useState<any>(null)
   const [form, setForm] = useState({
     animal_type: 'broiler', batch_name: '', quantity: '', mortality_count: '0', 
     feed_cost: '', medicine_cost: '', production_output: '',
@@ -269,7 +270,7 @@ export default function LivestockPage() {
                          setEditingUnitId(unit.id);
                          setShowModal(true);
                       }}>✏️ Edit</button>
-                      <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => toast.success(`Viewing history for ${unit.batch_name || unit.animal_type}`)}>📋 History</button>
+                      <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => setHistoryUnit(unit)}>📋 History</button>
                     </div>
                   </div>
                 </div>
@@ -359,6 +360,95 @@ export default function LivestockPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* History Drawer */}
+      {historyUnit && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setHistoryUnit(null)}>
+          <div className="modal" style={{ maxWidth: 500, right: 0, height: '100vh', position: 'fixed', top: 0, margin: 0, borderRadius: 0, display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--border-soft)' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid var(--border-soft)', padding: '16px 24px' }}>
+              <div className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 24 }}>{ANIMAL_ICONS[historyUnit.animal_type]}</span>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700 }}>{historyUnit.batch_name || 'Livestock'} History</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{historyUnit.animal_type.toUpperCase()} · ID: {historyUnit.id.slice(0, 8)}</div>
+                </div>
+              </div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setHistoryUnit(null)}>✕</button>
+            </div>
+            
+            <div className="modal-body" style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+              {/* Summary Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+                <div style={{ background: 'var(--bg-card-elevated)', padding: 12, borderRadius: 8, border: '1px solid var(--border-soft)' }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Active Head Count</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginTop: 4 }}>{historyUnit.quantity - (historyUnit.mortality_count || 0)} / {historyUnit.quantity}</div>
+                </div>
+                <div style={{ background: 'var(--bg-card-elevated)', padding: 12, borderRadius: 8, border: '1px solid var(--border-soft)' }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Acquisition Cost</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginTop: 4 }}>{fmt(historyUnit.acquisition_cost)}</div>
+                </div>
+              </div>
+
+              {/* Timeline */}
+              <div style={{ position: 'relative', paddingLeft: 24, borderLeft: '2px solid var(--border-soft)', marginLeft: 8 }}>
+                {/* Timeline Item 4: Current Status */}
+                <div style={{ marginBottom: 24, position: 'relative' }}>
+                  <div style={{ position: 'absolute', left: -31, top: 4, width: 12, height: 12, borderRadius: '50%', background: 'var(--brand-primary)', border: '2px solid var(--bg-card)' }} />
+                  <div style={{ fontSize: 11, color: 'var(--brand-primary)', fontWeight: 600, fontFamily: 'monospace' }}>CURRENT STATUS</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>Status: <span className={`badge ${historyUnit.status === 'active' ? 'badge-success' : historyUnit.status === 'sold' ? 'badge-info' : 'badge-danger'}`} style={{ textTransform: 'capitalize' }}>{historyUnit.status}</span></div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                    Current estimated market value is {fmt(historyUnit.current_value || 0)}. 
+                    {historyUnit.production_output && ` Output recorded: ${historyUnit.production_output}.`}
+                  </div>
+                </div>
+
+                {/* Timeline Item 3: Operational Inputs */}
+                <div style={{ marginBottom: 24, position: 'relative' }}>
+                  <div style={{ position: 'absolute', left: -31, top: 4, width: 12, height: 12, borderRadius: '50%', background: 'var(--status-info)', border: '2px solid var(--bg-card)' }} />
+                  <div style={{ fontSize: 11, color: 'var(--status-info)', fontWeight: 600, fontFamily: 'monospace' }}>OPERATIONAL INPUTS</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>Feed & Medicine Administration</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                    Accumulated input costs: Feed {fmt(historyUnit.feed_cost || 0)} and Medicine {fmt(historyUnit.medicine_cost || 0)}.
+                  </div>
+                </div>
+
+                {/* Timeline Item 2: Mortality & Loss */}
+                {(historyUnit.mortality_count || 0) > 0 && (
+                  <div style={{ marginBottom: 24, position: 'relative' }}>
+                    <div style={{ position: 'absolute', left: -31, top: 4, width: 12, height: 12, borderRadius: '50%', background: 'var(--status-critical)', border: '2px solid var(--bg-card)' }} />
+                    <div style={{ fontSize: 11, color: 'var(--status-critical)', fontWeight: 600, fontFamily: 'monospace' }}>MORTALITY RECORDED</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>{historyUnit.mortality_count} Head Mortality Recorded</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                      A loss of {historyUnit.mortality_count} animals was reported due to environmental/health factors. Remaining count: {historyUnit.quantity - historyUnit.mortality_count}.
+                    </div>
+                  </div>
+                )}
+
+                {/* Timeline Item 1: Acquisition */}
+                <div style={{ position: 'relative' }}>
+                  <div style={{ position: 'absolute', left: -31, top: 4, width: 12, height: 12, borderRadius: '50%', background: 'var(--status-success)', border: '2px solid var(--bg-card)' }} />
+                  <div style={{ fontSize: 11, color: 'var(--status-success)', fontWeight: 600, fontFamily: 'monospace' }}>{historyUnit.acquisition_date}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginTop: 2 }}>Batch Acquired / Registered</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                    Acquired {historyUnit.quantity} head for a total initial asset cost of {fmt(historyUnit.acquisition_cost)}.
+                  </div>
+                </div>
+              </div>
+
+              {historyUnit.notes && (
+                <div style={{ marginTop: 32, background: 'var(--bg-card-elevated)', padding: 16, borderRadius: 8, border: '1px solid var(--border-soft)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6 }}>Notes Log</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>{historyUnit.notes}</div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer" style={{ borderTop: '1px solid var(--border-soft)', padding: '16px 24px' }}>
+              <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => setHistoryUnit(null)}>Close History</button>
+            </div>
           </div>
         </div>
       )}

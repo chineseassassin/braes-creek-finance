@@ -66,6 +66,12 @@ const GROUPS = [
       { href: '/settings',  label: 'Settings',  icon: Settings },
       { href: '/login',     label: 'Log Out',   icon: LogOut },
     ]
+  },
+  {
+    title: 'Worker Interface',
+    items: [
+      { href: '/worker-hub', label: 'Data Entry Hub', icon: ClipboardList },
+    ]
   }
 ]
 
@@ -226,10 +232,16 @@ export default function Sidebar() {
         {!sidebarCollapsed && (
           <div style={{ padding: '16px 20px', background: 'var(--bg-card)', borderTop: '1px solid var(--border-soft)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-inverse)', fontSize: 13, fontWeight: 950, flexShrink: 0 }}>P</div>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-inverse)', fontSize: 13, fontWeight: 950, flexShrink: 0 }}>
+                {currentUser?.name ? currentUser.name[0].toUpperCase() : 'P'}
+              </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Peter Admin</div>
-                <div style={{ color: 'var(--status-success)', fontSize: 10, fontWeight: 800 }}>Estate Control</div>
+                <div style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {currentUser?.name || 'Peter Admin'}
+                </div>
+                <div style={{ color: 'var(--status-success)', fontSize: 10, fontWeight: 800 }}>
+                  {currentUser?.role === 'admin' ? 'Estate Control' : currentUser?.role === 'data-entry' ? 'Data Entry Operator' : currentUser?.role === 'viewer' ? 'Viewer Mode' : 'Restricted Mode'}
+                </div>
               </div>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--status-success)', boxShadow: '0 0 8px var(--status-success)' }} />
             </div>

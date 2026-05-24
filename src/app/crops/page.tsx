@@ -21,6 +21,8 @@ export default function CropsPage() {
   const { crops, addCrop, updateCrop, isLoading } = useCropStore()
   const { currentUser } = useAppStore()
   const [showModal, setShowModal] = useState(false)
+  const [showProjectionModal, setShowProjectionModal] = useState(false)
+  const [projectionCrop, setProjectionCrop] = useState<any>(null)
   const [editingCropId, setEditingCropId] = useState<string | null>(null)
   const [form, setForm] = useState({
     name: '', variety: '', area_acres: '', planting_date: new Date().toISOString().split('T')[0],
@@ -40,6 +42,47 @@ export default function CropsPage() {
     cost: c.input_costs + c.labor_cost,
     acres: c.area_acres
   }))
+
+  const getProjections = (crop: any) => {
+    if (!crop) return null;
+    
+    // Calculate based on real data or fallback to realistic demo
+    const cost = crop.input_costs + crop.labor_cost;
+    const estCost = cost > 0 ? cost * 1.15 : 12500; // adding 15% estimated additional costs
+    
+    // Parse expected yield if possible, else demo based on acres
+    let yieldNum = 0;
+    if (crop.expected_yield) {
+      const parsed = parseFloat(crop.expected_yield.replace(/[^0-9.]/g, ''));
+      if (!isNaN(parsed) && parsed > 0) yieldNum = parsed;
+    }
+    if (yieldNum === 0) yieldNum = crop.area_acres * 4500; // 4500 lbs/acre avg demo
+
+    const pricePerLb = 4.50; // Demo market price assumption
+    const estRevenue = yieldNum * pricePerLb;
+    const estProfit = estRevenue - estCost;
+    
+    const breakEven = estCost / pricePerLb;
+
+    const riskLevel = estProfit < 0 ? 'High' : (estProfit < estCost * 0.2 ? 'Medium' : 'Low');
+
+    const recommendedAction = riskLevel === 'High' 
+        ? "Review input costs immediately; highly unlikely to break even at current market prices without yield optimization."
+        : "Maintain current operational schedule. Ensure precision irrigation and timely harvesting to protect expected yield and profit margin.";
+
+    return {
+      yieldText: `${yieldNum.toLocaleString()} lbs (Estimated)`,
+      estRevenue,
+      estCost,
+      estProfit,
+      breakEven: `${Math.ceil(breakEven).toLocaleString()} lbs`,
+      riskLevel,
+      recommendedAction,
+      isDemo: true
+    };
+  };
+
+  const proj = getProjections(projectionCrop);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -239,7 +282,11 @@ export default function CropsPage() {
                             setEditingCropId(crop.id);
                             setShowModal(true);
                          }}>✏️ Edit Cycle</button>
-                         <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => toast.success(`Viewing projections for ${crop.name}`)}>📊 Projections</button>
+                         <button className="btn btn-secondary btn-sm" style={{ flex: 1 }} onClick={() => {
+                             setProjectionCrop(crop);
+                             setShowProjectionModal(true);
+                             toast.success(`Viewing projections for ${crop.name}`);
+                          }}>📊 Projections</button>
                       </div>
                    </div>
                  </div>
@@ -323,6 +370,66 @@ export default function CropsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* PROJECTIONS MODAL */}
+      {showProjectionModal && projectionCrop && proj && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowProjectionModal(false)}>
+          <div className="modal" style={{ maxWidth: 640 }}>
+            <div className="modal-header">
+              <div className="modal-title">Crop Production Projections</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowProjectionModal(false)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ padding: '24px' }}>
+               <div style={{ marginBottom: 20 }}>
+                 <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>{projectionCrop.name} <span style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 600 }}>({projectionCrop.area_acres} Acres)</span></h3>
+                 {proj.isDemo && <span className="badge" style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', marginTop: 8, fontWeight: 800 }}>DEMO DATA / AI ESTIMATE</span>}
+               </div>
+
+               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+                 <div style={{ background: 'var(--bg-card-elevated)', padding: 16, borderRadius: 12, border: '1px solid var(--border-soft)' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700, marginBottom: 4 }}>Projected Yield</div>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--status-success)' }}>{proj.yieldText}</div>
+                 </div>
+                 <div style={{ background: 'var(--bg-card-elevated)', padding: 16, borderRadius: 12, border: '1px solid var(--border-soft)' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700, marginBottom: 4 }}>Break-even Yield</div>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--status-info)' }}>{proj.breakEven}</div>
+                 </div>
+                 <div style={{ background: 'var(--bg-card-elevated)', padding: 16, borderRadius: 12, border: '1px solid var(--border-soft)' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700, marginBottom: 4 }}>Estimated Input Cost</div>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--status-warning)' }}>{fmt(proj.estCost)}</div>
+                 </div>
+                 <div style={{ background: 'var(--bg-card-elevated)', padding: 16, borderRadius: 12, border: '1px solid var(--border-soft)' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700, marginBottom: 4 }}>Estimated Revenue</div>
+                    <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--status-success)' }}>{fmt(proj.estRevenue)}</div>
+                 </div>
+               </div>
+
+               <div style={{ background: proj.estProfit >= 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', border: `1px solid ${proj.estProfit >= 0 ? 'var(--status-success)' : 'var(--status-critical)'}`, padding: 20, borderRadius: 12, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                 <div>
+                    <div style={{ fontSize: 13, color: proj.estProfit >= 0 ? 'var(--status-success)' : 'var(--status-critical)', fontWeight: 800, textTransform: 'uppercase' }}>Estimated Profit</div>
+                    <div style={{ fontSize: 28, fontWeight: 900, color: proj.estProfit >= 0 ? 'var(--status-success)' : 'var(--status-critical)' }}>{fmt(proj.estProfit)}</div>
+                 </div>
+                 <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>Risk Level</div>
+                    <div style={{ fontSize: 16, fontWeight: 900, color: proj.riskLevel === 'Low' ? 'var(--status-success)' : proj.riskLevel === 'Medium' ? 'var(--status-warning)' : 'var(--status-critical)' }}>{proj.riskLevel}</div>
+                 </div>
+               </div>
+
+               <div style={{ background: 'var(--bg-card-elevated)', padding: 16, borderRadius: 12, border: '1px solid var(--border-soft)' }}>
+                 <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Activity size={14} /> Recommended Action
+                 </div>
+                 <div style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.5, fontWeight: 500 }}>
+                    {proj.recommendedAction}
+                 </div>
+               </div>
+            </div>
+            <div className="modal-footer" style={{ borderTop: '1px solid var(--border-soft)', padding: '16px 24px', display: 'flex', justifyContent: 'flex-end' }}>
+               <button className="btn btn-primary" onClick={() => setShowProjectionModal(false)}>Close Projections</button>
+            </div>
           </div>
         </div>
       )}

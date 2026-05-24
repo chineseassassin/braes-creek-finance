@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useAppStore } from '@/store/useAppStore';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setCurrentUser } = useAppStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -62,12 +64,35 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (authError) throw authError;
+
+      // Populate currentUser from real Supabase auth data
+      if (data.user) {
+        const meta = data.user.user_metadata || {};
+        // Try to get role from profiles table first, fallback to metadata
+        let roleKey: 'admin' | 'data-entry' | 'viewer' | 'restricted' = 'admin';
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role, full_name')
+            .eq('id', data.user.id)
+            .single();
+          if (profile?.role) roleKey = profile.role as any;
+          if (profile?.full_name) meta.full_name = profile.full_name;
+        } catch (_) { /* profiles table may not exist, use metadata */ }
+
+        setCurrentUser({
+          id: data.user.id,
+          name: meta.full_name || data.user.email?.split('@')[0] || 'User',
+          role: roleKey
+        });
+      }
+
       setLoginState('scanning');
 
     } catch (err: any) {

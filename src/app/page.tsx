@@ -23,7 +23,20 @@ export default function Home() {
   const { transactions, fetchTransactions, getTotalRevenue, getTotalExpenses, getNetProfit } = useDashboardStore();
   const { sidebarCollapsed } = useUIStore();
   const { recommendations, updateRecommendationStatus, generateRecommendations } = useWorkflowStore();
-  const { initializeEngine } = useAppStore();
+  const { initializeEngine, currentUser } = useAppStore();
+
+  const getModuleRoute = (moduleName: string) => {
+    const m = moduleName.toLowerCase();
+    if (m.includes('livestock')) return '/livestock';
+    if (m.includes('crop')) return '/crops';
+    if (m.includes('infrastructure')) return '/infrastructure';
+    if (m.includes('expense')) return '/expenses';
+    if (m.includes('inventory')) return '/inventory';
+    if (m.includes('payroll')) return '/payroll';
+    if (m.includes('budget')) return '/budgets';
+    if (m.includes('predictive') || m.includes('ai') || m.includes('intelligence')) return '/decision-engine';
+    return '/' + m.replace(/\s+/g, '-');
+  };
 
   const [mounted, setMounted] = useState(false);
 
@@ -126,10 +139,14 @@ export default function Home() {
             <NotificationCenter />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, borderLeft: '1px solid var(--border-soft)', paddingLeft: 24 }}>
                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>Peter Admin</div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--status-success)' }}>Estate Control</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>{currentUser?.name || 'Peter Admin'}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--status-success)' }}>
+                     {currentUser?.role === 'admin' ? 'Estate Control' : currentUser?.role === 'data-entry' ? 'Data Entry Operator' : currentUser?.role === 'viewer' ? 'Viewer Mode' : 'Restricted Mode'}
+                  </div>
                </div>
-               <div style={{ width: 36, height: 36, borderRadius: 12, background: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-inverse)', fontWeight: 950, fontSize: 14, boxShadow: '0 0 15px var(--status-success-glow)' }}>P</div>
+               <div style={{ width: 36, height: 36, borderRadius: 12, background: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-inverse)', fontWeight: 950, fontSize: 14, boxShadow: '0 0 15px var(--status-success-glow)' }}>
+                  {currentUser?.name ? currentUser.name[0].toUpperCase() : 'P'}
+               </div>
             </div>
           </div>
         </header>
@@ -279,7 +296,10 @@ export default function Home() {
                               </div>
 
                               <div style={{ display: 'flex', gap: 12 }}>
-                                 <button className="btn btn-primary" onClick={() => router.push(`/${rec.module.toLowerCase()}`)} style={{ padding: '10px 20px', fontSize: 13, fontWeight: 800 }}>Open {rec.module} Module</button>
+                                 <button className="btn btn-primary" onClick={() => {
+                                    const route = getModuleRoute(rec.module);
+                                    router.push(route);
+                                 }} style={{ padding: '10px 20px', fontSize: 13, fontWeight: 800 }}>Open {rec.module} Module</button>
                                  <button className="btn btn-secondary" style={{ padding: '10px 20px', fontSize: 13, fontWeight: 800 }}>Delegate Tactical Task</button>
                                  <button className="btn btn-ghost" onClick={() => handleMarkReviewed(rec.id)} style={{ padding: '10px 20px', fontSize: 13, fontWeight: 800, color: 'var(--text-muted)' }}>Mark as Reviewed</button>
                               </div>

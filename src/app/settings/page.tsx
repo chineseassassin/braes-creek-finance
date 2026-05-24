@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from '@/components/Sidebar'
 import Topbar from '@/components/Topbar'
 import { SAMPLE_USERS, SAMPLE_AUDIT } from '@/lib/sample-data'
@@ -14,7 +14,7 @@ import {
   Sun, Check, ChevronRight, AlertTriangle,
   Mail, Phone, MapPin, Globe, Clock,
   DollarSign, Activity, Settings as SettingsIcon,
-  X
+  X, Loader2, MessageSquare
 } from 'lucide-react'
 
 const SETTING_TABS = [
@@ -27,8 +27,13 @@ const SETTING_TABS = [
 ]
 
 export default function SettingsPage() {
-  const { theme, setTheme, currentUser } = useAppStore();
-  const { categories, segments, addCategory, addSegment, deleteCategory } = useCategoryStore();
+  const { theme, setTheme, currentUser, pendingInvites, addPendingInvite, revokeInvite } = useAppStore();
+  const { 
+    categories, segments, 
+    addCategory, updateCategory, deleteCategory, 
+    addSegment, updateSegment, deleteSegment 
+  } = useCategoryStore();
+  
   const { sidebarCollapsed } = useUIStore();
   const [activeTab, setActiveTab] = useState('General')
   const [farmName, setFarmName] = useState('Braes Creek Estate')
@@ -45,6 +50,7 @@ export default function SettingsPage() {
     'Harvest countdown alerts': true,
     'Weekly spend summary': false,
   });
+
   const toggleNotif = (label: string) => {
     const next = !notifState[label];
     setNotifState(prev => ({ ...prev, [label]: next }));
@@ -52,17 +58,120 @@ export default function SettingsPage() {
   };
   
   // Category Modal State
+  const BLANK_CAT = { name: '', segment_id: '', color: '#22c55e' }
   const [showCatModal, setShowCatModal] = useState(false)
-  const [newCat, setNewCat] = useState({ name: '', segment_id: '', color: '#22c55e' })
+  const [editingCatId, setEditingCatId] = useState<string | null>(null)
+  const [newCat, setNewCat] = useState(BLANK_CAT)
+  const [catError, setCatError] = useState('')
 
-  const handleAddCategory = () => {
-    if (!newCat.name || !newCat.segment_id) {
-      toast.error('Please fill all required fields');
+  // Segment Modal State
+  const BLANK_SEG = { name: '', icon: '🌿', color: '#22c55e', description: '' }
+  const [showSegModal, setShowSegModal] = useState(false)
+  const [editingSegId, setEditingSegId] = useState<string | null>(null)
+  const [newSeg, setNewSeg] = useState(BLANK_SEG)
+  const [segError, setSegError] = useState('')
+
+  // Invite Modal State
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteForm, setInviteForm] = useState({
+    fullName: '',
+    email: '',
+    role: 'Admin',
+    expiresAt: '',
+    message: ''
+  });
+  const [inviteError, setInviteError] = useState('');
+  const [isSendingInvite, setIsSendingInvite] = useState(false);
+
+  const getRoleDescription = (r: string) => {
+    if (r === 'Admin') return 'Full access to dashboard, financials, approvals, reports, users, and settings.';
+    if (r === 'Data Entry') return 'Can add expenses, payroll, livestock, crops, receipts, and operational records. Cannot approve loans, view sensitive financials, delete data, or manage users.';
+    if (r === 'View Only') return 'Can view dashboards, reports, analytics, and records. Cannot edit, approve, delete, upload, or manage users.';
+    return '';
+  };
+
+  const handleSendInvite = async () => {
+    if (!inviteForm.email) {
+      setInviteError('Email is required.');
       return;
     }
-    addCategory(newCat);
+    if (!inviteForm.role) {
+      setInviteError('Role is required.');
+      return;
+    }
+    setInviteError('');
+    setIsSendingInvite(true);
+    
+    const inviteId = `invite-${Date.now()}`;
+
+    try {
+      const response = await fetch('/api/invites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...inviteForm, inviteId })
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        addPendingInvite({
+          id: inviteId,
+          fullName: inviteForm.fullName,
+          email: inviteForm.email,
+          role: inviteForm.role,
+          permissions: inviteForm.role,
+          expiresAt: inviteForm.expiresAt,
+          message: inviteForm.message,
+          status: data.status || 'pending',
+          invitedAt: new Date().toISOString(),
+          link: data.inviteLink
+        });
+
+        if (data.method === 'resend') {
+          toast.success('Invite email sent successfully.');
+        } else {
+          toast.success('Invite saved locally. Email sending is not configured in this environment.');
+        }
+      } else {
+        toast.error(data.error || 'Failed to process invite');
+      }
+    } catch (err) {
+      toast.error('Network error while processing invite');
+    } finally {
+      setIsSendingInvite(false);
+      setShowInviteModal(false);
+      setInviteForm({ fullName: '', email: '', role: 'Admin', expiresAt: '', message: '' });
+    }
+  };
+
+  const handleSaveCategory = () => {
+    if (!newCat.name.trim()) { setCatError('Category name is required.'); return; }
+    if (!newCat.segment_id) { setCatError('Segment association is required.'); return; }
+    setCatError('');
+
+    if (editingCatId) {
+      updateCategory(editingCatId, newCat);
+      toast.success('Category updated successfully');
+    } else {
+      addCategory(newCat);
+    }
     setShowCatModal(false);
-    setNewCat({ name: '', segment_id: '', color: '#22c55e' });
+    setEditingCatId(null);
+    setNewCat(BLANK_CAT);
+  };
+
+  const handleSaveSegment = () => {
+    if (!newSeg.name.trim()) { setSegError('Segment name is required.'); return; }
+    setSegError('');
+
+    if (editingSegId) {
+      updateSegment(editingSegId, newSeg);
+      toast.success('Segment updated successfully');
+    } else {
+      addSegment(newSeg);
+    }
+    setShowSegModal(false);
+    setEditingSegId(null);
+    setNewSeg(BLANK_SEG);
   };
 
   const handleExportAll = () => {
@@ -211,15 +320,15 @@ export default function SettingsPage() {
                 <div className="card-body">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-soft)' }}>
                     <div>
-                      <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: 13 }}>System Data Portability</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Download a complete cryptographic backup of all records</div>
+                       <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: 13 }}>System Data Portability</div>
+                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Download a complete cryptographic backup of all records</div>
                     </div>
                     <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: 11 }} onClick={handleExportAll}><Download size={14} /> Full Export</button>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0' }}>
                     <div>
-                      <div style={{ fontWeight: 800, color: 'var(--status-critical)', fontSize: 13 }}>Master Database Purge</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Irreversibly delete all organization data and configurations</div>
+                       <div style={{ fontWeight: 800, color: 'var(--status-critical)', fontSize: 13 }}>Master Database Purge</div>
+                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Irreversibly delete all organization data and configurations</div>
                     </div>
                     <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: 11, color: 'var(--status-critical)', borderColor: 'rgba(239, 68, 68, 0.2)' }} onClick={() => toast.error('Purge protocol requires level-3 biometric verification (mock).')}><Trash2 size={14} /> Purge All</button>
                   </div>
@@ -230,244 +339,204 @@ export default function SettingsPage() {
 
           {/* Users & Access */}
           {activeTab === 'Users & Access' && (
-            <div style={{ maxWidth: 840, display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div style={{ width: '100%', maxWidth: 1200, display: 'flex', flexDirection: 'column', gap: 24 }}>
               
-              {/* SECTION 1 — TEAM MANAGEMENT */}
-              <div className="card">
+              {/* TOP ROW — USER & ACCESS MANAGEMENT & SMART ROLE PREVIEW */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 24, alignItems: 'start' }}>
+                {/* SECTION 1 — USER & ACCESS MANAGEMENT */}
+                <div className="card" style={{ height: 'fit-content' }}>
+                  <div className="card-header" style={{ marginBottom: 16 }}>
+                    <div>
+                       <div className="card-title" style={{ fontSize: 16 }}>User & Access Management</div>
+                       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Manage your organization's members and their system access.</div>
+                    </div>
+                    <button className="btn btn-primary btn-sm" onClick={() => setShowInviteModal(true)}>+ Invite User</button>
+                  </div>
+                  <div className="data-table-wrapper" style={{ overflow: 'visible' }}>
+                    <table className="data-table">
+                      <thead>
+                        <tr><th>User</th><th>Role</th><th>Status</th><th>Last Active</th></tr>
+                      </thead>
+                      <tbody>
+                        {SAMPLE_USERS.map(u => (
+                          <tr key={u.id}>
+                            <td className="primary">
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--status-success-glow)', color: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
+                                  {u.name[0]}
+                                </div>
+                                <div>
+                                   <div style={{ fontWeight: 700, fontSize: 14 }}>{u.name}</div>
+                                   <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <select className="form-select" style={{ padding: '6px 12px', fontSize: 12, minWidth: 100, background: 'var(--bg-card)' }} defaultValue={u.role === 'admin' ? 'Admin' : u.role === 'manager' ? 'Data Entry' : 'View Only'}>
+                                 <option>View Only</option>
+                                 <option>Data Entry</option>
+                                 <option>Admin</option>
+                              </select>
+                            </td>
+                            <td><span className="badge" style={{ background: 'var(--status-success-glow)', color: 'var(--status-success)', fontWeight: 800 }}>● Active</span></td>
+                            <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{u.lastLogin}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* SECTION 2 & 3 — SMART ROLE PREVIEW */}
+                <div className="card" style={{ height: 'fit-content' }}>
+                  <div className="card-header" style={{ marginBottom: 16 }}>
+                    <div>
+                       <div className="card-title" style={{ fontSize: 16 }}>Smart Role Preview</div>
+                       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Capabilities granted to the selected role.</div>
+                    </div>
+                    <select className="form-select" style={{ width: 140, fontWeight: 700 }} defaultValue="Data Entry">
+                       <option>View Only</option>
+                       <option>Data Entry</option>
+                       <option>Admin</option>
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(255,255,255,0.02)', padding: 24, borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-success)', fontSize: 13, fontWeight: 600 }}>
+                        <span style={{ fontSize: 14 }}>✔</span> Can add expenses
+                     </div>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-success)', fontSize: 13, fontWeight: 600 }}>
+                        <span style={{ fontSize: 14 }}>✔</span> Can log payroll
+                     </div>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-success)', fontSize: 13, fontWeight: 600 }}>
+                        <span style={{ fontSize: 14 }}>✔</span> Can update livestock
+                     </div>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-critical)', fontSize: 13, fontWeight: 600 }}>
+                        <span style={{ fontSize: 14 }}>✖</span> Cannot delete data
+                     </div>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-critical)', fontSize: 13, fontWeight: 600 }}>
+                        <span style={{ fontSize: 14 }}>✖</span> Cannot access settings
+                     </div>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-critical)', fontSize: 13, fontWeight: 600 }}>
+                        <span style={{ fontSize: 14 }}>✖</span> Cannot modify reports
+                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECOND ROW — PENDING INVITES */}
+              <div className="card" style={{ height: 'fit-content' }}>
                 <div className="card-header" style={{ marginBottom: 16 }}>
                   <div>
-                     <div className="card-title" style={{ fontSize: 16 }}>Team Management</div>
-                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Manage your organization's members and their system access.</div>
+                     <div className="card-title" style={{ fontSize: 16 }}>Pending Invites</div>
+                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Invitations awaiting user acceptance.</div>
                   </div>
-                  <button className="btn btn-primary btn-sm" onClick={() => toast.success('Invitation link generated and copied')}>+ Invite User</button>
                 </div>
                 <div className="data-table-wrapper" style={{ overflow: 'visible' }}>
                   <table className="data-table">
                     <thead>
-                      <tr><th>User</th><th>Role</th><th>Status</th><th>Last Active</th></tr>
+                      <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Invited Date</th><th>Expires</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
-                      {SAMPLE_USERS.map(u => (
-                        <tr key={u.id}>
-                          <td className="primary">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--status-success-glow)', color: 'var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                                {u.name[0]}
-                              </div>
-                              <div>
-                                 <div style={{ fontWeight: 700, fontSize: 14 }}>{u.name}</div>
-                                 <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{u.email}</div>
-                              </div>
-                            </div>
+                      {pendingInvites.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
+                            No pending invites.
                           </td>
-                          <td>
-                            <select className="form-select" style={{ padding: '6px 12px', fontSize: 12, minWidth: 140, background: 'var(--bg-card)' }} defaultValue={u.role === 'admin' ? 'Admin' : u.role === 'manager' ? 'Data Entry' : 'View Only'}>
-                               <option>View Only</option>
-                               <option>Data Entry</option>
-                               <option>Admin</option>
-                            </select>
-                          </td>
-                          <td><span className="badge" style={{ background: 'var(--status-success-glow)', color: 'var(--status-success)', fontWeight: 800 }}>● Active</span></td>
-                          <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{u.lastLogin}</td>
                         </tr>
-                      ))}
+                      ) : (
+                        pendingInvites.map((inv: any) => {
+                          const getBadgeColor = (status: string) => {
+                            if (status === 'Email Sent') return { bg: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' };
+                            if (status === 'Local Only') return { bg: 'rgba(156, 163, 175, 0.1)', color: '#9ca3af' };
+                            if (status === 'Failed') return { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' };
+                            if (status === 'Revoked') return { bg: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', textDecoration: 'line-through' };
+                            if (status === 'Accepted') return { bg: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' };
+                            return { bg: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24' }; // pending
+                          };
+                          const badge = getBadgeColor(inv.status);
+
+                          const handleResend = async () => {
+                            toast.loading('Resending invite...', { id: 'resend' });
+                            try {
+                              const res = await fetch('/api/invites', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ email: inv.email, fullName: inv.fullName, role: inv.role, message: inv.message, inviteId: inv.id })
+                              });
+                              const data = await res.json();
+                              if (res.ok) {
+                                if (data.method === 'resend') {
+                                  toast.success('Invite email sent successfully.', { id: 'resend' });
+                                } else {
+                                  toast.success('Invite saved locally. Email sending is not configured in this environment.', { id: 'resend' });
+                                }
+                              } else {
+                                toast.error('Failed to resend invite.', { id: 'resend' });
+                              }
+                            } catch (e) {
+                              toast.error('Network error while resending.', { id: 'resend' });
+                            }
+                          };
+
+                          return (
+                          <tr key={inv.id}>
+                            <td className="primary" style={{ fontWeight: 600 }}>{inv.fullName || '-'}</td>
+                            <td style={{ color: 'var(--text-muted)' }}>{inv.email}</td>
+                            <td>
+                              <span style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: '100px', fontSize: 12, fontWeight: 800 }}>{inv.role}</span>
+                            </td>
+                            <td>
+                              <span style={{ background: badge.bg, color: badge.color, padding: '4px 8px', borderRadius: '6px', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', textDecoration: badge.textDecoration || 'none' }}>
+                                {inv.status}
+                              </span>
+                            </td>
+                            <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                              {new Date(inv.invitedAt).toLocaleDateString()}
+                            </td>
+                            <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                              {inv.expiresAt ? new Date(inv.expiresAt).toLocaleDateString() : 'Ongoing'}
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <button onClick={() => {
+                                  let link = inv.link;
+                                  if (!link) {
+                                    try {
+                                      const invitePayload = {
+                                        id: inv.id,
+                                        email: inv.email,
+                                        fullName: inv.fullName || '',
+                                        role: inv.role || 'View Only',
+                                        message: inv.message || '',
+                                        expiresAt: inv.expiresAt || '',
+                                        status: inv.status || 'pending',
+                                        invitedAt: inv.invitedAt || new Date().toISOString()
+                                      };
+                                      const jsonStr = JSON.stringify(invitePayload);
+                                      const bytes = new TextEncoder().encode(jsonStr);
+                                      const binString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
+                                      const encoded = window.btoa(binString);
+                                      link = `${window.location.origin}/invite/${inv.id}?d=${encodeURIComponent(encoded)}`;
+                                    } catch (e) {
+                                      console.error('Failed to generate invite link inline:', e);
+                                      link = `${window.location.origin}/invite/${inv.id}`;
+                                    }
+                                  }
+                                  navigator.clipboard.writeText(link);
+                                  toast.success('Invite link copied to clipboard');
+                                }} style={{ background: 'transparent', border: '1px solid var(--border-soft)', borderRadius: '6px', padding: '4px 8px', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600, fontSize: 11 }}>Copy Link</button>
+                                <button onClick={handleResend} style={{ background: 'transparent', border: 'none', color: '#10b981', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>Resend</button>
+                                <button onClick={() => revokeInvite(inv.id)} style={{ background: 'transparent', border: 'none', color: 'var(--status-critical)', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>Revoke</button>
+                              </div>
+                            </td>
+                          </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
-
-              {/* SECTION 2 & 3 — SMART ROLE PREVIEW */}
-              <div className="card">
-                <div className="card-header" style={{ marginBottom: 16 }}>
-                  <div>
-                     <div className="card-title" style={{ fontSize: 16 }}>Smart Role Preview</div>
-                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Capabilities granted to the selected role.</div>
-                  </div>
-                  <select className="form-select" style={{ width: 180, fontWeight: 700 }} defaultValue="Data Entry">
-                     <option>View Only</option>
-                     <option>Data Entry</option>
-                     <option>Admin</option>
-                  </select>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(255,255,255,0.02)', padding: 24, borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-success)', fontSize: 13, fontWeight: 600 }}>
-                      <span style={{ fontSize: 14 }}>✔</span> Can add expenses
-                   </div>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-success)', fontSize: 13, fontWeight: 600 }}>
-                      <span style={{ fontSize: 14 }}>✔</span> Can log payroll
-                   </div>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-success)', fontSize: 13, fontWeight: 600 }}>
-                      <span style={{ fontSize: 14 }}>✔</span> Can update livestock
-                   </div>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-critical)', fontSize: 13, fontWeight: 600 }}>
-                      <span style={{ fontSize: 14 }}>✖</span> Cannot delete data
-                   </div>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-critical)', fontSize: 13, fontWeight: 600 }}>
-                      <span style={{ fontSize: 14 }}>✖</span> Cannot access settings
-                   </div>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--status-critical)', fontSize: 13, fontWeight: 600 }}>
-                      <span style={{ fontSize: 14 }}>✖</span> Cannot modify reports
-                   </div>
-                </div>
-              </div>
-
-              {/* NEW SECTION — TEMPORARY ACCESS ASSIGNMENTS */}
-              <div className="card">
-                <div className="card-header" style={{ marginBottom: 16 }}>
-                  <div>
-                     <div className="card-title" style={{ fontSize: 16 }}>Temporary Access Assignments</div>
-                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Grant limited-time access to specific entry tasks. Missed deadlines notify the owner.</div>
-                  </div>
-                  <button className="btn btn-primary btn-sm" style={{ background: '#f59e0b', color: '#101010', border: 'none', fontWeight: 800 }} onClick={() => toast.success('New temporary access token generated')}>+ New Task Access</button>
-                </div>
-                <div className="data-table-wrapper" style={{ overflow: 'visible' }}>
-                  <table className="data-table">
-                    <thead>
-                      <tr><th>Employee</th><th>Task Preset</th><th>Deadline</th><th>Status</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td className="primary">Mary Joseph</td>
-                        <td style={{ fontSize: 12 }}>Update Livestock Mortality</td>
-                        <td style={{ fontSize: 12, color: 'var(--status-warning)', fontWeight: 600 }}>Due in 2h 15m</td>
-                        <td><span className="badge badge-warning">In Progress</span></td>
-                        <td>
-                          <div style={{ display: 'flex', gap: 6 }}>
-                             <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }} onClick={() => toast.success('Deadline extended by 24 hours')}>Extend</button>
-                             <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', color: '#f87171' }} onClick={() => toast.error('Access revoked for Mary Joseph')}>Revoke</button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="primary">James Ali</td>
-                        <td style={{ fontSize: 12 }}>Upload Feed Receipt</td>
-                        <td style={{ fontSize: 12, color: 'var(--status-critical)', fontWeight: 600 }}>Expired (Yesterday)</td>
-                        <td><span className="badge badge-danger">Missed</span></td>
-                        <td>
-                          <div style={{ display: 'flex', gap: 6 }}>
-                             <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }} onClick={() => toast.success('Reminder notification sent')}>Reminder</button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="primary">Jane Doe</td>
-                        <td style={{ fontSize: 12 }}>Log Today's Labor</td>
-                        <td style={{ fontSize: 12, color: 'var(--status-success)', fontWeight: 600 }}>Submitted</td>
-                        <td><span className="badge badge-success">Reviewing</span></td>
-                        <td>
-                          <div style={{ display: 'flex', gap: 6 }}>
-                             <button className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', color: '#4ade80' }} onClick={() => toast.success('Reviewing submission...')}>View</button>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* SECTION 4 — MODULE ACCESS */}
-              <div className="card">
-                <div className="card-header" style={{ marginBottom: 16 }}>
-                  <div>
-                     <div className="card-title" style={{ fontSize: 16 }}>Module Access Defaults</div>
-                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Enable or disable core system modules for non-admin users.</div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                   {['Expenses', 'Payroll', 'Livestock', 'Crops'].map((mod, i) => (
-                      <div key={mod} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: 'var(--bg-card-elevated)', borderRadius: i === 0 ? '12px 12px 0 0' : i === 3 ? '0 0 12px 12px' : 0, borderBottom: i < 3 ? '1px solid var(--border-subtle)' : 'none' }}>
-                         <div style={{ fontWeight: 600, fontSize: 13 }}>{mod}</div>
-                         <label className="settings-switch">
-                            <input type="checkbox" defaultChecked={true} onChange={(e) => toast.success(`${mod} module ${e.target.checked ? 'enabled' : 'disabled'} for team`)} />
-                            <span className="settings-slider"></span>
-                         </label>
-                      </div>
-                   ))}
-                </div>
-              </div>
-
-              {/* SECTION 5 — SECURITY PANEL */}
-              <div className="card">
-                <div className="card-header" style={{ marginBottom: 16 }}>
-                  <div>
-                     <div className="card-title" style={{ fontSize: 16 }}>Security Panel</div>
-                     <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Authentication and session management.</div>
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                   <div style={{ padding: 20, background: 'var(--bg-card-elevated)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Change Password</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>Last changed 45 days ago.</div>
-                      <button className="btn btn-secondary" style={{ width: '100%', fontSize: 12 }} onClick={() => toast.success('Password update link sent to your email')}>Update Password</button>
-                   </div>
-                   <div style={{ padding: 20, background: 'var(--bg-card-elevated)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
-                      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Two-Factor Auth</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>Secure your account with 2FA.</div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                         <span style={{ fontSize: 12, color: 'var(--status-success)', fontWeight: 800 }}>Enabled</span>
-                         <label className="settings-switch"><input type="checkbox" defaultChecked onChange={(e) => toast.success(`Two-Factor Authentication ${e.target.checked ? 'activated' : 'deactivated'}`)} /><span className="settings-slider"></span></label>
-                      </div>
-                   </div>
-                   <div style={{ gridColumn: 'span 2', padding: 20, background: 'var(--bg-card-elevated)', borderRadius: 12, border: '1px solid var(--border-subtle)' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                         <div>
-                            <div style={{ fontWeight: 700, fontSize: 13 }}>Active Sessions</div>
-                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Current login activity.</div>
-                         </div>
-                         <button className="btn btn-secondary" style={{ fontSize: 11, color: '#f87171', borderColor: 'rgba(248,113,113,0.3)' }} onClick={() => toast.success('Logged out all other active sessions')}>Logout All Sessions</button>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(0,0,0,0.2)', borderRadius: 8 }}>
-                         <div>
-                            <div style={{ fontSize: 12, fontWeight: 700 }}>MacBook Pro (Chrome)</div>
-                            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>New York, USA — IP: 192.168.1.1</div>
-                         </div>
-                         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--status-success)' }}>Current Session</div>
-                      </div>
-                   </div>
-                </div>
-              </div>
-
-              {/* SECTION 6 — DANGER ZONE UPGRADE */}
-              <div className="card" style={{ border: '1px solid rgba(239, 68, 68, 0.3)', background: 'linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, transparent 100%)' }}>
-                <div className="card-header" style={{ marginBottom: 16, borderBottom: '1px solid rgba(239, 68, 68, 0.1)', paddingBottom: 16 }}>
-                  <div>
-                     <div className="card-title" style={{ fontSize: 16, color: 'var(--status-critical)' }}>Danger Zone</div>
-                     <div style={{ fontSize: 12, color: '#fca5a5' }}>Destructive operations.</div>
-                  </div>
-                </div>
-                <div style={{ padding: '8px 0' }}>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                     <div>
-                       <div style={{ fontWeight: 700, color: 'var(--status-critical)', fontSize: 14, marginBottom: 4 }}>System Factory Reset</div>
-                       <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                          This will permanently delete all records, transactions, users, and logs.<br/>
-                          <span style={{ fontWeight: 800, color: 'var(--status-warning)' }}>Warning: 4,129 records will be destroyed.</span>
-                       </div>
-                     </div>
-                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 220 }}>
-                        <input type="text" placeholder='Type "RESET" to confirm' className="form-input" style={{ borderColor: 'rgba(239, 68, 68, 0.3)', background: 'rgba(0,0,0,0.2)' }} />
-                        <button className="btn" style={{ background: 'var(--status-critical)', color: '#fff', fontSize: 12, fontWeight: 800, padding: '10px' }} onClick={() => toast.error('Enter "RESET" and confirm with secondary password.')}>PERMANENTLY RESET</button>
-                     </div>
-                   </div>
-                </div>
-              </div>
-
-              <style dangerouslySetInnerHTML={{__html: `
-                 .settings-switch {
-                    position: relative; display: inline-block; width: 36px; height: 20px;
-                 }
-                 .settings-switch input { opacity: 0; width: 0; height: 0; }
-                 .settings-slider {
-                    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-                    background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 34px;
-                 }
-                 .settings-slider:before {
-                    position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
-                    background-color: white; transition: .4s; border-radius: 50%;
-                 }
-                 input:checked + .settings-slider { background-color: #22c55e; }
-                 input:checked + .settings-slider:before { transform: translateX(16px); }
-              `}} />
             </div>
           )}
 
@@ -479,7 +548,7 @@ export default function SettingsPage() {
                    <h3 style={{ fontSize: 18, fontWeight: 950, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Expense Taxonomy</h3>
                    <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, fontWeight: 700 }}>Categorize financial transactions for granular P&L reporting</p>
                 </div>
-                <button className="btn-primary" style={{ padding: '10px 20px' }} onClick={() => setShowCatModal(true)}><Plus size={16} /> New Category</button>
+                <button className="btn-primary" style={{ padding: '10px 20px' }} onClick={() => { setEditingCatId(null); setNewCat(BLANK_CAT); setCatError(''); setShowCatModal(true); }}><Plus size={16} /> New Category</button>
               </div>
               
               <div style={{ overflowX: 'auto' }}>
@@ -507,7 +576,7 @@ export default function SettingsPage() {
                           </td>
                           <td style={{ textAlign: 'right' }}>
                             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                              <button className="btn-secondary" style={{ padding: '6px 10px' }} onClick={() => toast.error('Core system categories cannot be modified in trial mode.')}><Edit2 size={12}/></button>
+                              <button className="btn-secondary" style={{ padding: '6px 10px' }} onClick={() => { setEditingCatId(cat.id); setNewCat({ name: cat.name, segment_id: cat.segment_id, color: cat.color }); setCatError(''); setShowCatModal(true); }}><Edit2 size={12}/></button>
                               <button className="btn-secondary" style={{ padding: '6px 10px', color: 'var(--status-critical)', borderColor: 'rgba(239, 68, 68, 0.1)' }} onClick={() => deleteCategory(cat.id)}><Trash2 size={12}/></button>
                             </div>
                           </td>
@@ -528,7 +597,7 @@ export default function SettingsPage() {
                    <h3 style={{ fontSize: 18, fontWeight: 950, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Operational Segments</h3>
                    <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0, fontWeight: 700 }}>Isolated business units for segmented performance analytics</p>
                 </div>
-                <button className="btn-primary" style={{ padding: '10px 20px' }} onClick={() => toast.success('Segment addition protocol initiated (Mock)')}><Plus size={16} /> New Segment</button>
+                <button className="btn-primary" style={{ padding: '10px 20px' }} onClick={() => { setEditingSegId(null); setNewSeg(BLANK_SEG); setSegError(''); setShowSegModal(true); }}><Plus size={16} /> New Segment</button>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
@@ -536,7 +605,7 @@ export default function SettingsPage() {
                   <div key={seg.id} className="card" style={{ borderLeft: `4px solid ${seg.color}`, padding: '24px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                        <div style={{ fontSize: 32 }}>{seg.icon}</div>
-                       <button className="btn-secondary" style={{ padding: '6px', borderRadius: 8 }} onClick={() => toast.success(`Editing segment: ${seg.name}`)}><Edit2 size={12}/></button>
+                       <button className="btn-secondary" style={{ padding: '6px', borderRadius: 8 }} onClick={() => { setEditingSegId(seg.id); setNewSeg({ name: seg.name, icon: seg.icon || '🌿', color: seg.color || '#22c55e', description: seg.description || '' }); setSegError(''); setShowSegModal(true); }}><Edit2 size={12}/></button>
                     </div>
                     <h4 style={{ fontSize: 15, fontWeight: 950, color: 'var(--text-primary)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.02em' }}>{seg.name}</h4>
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 20 }}>{seg.description}</p>
@@ -626,60 +695,212 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Add Category Modal */}
+      {/* CATEGORY MODAL — Create / Edit */}
       {showCatModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="card" style={{ width: 480, padding: '48px', position: 'relative', background: 'var(--bg-card)', border: '1px solid var(--border-soft)', borderRadius: 24 }}>
-             <button onClick={() => setShowCatModal(false)} style={{ position: 'absolute', top: 32, right: 32, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-               <X size={24} />
-             </button>
-             
-             <h2 style={{ fontSize: 22, fontWeight: 950, color: 'var(--text-primary)', marginBottom: 8, letterSpacing: '-0.02em' }}>Register New Category</h2>
-             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 40 }}>Establish a new financial classification within your organization intelligence matrix.</p>
-             
-             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                <div className="form-group">
-                   <label className="label-small" style={{ marginBottom: 10, display: 'block' }}>Category Nomenclature</label>
-                   <input 
-                     className="form-input" 
-                     placeholder="e.g. Organic Pest Control" 
-                     value={newCat.name}
-                     onChange={e => setNewCat({...newCat, name: e.target.value})}
-                   />
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowCatModal(false)}>
+          <div className="modal" style={{ maxWidth: 480 }}>
+            <div className="modal-header">
+              <div className="modal-title">{editingCatId ? 'Edit Category' : 'Create Category'}</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => { setShowCatModal(false); setEditingCatId(null); }}>✕</button>
+            </div>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="form-group">
+                <label className="form-label">Category Name *</label>
+                <input
+                  className="form-input"
+                  placeholder="e.g. Fuel & Lubricants"
+                  value={newCat.name}
+                  onChange={e => setNewCat(p => ({ ...p, name: e.target.value }))}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Module / Area *</label>
+                <select
+                  className="form-select"
+                  value={newCat.segment_id}
+                  onChange={e => setNewCat(p => ({ ...p, segment_id: e.target.value }))}
+                >
+                  <option value="">— Select segment —</option>
+                  {segments.map(s => (
+                    <option key={s.id} value={s.id}>{s.icon} {s.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Colour</label>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <input
+                    type="color"
+                    value={newCat.color}
+                    onChange={e => setNewCat(p => ({ ...p, color: e.target.value }))}
+                    style={{ width: 40, height: 36, borderRadius: 8, border: '1px solid var(--border-soft)', background: 'none', cursor: 'pointer', padding: 2 }}
+                  />
+                  <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--text-muted)', fontWeight: 700 }}>{newCat.color.toUpperCase()}</span>
+                  <div style={{ width: 36, height: 18, borderRadius: 4, background: newCat.color }} />
                 </div>
-                <div className="form-group">
-                   <label className="label-small" style={{ marginBottom: 10, display: 'block' }}>Operational Segment Association</label>
-                   <select 
-                     className="form-select"
-                     value={newCat.segment_id}
-                     onChange={e => setNewCat({...newCat, segment_id: e.target.value})}
-                   >
-                      <option value="">Select Segment...</option>
-                      {segments.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                   </select>
+              </div>
+              {catError && <div style={{ fontSize: 12, color: 'var(--status-critical)', fontWeight: 700, padding: '8px 12px', background: 'rgba(239,68,68,0.08)', borderRadius: 8 }}>{catError}</div>}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => { setShowCatModal(false); setEditingCatId(null); }}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSaveCategory}>{editingCatId ? 'Save Changes' : 'Create Category'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SEGMENT MODAL — Create / Edit */}
+      {showSegModal && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowSegModal(false)}>
+          <div className="modal" style={{ maxWidth: 480 }}>
+            <div className="modal-header">
+              <div className="modal-title">{editingSegId ? 'Edit Segment' : 'Create Segment'}</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => { setShowSegModal(false); setEditingSegId(null); }}>✕</button>
+            </div>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="form-group">
+                <label className="form-label">Segment Name *</label>
+                <input
+                  className="form-input"
+                  placeholder="e.g. Livestock Operations"
+                  value={newSeg.name}
+                  onChange={e => setNewSeg(p => ({ ...p, name: e.target.value }))}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Icon (emoji)</label>
+                <input
+                  className="form-input"
+                  placeholder="🌿"
+                  value={newSeg.icon}
+                  onChange={e => setNewSeg(p => ({ ...p, icon: e.target.value }))}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Colour</label>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <input
+                    type="color"
+                    value={newSeg.color}
+                    onChange={e => setNewSeg(p => ({ ...p, color: e.target.value }))}
+                    style={{ width: 40, height: 36, borderRadius: 8, border: '1px solid var(--border-soft)', background: 'none', cursor: 'pointer', padding: 2 }}
+                  />
+                  <div style={{ width: 36, height: 18, borderRadius: 4, background: newSeg.color }} />
                 </div>
-                <div className="form-group">
-                   <label className="label-small" style={{ marginBottom: 10, display: 'block' }}>Visual Signature (Color)</label>
-                   <div style={{ display: 'flex', gap: 10 }}>
-                      {['#22c55e', '#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'].map(c => (
-                         <button 
-                           key={c} 
-                           style={{ 
-                             width: 32, height: 32, borderRadius: 8, background: c, cursor: 'pointer', 
-                             border: newCat.color === c ? '2px solid #fff' : '1px solid rgba(255,255,255,0.1)',
-                             boxShadow: newCat.color === c ? `0 0 12px ${c}` : 'none',
-                             transition: 'all 0.2s'
-                           }} 
-                           onClick={() => setNewCat({...newCat, color: c})} 
-                         />
-                      ))}
-                   </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Description</label>
+                <textarea
+                  className="form-input"
+                  placeholder="Describe this segment's purpose..."
+                  value={newSeg.description}
+                  onChange={e => setNewSeg(p => ({ ...p, description: e.target.value }))}
+                  style={{ minHeight: 72, resize: 'vertical' }}
+                />
+              </div>
+              {segError && <div style={{ fontSize: 12, color: 'var(--status-critical)', fontWeight: 700, padding: '8px 12px', background: 'rgba(239,68,68,0.08)', borderRadius: 8 }}>{segError}</div>}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => { setShowSegModal(false); setEditingSegId(null); }}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSaveSegment}>{editingSegId ? 'Save Changes' : 'Create Segment'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* INVITE USER MODAL */}
+      {showInviteModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)' }} onClick={e => e.target === e.currentTarget && setShowInviteModal(false)}>
+          <div style={{ margin: 'auto', width: '100%', maxWidth: '560px', background: 'var(--bg-card)', border: '1px solid var(--border-soft)', borderRadius: '24px', padding: '40px', boxShadow: '0 40px 80px rgba(0,0,0,0.6)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 900, margin: 0 }}>Invite New User</h2>
+              <button onClick={() => setShowInviteModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={24} />
+              </button>
+            </div>
+            
+            {inviteError && (
+              <div style={{ color: 'var(--status-critical)', fontSize: '13px', background: 'rgba(239,68,68,0.1)', padding: '12px 16px', borderRadius: '12px', marginBottom: '24px', fontWeight: 700 }}>
+                {inviteError}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <label className="form-label" style={{ marginBottom: 8, display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Full Name</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="Enter user's full name"
+                  value={inviteForm.fullName}
+                  onChange={e => setInviteForm({ ...inviteForm, fullName: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="form-label" style={{ marginBottom: 8, display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Email Address *</label>
+                <input 
+                  type="email" 
+                  className="form-input" 
+                  placeholder="name@example.com"
+                  value={inviteForm.email}
+                  onChange={e => setInviteForm({ ...inviteForm, email: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="form-label" style={{ marginBottom: 8, display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Role *</label>
+                <select 
+                  className="form-select" 
+                  value={inviteForm.role}
+                  onChange={e => setInviteForm({ ...inviteForm, role: e.target.value })}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <option value="Admin">Admin</option>
+                  <option value="Data Entry">Data Entry</option>
+                  <option value="View Only">View Only</option>
+                </select>
+              </div>
+
+              {/* Permissions Preview Card */}
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-soft)', borderRadius: '16px', padding: '16px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Access Level Preview</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                  {getRoleDescription(inviteForm.role)}
                 </div>
-                <div style={{ display: 'flex', gap: 16, marginTop: 16 }}>
-                   <button className="btn-secondary" style={{ flex: 1, padding: '14px' }} onClick={() => setShowCatModal(false)}>Cancel</button>
-                   <button className="btn-primary" style={{ flex: 1, padding: '14px' }} onClick={handleAddCategory}>Register Category</button>
-                </div>
-             </div>
+              </div>
+
+              <div>
+                <label className="form-label" style={{ marginBottom: 8, display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)' }}>Personal Message (Optional)</label>
+                <textarea 
+                  className="form-input" 
+                  placeholder="Add a friendly welcome note..."
+                  value={inviteForm.message}
+                  onChange={e => setInviteForm({ ...inviteForm, message: e.target.value })}
+                  style={{ minHeight: '80px', resize: 'vertical', padding: '12px 14px' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
+                <button 
+                  className="btn btn-secondary" 
+                  style={{ flex: 1 }} 
+                  onClick={() => setShowInviteModal(false)}
+                  disabled={isSendingInvite}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ flex: 1 }} 
+                  onClick={handleSendInvite}
+                  disabled={isSendingInvite}
+                >
+                  {isSendingInvite ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Invitation'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

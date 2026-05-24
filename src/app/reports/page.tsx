@@ -16,7 +16,8 @@ import {
   Users, Sprout, FileText, Download, Printer, TrendingUp, 
   TrendingDown, DollarSign, PieChart as LucidePieChart, Activity,
   Layers, Package, ChevronRight, Calculator, Clock, Wrench, Truck,
-  Paperclip, Info, Upload, FileUp, FolderInput
+  Paperclip, Info, Upload, FileUp, FolderInput, X, Eye,
+  AlertTriangle, BrainCircuit, CheckCircle, FileSpreadsheet
 } from 'lucide-react'
 import React from 'react'
 import { useDashboardStore } from '@/store/useDashboardStore'
@@ -27,8 +28,9 @@ import { useVendorStore } from '@/store/useVendorStore'
 import { useAppStore } from '@/store/useAppStore'
 import { useUIStore } from '@/store/useUIStore'
 import { useWorkflowStore } from '@/store/useWorkflowStore'
-import { exportToCSV } from '@/lib/exportUtils'
+import { exportToCSV, exportToPDF } from '@/lib/exportUtils'
 import { toast, Toaster } from 'react-hot-toast'
+import { useAlertStore } from '@/store/useAlertStore'
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n)
@@ -50,6 +52,7 @@ export default function ReportsPage() {
   const [dateFrom, setDateFrom] = useState('2024-01-01')
   const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0])
   const [isGenerating, setIsGenerating] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const importInputRef = useRef<HTMLInputElement>(null)
 
@@ -61,6 +64,8 @@ export default function ReportsPage() {
   const { vendors } = useVendorStore()
   const { emitSystemEvent } = useAppStore()
   const { sidebarCollapsed } = useUIStore()
+  const { getActiveAlerts } = useAlertStore()
+  const { events } = useWorkflowStore()
 
   useEffect(() => {
     fetchTransactions()
@@ -94,12 +99,13 @@ export default function ReportsPage() {
     setIsGenerating(true)
     setTimeout(() => {
       setIsGenerating(false)
-      toast.success('Report generated from approved data')
+      // Open the preview modal instead of immediately downloading
+      setShowPreview(true)
       emitSystemEvent({
         type: 'creation',
         severity: 'info',
         module: 'Reports',
-        message: `Generated ${REPORT_TYPES.find(r => r.id === activeReport)?.label} report`,
+        message: `Opened General Report Preview for ${REPORT_TYPES.find(r => r.id === activeReport)?.label}`,
         metadata: { activeReport, dateFrom, dateTo }
       })
     }, 800)
@@ -144,7 +150,6 @@ export default function ReportsPage() {
     toast('PDF export ready for backend/PDF library connection', { icon: '📄' })
   }
 
-  const { events } = useWorkflowStore()
   const auditLogs = useMemo(() => {
     return events.filter(ev => {
       const d = new Date(ev.timestamp)
@@ -153,6 +158,81 @@ export default function ReportsPage() {
   }, [events, dateFrom, dateTo])
 
   const handlePrint = () => {
+    window.print()
+  }
+
+  // ── GENERAL REPORT DATA ASSEMBLY ──────────────────────────────────────────
+  const DEMO_TRANSACTIONS = [
+    { date: '2024-11-01', type: 'income', category: 'Livestock Sales', description: 'Broiler Batch #14 — 200 units', amount: 28000 },
+    { date: '2024-11-05', type: 'expense', category: 'Feed & Supplies', description: 'Layer Pellets — 2 tons', amount: 4800 },
+    { date: '2024-11-10', type: 'expense', category: 'Payroll', description: 'Bi-Weekly Payroll Run', amount: 9600 },
+    { date: '2024-11-18', type: 'income', category: 'Crop Revenue', description: 'Cassava Harvest — 3 acres', amount: 12500 },
+    { date: '2024-11-22', type: 'expense', category: 'Infrastructure', description: 'Generator Maintenance', amount: 1200 },
+  ]
+
+  const reportData = useMemo(() => {
+    const useLive = filteredData.txs.length > 0
+    const txs = useLive ? filteredData.txs : DEMO_TRANSACTIONS
+    const isDemo = !useLive
+
+    const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+    const expensesTotal = txs.filter(t => t.type === 'expense' && t.category !== 'Payroll').reduce((s, t) => s + t.amount, 0)
+    const payrollTotal = txs.filter(t => t.category === 'Payroll').reduce((s, t) => s + t.amount, 0)
+    const profitLoss = income - expensesTotal - payrollTotal
+
+    const livestockSummary = livestock.length > 0
+      ? livestock.slice(0, 4).map(l => ({ type: l.animal_type, qty: l.quantity, value: l.current_value ?? 0, status: l.status }))
+      : [
+          { type: 'Broiler Chicken', qty: 580, value: 87000, status: 'active' },
+          { type: 'Layer Hen', qty: 160, value: 24000, status: 'active' },
+          { type: 'Pig', qty: 60, value: 54000, status: 'active' },
+          { type: 'Goat', qty: 40, value: 28000, status: 'active' },
+        ]
+    const isLivestockDemo = livestock.length === 0
+
+    const cropSummary = crops.length > 0
+      ? crops.slice(0, 3).map(c => ({ name: c.name, area: c.area_acres, cost: (c.input_costs || 0) + (c.labor_cost || 0), status: c.status }))
+      : [
+          { name: 'Cassava', area: 3, cost: 3700, status: 'growing' },
+          { name: 'Tomato', area: 0.75, cost: 2700, status: 'growing' },
+        ]
+    const isCropDemo = crops.length === 0
+
+    const activeAlerts = getActiveAlerts().slice(0, 5)
+    const recentActivity = events.slice(0, 6)
+
+    const aiSummary = profitLoss >= 0
+      ? `Operations are profitable for the period ${dateFrom} – ${dateTo}. Net surplus of ${fmt(profitLoss)} indicates strong revenue performance. Recommend reviewing payroll optimisation and feed cost reduction strategies.`
+      : `Operations recorded a net loss of ${fmt(Math.abs(profitLoss))} for the period ${dateFrom} – ${dateTo}. Immediate review of expense categories is recommended. Focus on reducing feed costs and identifying non-essential expenditure.`
+
+    return { txs, income, expensesTotal, payrollTotal, profitLoss, livestockSummary, cropSummary, activeAlerts, recentActivity, aiSummary, isDemo, isLivestockDemo, isCropDemo }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredData, livestock, crops, events, dateFrom, dateTo])
+
+  // ── EXPORT FROM PREVIEW ────────────────────────────────────────────────────
+  const handlePreviewExportCSV = () => {
+    const rows = reportData.txs.map(t => ({
+      Date: t.date,
+      Type: t.type,
+      Category: t.category,
+      Description: t.description,
+      Amount: t.amount
+    }))
+    exportToCSV(rows, `braes-creek-general-report-${new Date().toISOString().split('T')[0]}`)
+    toast.success('CSV downloaded from preview')
+    emitSystemEvent({ type: 'creation', severity: 'info', module: 'Reports', message: 'General Report exported to CSV', metadata: {} })
+  }
+
+  const handlePreviewExportExcel = () => {
+    // Export as a detailed PDF (Excel requires a library; PDF is our "Excel-like" export)
+    const columns = ['Date', 'Type', 'Category', 'Description', 'Amount (TTD)']
+    const rows = reportData.txs.map(t => [t.date, t.type, t.category, t.description, String(t.amount)])
+    exportToPDF('General Report — Braes Creek Estate', columns, rows, `braes-creek-general-report-${new Date().toISOString().split('T')[0]}`)
+    toast.success('Report downloaded as PDF')
+    emitSystemEvent({ type: 'creation', severity: 'info', module: 'Reports', message: 'General Report exported to PDF/Excel', metadata: {} })
+  }
+
+  const handlePreviewPrint = () => {
     window.print()
   }
 
@@ -207,6 +287,219 @@ export default function ReportsPage() {
     <div className="app-shell" style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)' }}>
       <Toaster position="top-right" />
       <Sidebar />
+
+      {/* ── GENERAL REPORT PREVIEW MODAL ─────────────────────────────── */}
+      {showPreview && (
+        <div
+          id="general-report-preview-backdrop"
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(0,0,0,0.72)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+            overflowY: 'auto', padding: '32px 16px'
+          }}
+          onClick={(e) => { if ((e.target as HTMLElement).id === 'general-report-preview-backdrop') setShowPreview(false) }}
+        >
+          <div style={{
+            background: 'var(--bg-card)', border: '1px solid var(--border-soft)',
+            borderRadius: 20, width: '100%', maxWidth: 880,
+            boxShadow: '0 40px 120px rgba(0,0,0,0.6)',
+            overflow: 'hidden', position: 'relative'
+          }}>
+
+            {/* Modal Header */}
+            <div style={{
+              padding: '28px 36px', borderBottom: '1px solid var(--border-soft)',
+              background: 'var(--bg-card-elevated)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--status-info-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--status-info)', border: '1px solid var(--status-info)' }}>
+                  <Eye size={22} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>General Report Preview</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700, marginTop: 2 }}>
+                    Period: {dateFrom} → {dateTo}
+                    {reportData.isDemo && <span style={{ marginLeft: 12, background: 'var(--status-warning-glow)', color: 'var(--status-warning)', padding: '2px 10px', borderRadius: 20, fontSize: 10, fontWeight: 900, border: '1px solid var(--status-warning)', letterSpacing: '0.05em' }}>DEMO REPORT DATA</span>}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPreview(false)}
+                style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--bg-body)', border: '1px solid var(--border-soft)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', transition: 'all 0.2s' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--status-critical-glow)'; (e.currentTarget as HTMLElement).style.color = 'var(--status-critical)' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-body)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)' }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Notice Banner */}
+            <div style={{ padding: '12px 36px', background: 'rgba(59,130,246,0.06)', borderBottom: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Info size={14} color="var(--status-info)" />
+              <span style={{ fontSize: 12, color: 'var(--status-info)', fontWeight: 700 }}>Preview shown before export to reduce unnecessary file downloads.</span>
+            </div>
+
+            {/* Report Body */}
+            <div style={{ padding: '32px 36px', display: 'flex', flexDirection: 'column', gap: 28 }}>
+
+              {/* 1. Financial Summary */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>Financial Summary</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+                  {[
+                    { label: 'Total Revenue', val: reportData.income, color: 'var(--status-success)', icon: <TrendingUp size={18}/> },
+                    { label: 'Total Expenses', val: reportData.expensesTotal, color: 'var(--status-critical)', icon: <TrendingDown size={18}/> },
+                    { label: 'Payroll Total', val: reportData.payrollTotal, color: 'var(--status-warning)', icon: <Banknote size={18}/> },
+                    { label: 'Profit / Loss', val: reportData.profitLoss, color: reportData.profitLoss >= 0 ? 'var(--status-success)' : 'var(--status-critical)', icon: <DollarSign size={18}/> },
+                  ].map(item => (
+                    <div key={item.label} style={{ background: 'var(--bg-body)', border: `1px solid ${item.color}22`, borderRadius: 14, padding: '18px 20px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, color: item.color }}>{item.icon}</div>
+                      <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{item.label}</div>
+                      <div style={{ fontSize: 20, fontWeight: 900, color: item.color, letterSpacing: '-0.02em' }}>{fmt(item.val)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2. Livestock Summary */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                  <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Livestock Summary</div>
+                  {reportData.isLivestockDemo && <span style={{ background: 'var(--status-warning-glow)', color: 'var(--status-warning)', padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 900, border: '1px solid var(--status-warning)' }}>DEMO</span>}
+                </div>
+                <div style={{ border: '1px solid var(--border-soft)', borderRadius: 12, overflow: 'hidden' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ background: 'var(--bg-body)' }}>
+                        {['Animal Type', 'Quantity', 'Est. Value', 'Status'].map(h => (
+                          <th key={h} style={{ padding: '10px 16px', fontSize: 10, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'left', borderBottom: '1px solid var(--border-soft)' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.livestockSummary.map((l, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid var(--border-soft)' }}>
+                          <td style={{ padding: '10px 16px', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)' }}>{l.type}</td>
+                          <td style={{ padding: '10px 16px', fontSize: 13, fontWeight: 700, color: 'var(--text-secondary)' }}>{l.qty.toLocaleString()}</td>
+                          <td style={{ padding: '10px 16px', fontSize: 13, fontWeight: 800, color: 'var(--status-success)' }}>{fmt(l.value)}</td>
+                          <td style={{ padding: '10px 16px' }}><span style={{ fontSize: 10, fontWeight: 900, padding: '4px 10px', borderRadius: 20, background: 'var(--status-success-glow)', color: 'var(--status-success)', textTransform: 'uppercase' }}>{l.status}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* 3. Crop Summary */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                  <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Crop Summary</div>
+                  {reportData.isCropDemo && <span style={{ background: 'var(--status-warning-glow)', color: 'var(--status-warning)', padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 900, border: '1px solid var(--status-warning)' }}>DEMO</span>}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
+                  {reportData.cropSummary.map((c, i) => (
+                    <div key={i} style={{ background: 'var(--bg-body)', border: '1px solid var(--border-soft)', borderRadius: 12, padding: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}><Sprout size={16} color="var(--status-success)" /><span style={{ fontSize: 14, fontWeight: 900, color: 'var(--text-primary)' }}>{c.name}</span></div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>{c.area} acres · {fmt(c.cost)} input cost</div>
+                      <div style={{ marginTop: 8 }}><span style={{ fontSize: 10, fontWeight: 900, padding: '3px 8px', borderRadius: 20, background: 'var(--status-info-glow)', color: 'var(--status-info)', textTransform: 'uppercase' }}>{c.status}</span></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 4. Key Alerts */}
+              {reportData.activeAlerts.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>Key Alerts</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {reportData.activeAlerts.map((a: any, i: number) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--bg-body)', border: '1px solid var(--border-soft)', borderRadius: 10 }}>
+                        <AlertTriangle size={14} color={a.severity === 'critical' || a.severity === 'emergency' ? 'var(--status-critical)' : a.severity === 'warning' ? 'var(--status-warning)' : 'var(--status-info)'} />
+                        <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{a.title}</span>
+                        <span style={{ fontSize: 10, fontWeight: 900, padding: '3px 10px', borderRadius: 20, textTransform: 'uppercase',
+                          background: a.severity === 'critical' || a.severity === 'emergency' ? 'var(--status-critical-glow)' : a.severity === 'warning' ? 'var(--status-warning-glow)' : 'var(--status-info-glow)',
+                          color: a.severity === 'critical' || a.severity === 'emergency' ? 'var(--status-critical)' : a.severity === 'warning' ? 'var(--status-warning)' : 'var(--status-info)'
+                        }}>{a.severity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 5. AI Summary */}
+              <div style={{ background: 'var(--status-info-glow)', border: '1px solid var(--status-info)', borderRadius: 14, padding: '20px 24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <BrainCircuit size={18} color="var(--status-info)" />
+                  <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--status-info)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>AI Summary & Recommendation</div>
+                </div>
+                <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, fontWeight: 600 }}>{reportData.aiSummary}</div>
+              </div>
+
+              {/* 6. Recent Activity */}
+              {reportData.recentActivity.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>Recent Activity</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {reportData.recentActivity.map((ev: any, i: number) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--bg-body)', borderRadius: 10, border: '1px solid var(--border-soft)' }}>
+                        <CheckCircle size={14} color="var(--status-success)" />
+                        <span style={{ flex: 1, fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{ev.message || ev.title}</span>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, flexShrink: 0 }}>{ev.module}</span>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, flexShrink: 0 }}>{new Date(ev.timestamp).toLocaleDateString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </div>{/* end report body */}
+
+            {/* Modal Footer: Action Buttons */}
+            <div style={{
+              padding: '20px 36px', borderTop: '1px solid var(--border-soft)',
+              background: 'var(--bg-card-elevated)',
+              display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap'
+            }}>
+              <button
+                id="preview-download-excel"
+                className="btn btn-primary"
+                onClick={handlePreviewExportExcel}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: 13, fontWeight: 800 }}
+              >
+                <FileSpreadsheet size={16} /> Download Excel / PDF
+              </button>
+              <button
+                id="preview-download-csv"
+                className="btn btn-secondary"
+                onClick={handlePreviewExportCSV}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: 13, fontWeight: 800 }}
+              >
+                <Download size={16} /> Download CSV
+              </button>
+              <button
+                id="preview-print"
+                className="btn btn-secondary"
+                onClick={handlePreviewPrint}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: 13, fontWeight: 800 }}
+              >
+                <Printer size={16} /> Print
+              </button>
+              <button
+                id="preview-close"
+                className="btn btn-ghost"
+                onClick={() => setShowPreview(false)}
+                style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: 13, fontWeight: 800, color: 'var(--text-muted)' }}
+              >
+                <X size={16} /> Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── END MODAL ─────────────────────────────────────────────── */}
       
       <div className="main-content" style={{ marginLeft: sidebarCollapsed ? 64 : 250, transition: 'margin-left 0.2s ease', flex: 1, display: 'flex', flexDirection: 'column', width: '100%' }}>
         <Topbar
@@ -218,8 +511,8 @@ export default function ReportsPage() {
               <button className="btn btn-secondary btn-sm" onClick={handlePrint}>🖨️ Print</button>
               <button className="btn btn-secondary btn-sm" onClick={handleExportCSV}><Download size={14} /> Export</button>
               <button className="btn btn-primary btn-sm" onClick={handleGenerateReport} disabled={isGenerating}>
-                 {isGenerating ? <RefreshCw className="animate-spin" size={14} /> : <BarChart3 size={14} />} 
-                 {isGenerating ? 'Compiling...' : 'Intelligence Hub'}
+                 {isGenerating ? <RefreshCw className="animate-spin" size={14} /> : <Eye size={14} />} 
+                 {isGenerating ? 'Compiling...' : 'General Report'}
               </button>
             </div>
           }

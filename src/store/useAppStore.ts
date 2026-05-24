@@ -44,6 +44,11 @@ interface AppState {
   logEmployeeSubmission: (module: string, action: string, entityType: EntityType, entityId: string, metadata?: any) => void;
   processApproval: (requestId: string, status: 'approved' | 'rejected', comment?: string) => void;
   evaluateOperationalContext: () => void;
+  pendingInvites: any[];
+  addPendingInvite: (invite: any) => void;
+  revokeInvite: (id: string) => void;
+  acceptInvite: (id: string) => void;
+  setCurrentUser: (user: UserIdentity) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -67,6 +72,16 @@ export const useAppStore = create<AppState>()(
         };
         set({ currentUser: identities[role] });
       },
+
+      pendingInvites: [],
+      addPendingInvite: (invite) => set((s) => ({ pendingInvites: [invite, ...s.pendingInvites] })),
+      revokeInvite: (id) => set((s) => ({ 
+        pendingInvites: s.pendingInvites.map(i => i.id === id ? { ...i, status: 'Revoked' } : i) 
+      })),
+      acceptInvite: (id) => set((s) => ({
+        pendingInvites: s.pendingInvites.map(i => i.id === id ? { ...i, status: 'Accepted' } : i)
+      })),
+      setCurrentUser: (user) => set({ currentUser: user }),
 
   setTheme: (theme) => {
     set({ theme });

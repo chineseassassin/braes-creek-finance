@@ -25,13 +25,14 @@ const PAYMENT_METHODS = ['cash', 'bank_transfer', 'check', 'credit_card', 'other
 function ExpensesContent() {
   const searchParams = useSearchParams()
   const highlightId = searchParams.get('highlight')
-  const { transactions, addTransaction, getTotalExpenses } = useDashboardStore()
+  const { transactions, addTransaction, updateTransaction, getTotalExpenses } = useDashboardStore()
   const { currentUser, emitSystemEvent, switchRole } = useAppStore()
   const { addApprovalRequest } = useWorkflowStore()
   
   const [search, setSearch] = useState('')
   const [segFilter, setSegFilter] = useState('all')
   const [showModal, setShowModal] = useState(false)
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null)
 
   useEffect(() => {
     if (highlightId) {
@@ -79,35 +80,44 @@ function ExpensesContent() {
     const isDataEntry = currentUser.role === 'data-entry'
     const status = isDataEntry ? 'pending' : 'approved'
 
-    // 1. Add to Dashboard Store
-    const newRecord = await addTransaction({
-      ...form,
-      type: 'expense',
-      amount: amountNum,
-      status: status,
-      created_by: currentUser.id,
-    } as any)
-
-    if (!newRecord?.id) {
-       toast.error('Expense could not be created');
-       return;
-    }
-
-    // 2. If Data Entry, create Approval Request
-    if (isDataEntry) {
-       addApprovalRequest({
-          entity_type: 'expense',
-          entity_id: newRecord.id,
-          requester_id: currentUser.id,
-          priority: amountNum > 1000 ? 'high' : 'medium',
-          status: 'pending'
-       })
-       toast.success('Submitted for approval', { icon: '⏳', style: { background: '#101010', color: '#fff' } })
+    if (editingExpenseId) {
+      await updateTransaction(editingExpenseId, {
+        ...form,
+        amount: amountNum,
+      } as any)
+      toast.success('Expense updated successfully', { icon: '✅', style: { background: '#101010', color: '#fff' } })
     } else {
-       toast.success('Expense recorded and approved', { icon: '✅', style: { background: '#101010', color: '#fff' } })
+      // 1. Add to Dashboard Store
+      const newRecord = await addTransaction({
+        ...form,
+        type: 'expense',
+        amount: amountNum,
+        status: status,
+        created_by: currentUser.id,
+      } as any)
+
+      if (!newRecord?.id) {
+         toast.error('Expense could not be created');
+         return;
+      }
+
+      // 2. If Data Entry, create Approval Request
+      if (isDataEntry) {
+         addApprovalRequest({
+            entity_type: 'expense',
+            entity_id: newRecord.id,
+            requester_id: currentUser.id,
+            priority: amountNum > 1000 ? 'high' : 'medium',
+            status: 'pending'
+         })
+         toast.success('Submitted for approval', { icon: '⏳', style: { background: '#101010', color: '#fff' } })
+      } else {
+         toast.success('Expense recorded and approved', { icon: '✅', style: { background: '#101010', color: '#fff' } })
+      }
     }
 
     setShowModal(false)
+    setEditingExpenseId(null)
     setForm({ date: new Date().toISOString().split('T')[0], description: '', amount: '', category_id: '', segment_id: '', vendor_id: '', payment_method: 'cash', is_recurring: false, recurring_frequency: 'monthly', notes: '' })
   }
 
@@ -147,7 +157,11 @@ function ExpensesContent() {
                  <option value="admin">Peter (Admin)</option>
                  <option value="data-entry">Mary (Entry)</option>
                </select>
-               <button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>
+               <button className="btn btn-primary btn-sm" onClick={() => {
+                 setEditingExpenseId(null)
+                 setForm({ date: new Date().toISOString().split('T')[0], description: '', amount: '', category_id: '', segment_id: '', vendor_id: '', payment_method: 'cash', is_recurring: false, recurring_frequency: 'monthly', notes: '' })
+                 setShowModal(true)
+               }}>
                  + Add Expense
                </button>
             </div>
@@ -273,7 +287,22 @@ function ExpensesContent() {
                         </td>
                         <td className="amount expense">{fmt(exp.amount)}</td>
                         <td>
-                          <button className="btn btn-ghost btn-sm">✏️</button>
+                          <button className="btn btn-ghost btn-sm" onClick={() => {
+                            setForm({
+                              date: exp.date || '',
+                              description: exp.description || '',
+                              amount: exp.amount?.toString() || '',
+                              category_id: exp.category_id || '',
+                              segment_id: exp.segment_id || '',
+                              vendor_id: exp.vendor_id || '',
+                              payment_method: exp.payment_method || 'cash',
+                              is_recurring: exp.is_recurring || false,
+                              recurring_frequency: exp.recurring_frequency || 'monthly',
+                              notes: exp.notes || ''
+                            })
+                            setEditingExpenseId(exp.id)
+                            setShowModal(true)
+                          }}>✏️</button>
                         </td>
                       </tr>
                     )
@@ -287,11 +316,11 @@ function ExpensesContent() {
 
       {/* Add Expense Modal */}
       {showModal && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && (setShowModal(false), setEditingExpenseId(null))}>
           <div className="modal" style={{ maxWidth: 640 }}>
             <div className="modal-header">
-              <div className="modal-title">Add New Expense</div>
-              <button className="btn btn-ghost btn-sm" onClick={() => setShowModal(false)}>✕</button>
+              <div className="modal-title">{editingExpenseId ? 'Edit Expense' : 'Add New Expense'}</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => { setShowModal(false); setEditingExpenseId(null); }}>✕</button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
@@ -363,8 +392,8 @@ function ExpensesContent() {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Expense</button>
+                <button type="button" className="btn btn-secondary" onClick={() => { setShowModal(false); setEditingExpenseId(null); }}>Cancel</button>
+                <button type="submit" className="btn btn-primary">{editingExpenseId ? 'Save Changes' : 'Save Expense'}</button>
               </div>
             </form>
           </div>

@@ -9,11 +9,14 @@ import {
   Smartphone, Bell, Zap, 
   ShieldAlert, Clock, CheckCircle2,
   ChevronRight, RefreshCw, Settings, 
-  Smartphone as PhoneIcon, AlertTriangle, Plus, ArrowRight, Sparkles, Target, Activity, MessageSquare
+  Smartphone as PhoneIcon, AlertTriangle, Plus, ArrowRight, Sparkles, Target, Activity, MessageSquare, X
 } from "lucide-react";
 import { toast, Toaster } from 'react-hot-toast';
 
 import { THEME_COLORS as COLORS, TC } from '@/lib/theme-colors';
+
+const fmt = (n: number) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'TTD', maximumFractionDigits: 0 }).format(n);
 
 export default function MobileAlertsPage() {
   const { sidebarCollapsed } = useUIStore();
@@ -26,12 +29,182 @@ export default function MobileAlertsPage() {
   const [activeTab, setActiveTab] = useState('App Push');
   const [isRoutingActive, setIsRoutingActive] = useState(true);
 
+  // Alert Rule Builder selections
+  const [selectedDomain, setSelectedDomain] = useState('Capital Runway');
+  const [selectedThreshold, setSelectedThreshold] = useState('Below 14 Days');
+  const [selectedSeverity, setSelectedSeverity] = useState('Critical');
+
+  // Deployed alert rules state with persistence
+  const [deployments, setDeployments] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('mobile_alert_deployments');
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) {}
+      }
+    }
+    return [
+      {
+        id: 'rule-1',
+        name: 'Runway Guard Alert',
+        domain: 'Capital Runway',
+        threshold: 'Below 14 Days',
+        severity: 'Critical',
+        channels: ['App Push', 'SMS'],
+        recipients: 'Peter (Admin)',
+        schedule: 'Immediate',
+        status: 'active',
+        lastTriggered: '10:30 AM'
+      },
+      {
+        id: 'rule-2',
+        name: 'Maturity Auto-Reminder',
+        domain: 'Loan Maturity',
+        threshold: 'Within 48 Hours',
+        severity: 'High Priority',
+        channels: ['SMS'],
+        recipients: 'Mary (Entry)',
+        schedule: 'Scheduled',
+        status: 'active',
+        lastTriggered: '09:15 AM'
+      }
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mobile_alert_deployments', JSON.stringify(deployments));
+  }, [deployments]);
+
+  // SMS Gateway state with persistence
+  const [gatewayNumber, setGatewayNumber] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('mobile_alert_gateway') || '';
+    }
+    return '';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mobile_alert_gateway', gatewayNumber);
+  }, [gatewayNumber]);
+
+  // Modal display states
+  const [showDeployModal, setShowDeployModal] = useState(false);
+  const [editingDeploymentId, setEditingDeploymentId] = useState<string | null>(null);
+  
+  const [modalForm, setModalForm] = useState({
+    name: '',
+    domain: 'Capital Runway',
+    threshold: 'Below 14 Days',
+    severity: 'Critical',
+    channels: { appPush: true, sms: false, whatsapp: false },
+    recipients: 'Peter (Admin)',
+    schedule: 'Immediate'
+  });
+
   const [alerts, setAlerts] = useState([
      { id: 1, title: 'Cash Flow Warning', severity: 'Critical', source: 'Capital', action: 'Review expenses today', time: '10:30 AM', status: 'Sent' },
      { id: 2, title: 'Loan Payment Due', severity: 'High', source: 'Loans', action: 'Confirm cash reserve', time: '09:15 AM', status: 'Scheduled' },
      { id: 3, title: 'Feed Cost Spike', severity: 'Moderate', source: 'Expenses', action: 'Audit supplier pricing', time: 'Yesterday', status: 'Acknowledged' },
      { id: 4, title: 'Livestock Mortality Risk', severity: 'Critical', source: 'Livestock', action: 'Check pen 4 logs', time: 'Oct 24', status: 'Sent' },
   ]);
+
+  const handleDeployClick = () => {
+    setModalForm({
+      name: '',
+      domain: selectedDomain,
+      threshold: selectedThreshold,
+      severity: selectedSeverity,
+      channels: {
+        appPush: activeTab === 'App Push',
+        sms: activeTab === 'SMS',
+        whatsapp: activeTab === 'WhatsApp'
+      },
+      recipients: 'Peter (Admin)',
+      schedule: 'Immediate'
+    });
+    setEditingDeploymentId(null);
+    setShowDeployModal(true);
+  };
+
+  const handleEditDeploy = (dep: any) => {
+    setModalForm({
+      name: dep.name,
+      domain: dep.domain,
+      threshold: dep.threshold,
+      severity: dep.severity,
+      channels: {
+        appPush: dep.channels.includes('App Push'),
+        sms: dep.channels.includes('SMS'),
+        whatsapp: dep.channels.includes('WhatsApp')
+      },
+      recipients: dep.recipients || 'Peter (Admin)',
+      schedule: dep.schedule || 'Immediate'
+    });
+    setEditingDeploymentId(dep.id);
+    setShowDeployModal(true);
+  };
+
+  const handleConfirmDeploy = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Gateway validation check
+    const needsGateway = modalForm.channels.sms || modalForm.channels.whatsapp;
+    if (needsGateway && !gatewayNumber.trim()) {
+      toast.error("Gateway integration required", {
+        style: { background: '#101010', color: '#fff', border: '1px solid var(--status-critical)' }
+      });
+      return;
+    }
+
+    const selectedChannelsList: string[] = [];
+    if (modalForm.channels.appPush) selectedChannelsList.push('App Push');
+    if (modalForm.channels.sms) selectedChannelsList.push('SMS');
+    if (modalForm.channels.whatsapp) selectedChannelsList.push('WhatsApp');
+
+    if (selectedChannelsList.length === 0) {
+      toast.error("Please select at least one delivery channel", {
+        style: { background: '#101010', color: '#fff', border: '1px solid var(--status-critical)' }
+      });
+      return;
+    }
+
+    if (editingDeploymentId) {
+      // Edit mode
+      setDeployments(prev => prev.map(d => d.id === editingDeploymentId ? {
+        ...d,
+        name: modalForm.name,
+        domain: modalForm.domain,
+        threshold: modalForm.threshold,
+        severity: modalForm.severity,
+        channels: selectedChannelsList,
+        recipients: modalForm.recipients,
+        schedule: modalForm.schedule
+      } : d));
+      toast.success('Alert rule updated successfully', {
+        style: { background: '#101010', color: '#fff', border: '1px solid var(--status-success)' }
+      });
+    } else {
+      // Create mode
+      const newRule = {
+        id: `rule-${Date.now()}`,
+        name: modalForm.name,
+        domain: modalForm.domain,
+        threshold: modalForm.threshold,
+        severity: modalForm.severity,
+        channels: selectedChannelsList,
+        recipients: modalForm.recipients,
+        schedule: modalForm.schedule,
+        status: 'active',
+        lastTriggered: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setDeployments(prev => [newRule, ...prev]);
+      toast.success('Alert rule deployed successfully', {
+        style: { background: '#101010', color: '#fff', border: '1px solid var(--status-success)' }
+      });
+    }
+
+    setShowDeployModal(false);
+    setEditingDeploymentId(null);
+  };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-body)', color: 'var(--text-primary)' }}>
@@ -91,7 +264,7 @@ export default function MobileAlertsPage() {
                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
                           <div>
                              <label className="input-label">ALERT DOMAIN</label>
-                             <select className="saas-select">
+                             <select className="saas-select" value={selectedDomain} onChange={e => setSelectedDomain(e.target.value)}>
                                 <option>Capital Runway</option>
                                 <option>Loan Maturity</option>
                                 <option>Livestock Health</option>
@@ -100,7 +273,7 @@ export default function MobileAlertsPage() {
                           </div>
                           <div>
                              <label className="input-label">TRIGGER THRESHOLD</label>
-                             <select className="saas-select">
+                             <select className="saas-select" value={selectedThreshold} onChange={e => setSelectedThreshold(e.target.value)}>
                                 <option>Below 14 Days</option>
                                 <option>Within 48 Hours</option>
                                 <option>Above 15% Variance</option>
@@ -108,7 +281,7 @@ export default function MobileAlertsPage() {
                           </div>
                           <div>
                              <label className="input-label">SEVERITY LEVEL</label>
-                             <select className="saas-select">
+                             <select className="saas-select" value={selectedSeverity} onChange={e => setSelectedSeverity(e.target.value)}>
                                 <option>Critical</option>
                                 <option>High Priority</option>
                                 <option>Operational Warning</option>
@@ -121,7 +294,7 @@ export default function MobileAlertsPage() {
                               <button className={`tab-pill ${activeTab === 'SMS' ? 'active' : ''}`} onClick={() => setActiveTab('SMS')}>SMS</button>
                               <button className={`tab-pill ${activeTab === 'WhatsApp' ? 'active' : ''}`} onClick={() => setActiveTab('WhatsApp')}>WhatsApp</button>
                            </div>
-                           <button className="btn-saas-primary" onClick={() => toast.success('Intelligence Rule Deployed')}>Deploy Rule</button>
+                           <button className="btn-saas-primary" onClick={handleDeployClick}>Deploy Rule</button>
                        </div>
                     </div>
 
@@ -165,6 +338,117 @@ export default function MobileAlertsPage() {
                        </div>
                     </div>
 
+                    {/* 4. ACTIVE DEPLOYMENTS SECTION */}
+                    <div className="card-glass" style={{ padding: '32px', marginTop: 32 }}>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                             <Activity size={18} color={COLORS.primary} />
+                             <h3 style={{ fontSize: 16, fontWeight: 900, color: 'var(--text-primary)', margin: 0 }}>Active Deployments</h3>
+                          </div>
+                          <span style={{ fontSize: 10, color: COLORS.muted, fontWeight: 800 }}>
+                             {deployments.length} DEPLOYED RULES
+                          </span>
+                       </div>
+                       <div style={{ overflowX: 'auto' }}>
+                          <table className="saas-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                             <thead>
+                                <tr style={{ borderBottom: `1px solid ${COLORS.border}`, paddingBottom: 10, color: COLORS.muted, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', textAlign: 'left' }}>
+                                   <th style={{ padding: '12px 8px' }}>Rule Name</th>
+                                   <th style={{ padding: '12px 8px' }}>Domain</th>
+                                   <th style={{ padding: '12px 8px' }}>Severity</th>
+                                   <th style={{ padding: '12px 8px' }}>Channel</th>
+                                   <th style={{ padding: '12px 8px' }}>Status</th>
+                                   <th style={{ padding: '12px 8px' }}>Last Triggered</th>
+                                   <th style={{ padding: '12px 8px', textAlign: 'right' }}>Actions</th>
+                                </tr>
+                             </thead>
+                             <tbody>
+                                {deployments.map(dep => {
+                                   const isCrit = dep.severity === 'Critical';
+                                   const isHigh = dep.severity === 'High Priority' || dep.severity === 'High';
+                                   const color = isCrit ? COLORS.danger : isHigh ? COLORS.warning : COLORS.info;
+                                   return (
+                                      <tr key={dep.id} style={{ borderBottom: `1px solid ${COLORS.border}` }}>
+                                         <td style={{ padding: '12px 8px', fontWeight: 800, color: 'var(--text-primary)' }}>{dep.name}</td>
+                                         <td style={{ padding: '12px 8px', color: COLORS.muted }}>{dep.domain}</td>
+                                         <td style={{ padding: '12px 8px' }}>
+                                            <span style={{ color, fontSize: 10, fontWeight: 900 }}>{dep.severity}</span>
+                                         </td>
+                                         <td style={{ padding: '12px 8px', color: 'var(--text-secondary)' }}>
+                                            {dep.channels.join(', ')}
+                                         </td>
+                                         <td style={{ padding: '12px 8px' }}>
+                                            <span className="status-tag" style={{ 
+                                               color: dep.status === 'active' ? COLORS.success : COLORS.muted, 
+                                               borderColor: dep.status === 'active' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.1)',
+                                               background: dep.status === 'active' ? 'rgba(34, 197, 94, 0.05)' : 'transparent',
+                                               fontSize: 9,
+                                               textTransform: 'uppercase'
+                                            }}>
+                                               {dep.status}
+                                            </span>
+                                         </td>
+                                         <td style={{ padding: '12px 8px', color: COLORS.muted }}>{dep.lastTriggered || 'Never'}</td>
+                                         <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                                            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                                               {dep.status === 'active' ? (
+                                                  <button 
+                                                     className="icon-btn-ghost" 
+                                                     title="Pause Rule"
+                                                     onClick={() => {
+                                                        setDeployments(prev => prev.map(d => d.id === dep.id ? { ...d, status: 'paused' } : d));
+                                                        toast.success(`Rule "${dep.name}" paused`);
+                                                     }}
+                                                  >
+                                                     ⏸️
+                                                  </button>
+                                               ) : (
+                                                  <button 
+                                                     className="icon-btn-ghost" 
+                                                     title="Resume Rule"
+                                                     onClick={() => {
+                                                        setDeployments(prev => prev.map(d => d.id === dep.id ? { ...d, status: 'active' } : d));
+                                                        toast.success(`Rule "${dep.name}" resumed`);
+                                                     }}
+                                                  >
+                                                     ▶️
+                                                  </button>
+                                               )}
+                                               <button 
+                                                  className="icon-btn-ghost" 
+                                                  title="Edit Rule"
+                                                  onClick={() => handleEditDeploy(dep)}
+                                               >
+                                                  ✏️
+                                               </button>
+                                               <button 
+                                                  className="icon-btn-ghost" 
+                                                  title="Delete Rule"
+                                                  style={{ color: COLORS.danger }}
+                                                  onClick={() => {
+                                                     setDeployments(prev => prev.filter(d => d.id !== dep.id));
+                                                     toast.success(`Rule "${dep.name}" deleted`);
+                                                  }}
+                                               >
+                                                  🗑️
+                                               </button>
+                                            </div>
+                                         </td>
+                                      </tr>
+                                   );
+                                })}
+                                {deployments.length === 0 && (
+                                   <tr>
+                                      <td colSpan={7} style={{ padding: '24px 8px', textAlign: 'center', color: COLORS.muted }}>
+                                         No alert rules deployed. Build and deploy one above!
+                                      </td>
+                                   </tr>
+                                )}
+                             </tbody>
+                          </table>
+                       </div>
+                    </div>
+
                  </div>
 
                  {/* RIGHT SIDE: PHONE PREVIEW & SETTINGS */}
@@ -181,25 +465,31 @@ export default function MobileAlertsPage() {
                              </div>
                              
                              <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                <div className="phone-notification critical">
-                                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                                      <span style={{ fontSize: 8, fontWeight: 950, color: COLORS.danger }}>CRITICAL</span>
-                                      <span style={{ fontSize: 8, color: COLORS.muted }}>NOW</span>
-                                   </div>
-                                   <div style={{ fontSize: 10, fontWeight: 700, textAlign: 'left', lineHeight: 1.4, color: 'var(--text-primary)' }}>
-                                      Capital Alert: Cash runway below 14 days. Audit expenses.
-                                   </div>
-                                </div>
-
-                                <div className="phone-notification warning">
-                                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                                      <span style={{ fontSize: 8, fontWeight: 950, color: COLORS.warning }}>WARNING</span>
-                                      <span style={{ fontSize: 8, color: COLORS.muted }}>10M AGO</span>
-                                   </div>
-                                   <div style={{ fontSize: 10, fontWeight: 700, textAlign: 'left', lineHeight: 1.4, color: 'var(--text-primary)' }}>
-                                      Loan Due: Payment of $12k due in 48h. Confirm reserve.
-                                   </div>
-                                </div>
+                                {deployments.filter(d => d.status === 'active').slice(0, 3).map((dep, idx) => {
+                                  const isCrit = dep.severity === 'Critical';
+                                  const isHigh = dep.severity === 'High Priority' || dep.severity === 'High';
+                                  const tag = isCrit ? 'CRITICAL' : isHigh ? 'WARNING' : 'INFO';
+                                  const color = isCrit ? COLORS.danger : isHigh ? COLORS.warning : COLORS.info;
+                                  const borderLeftColor = isCrit ? 'var(--status-critical)' : isHigh ? 'var(--status-warning)' : 'var(--status-info)';
+                                  
+                                  return (
+                                    <div key={dep.id || idx} className={`phone-notification`} style={{ borderLeft: `4px solid ${borderLeftColor}`, padding: '10px', background: 'var(--bg-card-elevated)', borderRadius: '12px', border: '1px solid var(--border-soft)', borderLeftWidth: '4px' }}>
+                                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                                          <span style={{ fontSize: 8, fontWeight: 950, color }}>{tag}</span>
+                                          <span style={{ fontSize: 8, color: COLORS.muted }}>NOW</span>
+                                       </div>
+                                       <div style={{ fontSize: 9, fontWeight: 700, textAlign: 'left', lineHeight: 1.3, color: 'var(--text-primary)' }}>
+                                          {dep.name}: {dep.domain} threshold {dep.threshold.toLowerCase()} reached.
+                                       </div>
+                                    </div>
+                                  );
+                                })}
+                                {deployments.filter(d => d.status === 'active').length === 0 && (
+                                  <div style={{ padding: '32px 16px', color: COLORS.muted, fontSize: 11, textAlign: 'center' }}>
+                                     <Sparkles size={20} style={{ margin: '0 auto 8px', opacity: 0.3 }} />
+                                     No active alert signals. Screen clear.
+                                  </div>
+                                )}
                              </div>
 
                              <div className="phone-dock">
@@ -218,7 +508,13 @@ export default function MobileAlertsPage() {
                        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                           <div>
                              <label className="input-label">Operational SMS Gateway</label>
-                             <input className="saas-input" placeholder="+1 (555) 000-0000" />
+                             <input 
+                               type="text" 
+                               className="saas-input" 
+                               placeholder="+1 (555) 000-0000" 
+                               value={gatewayNumber}
+                               onChange={e => setGatewayNumber(e.target.value)}
+                             />
                           </div>
                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>AI Neural Routing</span>
@@ -238,11 +534,147 @@ export default function MobileAlertsPage() {
         </main>
       </div>
 
+      {/* Deploy Operational Alert Rule Modal Overlay */}
+      {showDeployModal && (
+        <div className="modal-backdrop" onClick={() => { setShowDeployModal(false); setEditingDeploymentId(null); }}>
+          <div className="modal-card" onClick={e => e.stopPropagation()} style={{ background: '#0b1220', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 24, padding: 32, width: 500, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 className="modal-title" style={{ fontSize: 18, fontWeight: 950, color: 'var(--text-primary)', margin: 0 }}>
+                {editingDeploymentId ? 'Edit Operational Alert Rule' : 'Deploy Operational Alert Rule'}
+              </h2>
+              <button style={{ background: 'transparent', border: 'none', color: COLORS.muted, cursor: 'pointer' }} onClick={() => { setShowDeployModal(false); setEditingDeploymentId(null); }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmDeploy} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div>
+                <label className="modal-label" style={{ display: 'block', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 8 }}>Rule Name *</label>
+                <input 
+                  type="text" 
+                  className="saas-input" 
+                  style={{ width: '100%' }}
+                  placeholder="e.g. Low Cash Runway Alarm" 
+                  value={modalForm.name}
+                  onChange={e => setModalForm({ ...modalForm, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <label className="modal-label" style={{ display: 'block', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 8 }}>Alert Domain</label>
+                  <select 
+                    className="saas-select"
+                    value={modalForm.domain}
+                    onChange={e => setModalForm({ ...modalForm, domain: e.target.value })}
+                  >
+                    <option value="Capital Runway">Capital Runway</option>
+                    <option value="Loan Maturity">Loan Maturity</option>
+                    <option value="Livestock Health">Livestock Health</option>
+                    <option value="Market Volatility">Market Volatility</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="modal-label" style={{ display: 'block', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 8 }}>Trigger Threshold</label>
+                  <select 
+                    className="saas-select"
+                    value={modalForm.threshold}
+                    onChange={e => setModalForm({ ...modalForm, threshold: e.target.value })}
+                  >
+                    <option value="Below 14 Days">Below 14 Days</option>
+                    <option value="Within 48 Hours">Within 48 Hours</option>
+                    <option value="Above 15% Variance">Above 15% Variance</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <label className="modal-label" style={{ display: 'block', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 8 }}>Severity Level</label>
+                  <select 
+                    className="saas-select"
+                    value={modalForm.severity}
+                    onChange={e => setModalForm({ ...modalForm, severity: e.target.value })}
+                  >
+                    <option value="Critical">Critical</option>
+                    <option value="High Priority">High Priority</option>
+                    <option value="Operational Warning">Operational Warning</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="modal-label" style={{ display: 'block', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 8 }}>Schedule</label>
+                  <select 
+                    className="saas-select"
+                    value={modalForm.schedule}
+                    onChange={e => setModalForm({ ...modalForm, schedule: e.target.value })}
+                  >
+                    <option value="Immediate">Immediate</option>
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Recurring">Recurring</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="modal-label" style={{ display: 'block', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 8 }}>Target Recipients *</label>
+                <input 
+                  type="text" 
+                  className="saas-input" 
+                  style={{ width: '100%' }}
+                  placeholder="e.g. Peter (Admin)" 
+                  value={modalForm.recipients}
+                  onChange={e => setModalForm({ ...modalForm, recipients: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="modal-label" style={{ display: 'block', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 8 }}>Delivery Channels *</label>
+                <div style={{ display: 'flex', gap: 16 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer', color: 'var(--text-primary)' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={modalForm.channels.appPush}
+                      onChange={e => setModalForm({ ...modalForm, channels: { ...modalForm.channels, appPush: e.target.checked } })}
+                    />
+                    App Push
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer', color: 'var(--text-primary)' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={modalForm.channels.sms}
+                      onChange={e => setModalForm({ ...modalForm, channels: { ...modalForm.channels, sms: e.target.checked } })}
+                    />
+                    SMS
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, cursor: 'pointer', color: 'var(--text-primary)' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={modalForm.channels.whatsapp}
+                      onChange={e => setModalForm({ ...modalForm, channels: { ...modalForm.channels, whatsapp: e.target.checked } })}
+                    />
+                    WhatsApp
+                  </label>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+                <button type="button" className="btn-saas-primary" style={{ flex: 1, background: 'transparent', border: '1px solid var(--border-soft)', color: 'var(--text-primary)' }} onClick={() => { setShowDeployModal(false); setEditingDeploymentId(null); }}>Cancel</button>
+                <button type="submit" className="btn-saas-primary" style={{ flex: 1 }}>{editingDeploymentId ? 'Save Changes' : 'Deploy Rule'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <style dangerouslySetInnerHTML={{__html: `
         .card-glass { background: var(--bg-card); backdrop-filter: blur(40px); border: 1px solid var(--border-soft); border-radius: 20px; box-shadow: var(--shadow-medium); }
         .premium-badge { font-size: 8px; font-weight: 950; padding: 6px 14px; background: var(--status-success-glow); color: var(--status-success); border: 1px solid var(--border-soft); border-radius: 30px; letter-spacing: 0.1em; }
         .input-label { display: block; font-size: 9px; font-weight: 900; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em; }
-        .saas-select, .saas-input { width: 100%; padding: 14px; background: var(--bg-card-elevated); border: 1px solid var(--border-soft); border-radius: 12px; color: var(--text-primary); font-size: 13px; font-weight: 600; outline: none; transition: all 0.2s; }
+        .saas-select, .saas-input { width: 100%; padding: 14px; background: var(--bg-card-elevated); border: 1px solid var(--border-soft); border-radius: 12px; color: var(--text-primary); font-size: 13px; font-weight: 600; outline: none; transition: all 0.2s; box-sizing: border-box; }
         .saas-select:focus, .saas-input:focus { border-color: var(--status-success); background: var(--bg-card); }
         
         .tab-pill { background: transparent; border: none; padding: 10px 20px; color: var(--text-muted); font-size: 12px; font-weight: 800; cursor: pointer; border-radius: 10px; transition: all 0.2s; }
@@ -273,6 +705,32 @@ export default function MobileAlertsPage() {
         .spin-slow { animation: spin 8s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .modal-backdrop {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(10px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          animation: fadeIn 0.25s ease-out;
+        }
+        .modal-card {
+          animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleUp {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
         
         @media (max-width: 1200px) {
            .grid-responsive { grid-template-columns: 1fr !important; }
