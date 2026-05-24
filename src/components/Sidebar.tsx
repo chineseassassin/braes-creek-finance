@@ -1,6 +1,7 @@
 'use client'
+import { useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useUIStore } from '@/store/useUIStore'
 import { useAppStore } from '@/store/useAppStore'
 import {
@@ -17,6 +18,7 @@ const GROUPS = [
     title: 'Command Center',
     items: [
       { href: '/',          label: 'Dashboard',   icon: LayoutDashboard },
+      { href: '/worker-hub', label: 'Data Entry Hub', icon: ClipboardList },
       { href: '/decision-engine', label: 'AI Decision Engine', icon: Zap },
       { href: '/approvals', label: 'Approval Center', icon: ShieldCheck },
       { href: '/employee-tasks', label: 'My Tasks', icon: ClipboardList },
@@ -66,25 +68,33 @@ const GROUPS = [
       { href: '/settings',  label: 'Settings',  icon: Settings },
       { href: '/login',     label: 'Log Out',   icon: LogOut },
     ]
-  },
-  {
-    title: 'Worker Interface',
-    items: [
-      { href: '/worker-hub', label: 'Data Entry Hub', icon: ClipboardList },
-    ]
   }
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { sidebarCollapsed, toggleSidebar } = useUIStore()
   const { currentUser } = useAppStore()
   const w = sidebarCollapsed ? 64 : 250
 
+  useEffect(() => {
+    if (currentUser?.role === 'data-entry') {
+      const allowedPaths = ['/worker-hub', '/employee-tasks', '/login'];
+      if (!allowedPaths.includes(pathname)) {
+        router.push('/worker-hub');
+      }
+    }
+  }, [currentUser?.role, pathname, router]);
+
   const filteredGroups = GROUPS.map(group => ({
     ...group,
     items: group.items.filter(item => {
-      if (currentUser.role === 'restricted') {
+      if (currentUser?.role === 'data-entry') {
+        const workerHrefs = ['/worker-hub', '/employee-tasks', '/login'];
+        return workerHrefs.includes(item.href);
+      }
+      if (currentUser?.role === 'restricted') {
         const restrictedHrefs = ['/loans', '/finance/pl', '/capital', '/capital-control', '/reports', '/settings', '/cash-flow'];
         if (restrictedHrefs.includes(item.href)) return false;
       }

@@ -1,8 +1,9 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 import Topbar from '@/components/Topbar'
-import { Clock, CheckCircle, AlertTriangle, FileText, ChevronRight, X, Upload } from 'lucide-react'
+import { Clock, CheckCircle, AlertTriangle, FileText, ChevronRight, X, Upload, ClipboardList, LogOut } from 'lucide-react'
 import { toast, Toaster } from 'react-hot-toast'
 import { useAppStore } from '@/store/useAppStore'
 
@@ -13,6 +14,7 @@ const INITIAL_TASKS = [
 ]
 
 export default function EmployeeTasksPage() {
+  const router = useRouter()
   const [tasks, setTasks] = useState(INITIAL_TASKS);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
@@ -206,6 +208,103 @@ export default function EmployeeTasksPage() {
         </div>
       )}
 
+      {/* ── Sticky Bottom Action Bar for Mobile ── */}
+      <div className="mobile-bottom-bar">
+        <button className="mobile-bottom-bar-btn" onClick={() => router.push('/worker-hub')}>
+          <ClipboardList size={20} />
+          <span>Worker Hub</span>
+        </button>
+        <button className="mobile-bottom-bar-btn active" onClick={() => router.push('/employee-tasks')}>
+          <CheckCircle size={20} />
+          <span>My Tasks</span>
+        </button>
+        <button className="mobile-bottom-bar-btn" onClick={() => router.push('/login')}>
+          <LogOut size={20} />
+          <span>Log Out</span>
+        </button>
+      </div>
+
+      {/* ── Mobile First CSS Injector ── */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 767px) {
+          aside {
+            display: none !important;
+          }
+          .main-content {
+            margin-left: 0 !important;
+            padding: 16px 16px 88px 16px !important;
+          }
+          .topbar {
+            padding: 12px 16px !important;
+            margin-bottom: 16px !important;
+          }
+          .page-container {
+            padding: 0 !important;
+          }
+          /* Sticky Bottom Action Bar */
+          .mobile-bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: rgba(20, 20, 20, 0.96);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border-soft);
+            display: flex !important;
+            align-items: center;
+            justify-content: space-around;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            z-index: 999;
+            box-shadow: 0 -4px 30px rgba(0,0,0,0.5);
+          }
+          .mobile-bottom-bar-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 8px 12px;
+            transition: all 0.2s;
+            font-family: inherit;
+          }
+          .mobile-bottom-bar-btn.active {
+            color: var(--status-success);
+          }
+          .mobile-bottom-bar-btn span {
+            font-size: 10px;
+            font-weight: 800;
+          }
+          /* Large touch targets on mobile */
+          .btn-primary, button {
+            min-height: 48px;
+          }
+          .card {
+            margin: 0;
+            border-radius: 20px 20px 0 0 !important;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 100% !important;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          }
+          @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+          }
+        }
+        @media (min-width: 768px) {
+          .mobile-bottom-bar {
+            display: none !important;
+          }
+        }
+      ` }} />
     </div>
   )
 }

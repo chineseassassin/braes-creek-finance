@@ -83,6 +83,49 @@ export default function SettingsPage() {
   const [inviteError, setInviteError] = useState('');
   const [isSendingInvite, setIsSendingInvite] = useState(false);
 
+  // Critical Operations confirmation state
+  const [showClearDemoModal, setShowClearDemoModal] = useState(false);
+  const [clearDemoInput, setClearDemoInput] = useState('');
+  const [showFactoryResetModal, setShowFactoryResetModal] = useState(false);
+  const [factoryResetInput, setFactoryResetInput] = useState('');
+
+  const handleClearDemo = () => {
+    if (clearDemoInput !== 'RESET DEMO DATA') return;
+    // Clear all operational/financial records but preserve system config
+    const { useCropStore } = require('@/store/useCropStore');
+    const { useLivestockStore } = require('@/store/useLivestockStore');
+    const { useDashboardStore } = require('@/store/useDashboardStore');
+    const { useInventoryStore } = require('@/store/useInventoryStore');
+    const { useWorkflowStore } = require('@/store/useWorkflowStore');
+    const { useAlertStore } = require('@/store/useAlertStore');
+    const { useActivityStore } = require('@/store/useActivityStore');
+    // Reset operational records only
+    try {
+      if (useCropStore.getState().resetCrops) useCropStore.getState().resetCrops();
+      if (useLivestockStore.getState().resetUnits) useLivestockStore.getState().resetUnits();
+      if (useInventoryStore.getState().resetItems) useInventoryStore.getState().resetItems();
+      if (useDashboardStore.getState().resetTransactions) useDashboardStore.getState().resetTransactions();
+    } catch (e) { /* stores may not expose reset yet, no crash */ }
+    // Clear local storage operational keys only
+    const keysToKeep = ['braes-creek-app-storage', 'braes-creek-theme', 'braes-creek-ui'];
+    Object.keys(localStorage).forEach(k => {
+      if (!keysToKeep.some(keep => k.includes(keep))) localStorage.removeItem(k);
+    });
+    setShowClearDemoModal(false);
+    setClearDemoInput('');
+    toast.success('Demo data cleared. Users, roles, and settings are preserved.');
+  };
+
+  const handleFactoryReset = () => {
+    if (factoryResetInput !== 'RESET BRAES CREEK FACTORY') return;
+    // Full wipe — clear all localStorage
+    localStorage.clear();
+    setShowFactoryResetModal(false);
+    setFactoryResetInput('');
+    toast.error('Factory reset complete. All system data has been wiped.');
+    setTimeout(() => window.location.reload(), 1500);
+  };
+
   const getRoleDescription = (r: string) => {
     if (r === 'Admin') return 'Full access to dashboard, financials, approvals, reports, users, and settings.';
     if (r === 'Data Entry') return 'Can add expenses, payroll, livestock, crops, receipts, and operational records. Cannot approve loans, view sensitive financials, delete data, or manage users.';
@@ -325,12 +368,34 @@ export default function SettingsPage() {
                     </div>
                     <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: 11 }} onClick={handleExportAll}><Download size={14} /> Full Export</button>
                   </div>
+                  {/* Clear Demo Data — amber */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid var(--border-soft)' }}>
+                     <div style={{ flex: 1, marginRight: 16 }}>
+                        <div style={{ fontWeight: 800, color: 'var(--status-warning)', fontSize: 13 }}>Clear Demo Data</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3, lineHeight: 1.5 }}>Remove all sample operational and financial records. Preserves users, roles, permissions, categories, segments, and system configuration.</div>
+                     </div>
+                     <button
+                        className="btn-secondary"
+                        style={{ padding: '8px 16px', fontSize: 11, color: 'var(--status-warning)', borderColor: 'rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.06)', whiteSpace: 'nowrap', flexShrink: 0 }}
+                        onClick={() => setShowClearDemoModal(true)}
+                     >
+                        <Trash size={14} /> Clear Demo Data
+                     </button>
+                  </div>
+
+                  {/* Factory Reset — red critical */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0' }}>
-                    <div>
-                       <div style={{ fontWeight: 800, color: 'var(--status-critical)', fontSize: 13 }}>Master Database Purge</div>
-                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Irreversibly delete all organization data and configurations</div>
-                    </div>
-                    <button className="btn-secondary" style={{ padding: '8px 16px', fontSize: 11, color: 'var(--status-critical)', borderColor: 'rgba(239, 68, 68, 0.2)' }} onClick={() => toast.error('Purge protocol requires level-3 biometric verification (mock).')}><Trash2 size={14} /> Purge All</button>
+                     <div style={{ flex: 1, marginRight: 16 }}>
+                        <div style={{ fontWeight: 800, color: 'var(--status-critical)', fontSize: 13 }}>Factory Reset Platform</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3, lineHeight: 1.5 }}>Full destructive wipe of all system data including users, settings, financials, and records. This action is irreversible.</div>
+                     </div>
+                     <button
+                        className="btn-secondary"
+                        style={{ padding: '8px 16px', fontSize: 11, color: 'var(--status-critical)', borderColor: 'rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)', whiteSpace: 'nowrap', flexShrink: 0 }}
+                        onClick={() => setShowFactoryResetModal(true)}
+                     >
+                        <Trash2 size={14} /> Factory Reset
+                     </button>
                   </div>
                 </div>
               </div>
@@ -900,6 +965,106 @@ export default function SettingsPage() {
                   {isSendingInvite ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Invitation'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Clear Demo Data Confirmation Modal ── */}
+      {showClearDemoModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          onClick={() => { setShowClearDemoModal(false); setClearDemoInput(''); }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 20, padding: 32, width: '100%', maxWidth: 480, boxShadow: '0 24px 60px rgba(0,0,0,0.5)', position: 'relative', zIndex: 1001 }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Trash size={18} color="var(--status-warning)" />
+              </div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--status-warning)' }}>Clear Demo Data</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Amber warning — non-destructive to system configuration</div>
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 12, padding: '14px 16px', marginBottom: 20, fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              This will permanently remove all <strong>demo/sample operational and financial records</strong> including crops, livestock batches, transactions, inventory items, workflows, and activity logs.<br /><br />
+              <strong style={{ color: 'var(--status-warning)' }}>Preserved:</strong> Users, roles, permissions, categories, segments, and all system configuration settings.
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontSize: 11, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                Type <strong style={{ color: 'var(--status-warning)', fontFamily: 'monospace' }}>RESET DEMO DATA</strong> to confirm
+              </label>
+              <input
+                className="form-input"
+                placeholder="RESET DEMO DATA"
+                value={clearDemoInput}
+                onChange={e => setClearDemoInput(e.target.value)}
+                style={{ fontFamily: 'monospace', borderColor: clearDemoInput === 'RESET DEMO DATA' ? 'var(--status-warning)' : undefined }}
+                autoFocus
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setShowClearDemoModal(false); setClearDemoInput(''); }}>Cancel</button>
+              <button
+                className="btn"
+                style={{ flex: 1, background: clearDemoInput === 'RESET DEMO DATA' ? 'var(--status-warning)' : 'rgba(245,158,11,0.15)', color: clearDemoInput === 'RESET DEMO DATA' ? '#fff' : 'var(--text-muted)', border: '1px solid rgba(245,158,11,0.3)', cursor: clearDemoInput === 'RESET DEMO DATA' ? 'pointer' : 'not-allowed', fontWeight: 800, transition: 'all 0.2s' }}
+                onClick={handleClearDemo}
+                disabled={clearDemoInput !== 'RESET DEMO DATA'}
+              >
+                Clear Demo Data
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Factory Reset Confirmation Modal ── */}
+      {showFactoryResetModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          onClick={() => { setShowFactoryResetModal(false); setFactoryResetInput(''); }}>
+          <div style={{ background: 'var(--bg-card)', border: '2px solid rgba(239,68,68,0.4)', borderRadius: 20, padding: 32, width: '100%', maxWidth: 480, boxShadow: '0 24px 80px rgba(239,68,68,0.15)', position: 'relative', zIndex: 1001 }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <AlertTriangle size={18} color="var(--status-critical)" />
+              </div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: 'var(--status-critical)' }}>Factory Reset Platform</div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>Critical danger — full destructive wipe</div>
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 12, padding: '14px 16px', marginBottom: 20, fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              <strong style={{ color: 'var(--status-critical)' }}>⚠ This action is irreversible.</strong><br /><br />
+              A full factory reset will permanently destroy <strong>all system data</strong> — including users, roles, permissions, settings, categories, segments, financial records, operational logs, and all configurations. The platform will restart as a blank installation.
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ fontSize: 11, fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>
+                Type <strong style={{ color: 'var(--status-critical)', fontFamily: 'monospace' }}>RESET BRAES CREEK FACTORY</strong> to confirm
+              </label>
+              <input
+                className="form-input"
+                placeholder="RESET BRAES CREEK FACTORY"
+                value={factoryResetInput}
+                onChange={e => setFactoryResetInput(e.target.value)}
+                style={{ fontFamily: 'monospace', borderColor: factoryResetInput === 'RESET BRAES CREEK FACTORY' ? 'var(--status-critical)' : undefined }}
+                autoFocus
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setShowFactoryResetModal(false); setFactoryResetInput(''); }}>Cancel</button>
+              <button
+                className="btn"
+                style={{ flex: 1, background: factoryResetInput === 'RESET BRAES CREEK FACTORY' ? 'var(--status-critical)' : 'rgba(239,68,68,0.1)', color: factoryResetInput === 'RESET BRAES CREEK FACTORY' ? '#fff' : 'var(--text-muted)', border: '1px solid rgba(239,68,68,0.3)', cursor: factoryResetInput === 'RESET BRAES CREEK FACTORY' ? 'pointer' : 'not-allowed', fontWeight: 800, transition: 'all 0.2s' }}
+                onClick={handleFactoryReset}
+                disabled={factoryResetInput !== 'RESET BRAES CREEK FACTORY'}
+              >
+                Factory Reset
+              </button>
             </div>
           </div>
         </div>

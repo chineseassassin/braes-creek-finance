@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 import Topbar from '@/components/Topbar'
 import { Toaster, toast } from 'react-hot-toast'
@@ -10,7 +11,8 @@ import { useInventoryStore } from '@/store/useInventoryStore'
 import { useDashboardStore } from '@/store/useDashboardStore'
 import {
   Sprout, Beef, Clock, DollarSign, Upload, Package, AlertTriangle,
-  CheckCircle, ChevronRight, X, Send, ClipboardList, Zap, Plus
+  CheckCircle, ChevronRight, X, Send, ClipboardList, Zap, Plus,
+  Wifi, WifiOff, Smartphone, Info, RefreshCw, LogOut
 } from 'lucide-react'
 
 // ─── constants ───────────────────────────────────────────────────────────────
@@ -63,20 +65,32 @@ function Modal({ title, subtitle, icon, onClose, children }: {
 }
 
 // ─── success screen ───────────────────────────────────────────────────────────
-function SuccessScreen({ message, onClose }: { message: string; onClose: () => void }) {
+function SuccessScreen({ message, onClose, isOffline = false }: { message: string; onClose: () => void; isOffline?: boolean }) {
   return (
     <div className="success-anim" style={{ padding: '48px 32px', textAlign: 'center', animation: 'scaleUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
       <div style={{
-        width: 64, height: 64, borderRadius: '50%', background: 'var(--status-success-glow)',
-        border: '2px solid var(--status-success)', display: 'flex', alignItems: 'center',
+        width: 64, height: 64, borderRadius: '50%', background: isOffline ? 'var(--status-warning-glow)' : 'var(--status-success-glow)',
+        border: `2px solid ${isOffline ? 'var(--status-warning)' : 'var(--status-success)'}`, display: 'flex', alignItems: 'center',
         justifyContent: 'center', margin: '0 auto 24px'
       }}>
-        <CheckCircle size={28} color="var(--status-success)" />
+        {isOffline ? <Clock size={28} color="var(--status-warning)" /> : <CheckCircle size={28} color="var(--status-success)" />}
       </div>
-      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>Task Completed</div>
+      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
+        {isOffline ? 'Offline Draft Saved' : 'Task Completed'}
+      </div>
       <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 6 }}>{message}</div>
-      <div style={{ fontSize: 12, color: 'var(--status-info)', fontWeight: 700, marginTop: 12, marginBottom: 24, padding: '10px', background: 'var(--status-info-glow)', borderRadius: 8, border: '1px solid rgba(59,130,246,0.2)' }}>
-        Submission Received — Routed to Approval Center
+      <div style={{
+        fontSize: 12,
+        color: isOffline ? 'var(--status-warning)' : 'var(--status-info)',
+        fontWeight: 700,
+        marginTop: 12,
+        marginBottom: 24,
+        padding: '10px',
+        background: isOffline ? 'var(--status-warning-glow)' : 'var(--status-info-glow)',
+        borderRadius: 8,
+        border: `1px solid ${isOffline ? 'rgba(245,158,11,0.2)' : 'rgba(59,130,246,0.2)'}`
+      }}>
+        {isOffline ? 'Offline Draft — Saved locally to phone' : 'Submission Received — Routed to Approval Center'}
       </div>
       <button className="btn-primary" onClick={onClose} style={{ padding: '12px 40px', margin: '0 auto' }}>Done</button>
       <style>{`
@@ -102,31 +116,29 @@ const executeAsWorker = async (action: () => Promise<void>) => {
 }
 
 // ─── Crop Update ──────────────────────────────────────────────────────────────
-function CropModal({ onClose }: { onClose: () => void }) {
+function CropModal({ onClose, onSubmit, isOffline }: { onClose: () => void; onSubmit: (payload: any, label: string) => void; isOffline: boolean }) {
   const [done, setDone] = useState(false)
   const [form, setForm] = useState({ field: '', crop: CROP_TYPES[0], qty: '', unit: 'kg', condition: 'Good', notes: '' })
-  const { addCrop } = useCropStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await executeAsWorker(async () => {
-      await addCrop({
-        name: form.crop,
-        variety: `Field: ${form.field}`,
-        planting_date: today(),
-        expected_harvest: today(),
-        area_acres: 0,
-        input_costs: 0,
-        labor_cost: 0,
-        status: 'growing',
-        workflow_status: 'pending',
-        notes: `Qty: ${form.qty}${form.unit} | Condition: ${form.condition} | ${form.notes}`,
-      } as any)
-    })
+    const payload = {
+      name: form.crop,
+      variety: `Field: ${form.field}`,
+      planting_date: today(),
+      expected_harvest: today(),
+      area_acres: 0,
+      input_costs: 0,
+      labor_cost: 0,
+      status: 'growing',
+      workflow_status: 'pending',
+      notes: `Qty: ${form.qty}${form.unit} | Condition: ${form.condition} | ${form.notes}`,
+    }
+    onSubmit(payload, `Crop update: ${form.crop} at ${form.field || 'Field'}`)
     setDone(true)
   }
 
-  if (done) return <SuccessScreen message={`Crop update for ${form.crop} queued for owner approval.`} onClose={onClose} />
+  if (done) return <SuccessScreen message={isOffline ? `Crop update for ${form.crop} saved locally as draft.` : `Crop update for ${form.crop} queued for owner approval.`} onClose={onClose} isOffline={isOffline} />
 
   return (
     <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -165,38 +177,36 @@ function CropModal({ onClose }: { onClose: () => void }) {
         <textarea className="form-input" rows={2} style={{ height: 'auto', padding: '10px 14px', resize: 'vertical' }} placeholder="Observations, issues..." value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
       </div>
       <button type="submit" className="btn-primary" style={{ width: '100%', padding: 14 }}>
-        <Send size={15} /> Submit Crop Update
+        <Send size={15} /> {isOffline ? 'Save Offline Draft' : 'Submit Crop Update'}
       </button>
     </form>
   )
 }
 
 // ─── Livestock Update ─────────────────────────────────────────────────────────
-function LivestockModal({ onClose }: { onClose: () => void }) {
+function LivestockModal({ onClose, onSubmit, isOffline }: { onClose: () => void; onSubmit: (payload: any, label: string) => void; isOffline: boolean }) {
   const [done, setDone] = useState(false)
   const [form, setForm] = useState({ type: ANIMAL_TYPES[0], count: '', mortality: '', feed: '', feedUnit: 'kg', condition: 'Good', notes: '' })
-  const { addUnit } = useLivestockStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await executeAsWorker(async () => {
-      await addUnit({
-        animal_type: form.type as any,
-        batch_name: `Daily Update — ${new Date().toLocaleDateString()}`,
-        quantity: parseInt(form.count) || 0,
-        purchase_date: today(),
-        purchase_cost: 0,
-        current_value: 0,
-        mortality_count: parseInt(form.mortality) || 0,
-        feed_cost_daily: 0,
-        notes: `Condition: ${form.condition} | Feed: ${form.feed}${form.feedUnit} | Mortality: ${form.mortality || 0} | ${form.notes}`,
-        workflow_status: 'pending',
-      } as any)
-    })
+    const payload = {
+      animal_type: form.type as any,
+      batch_name: `Daily Update — ${new Date().toLocaleDateString()}`,
+      quantity: parseInt(form.count) || 0,
+      purchase_date: today(),
+      purchase_cost: 0,
+      current_value: 0,
+      mortality_count: parseInt(form.mortality) || 0,
+      feed_cost_daily: 0,
+      notes: `Condition: ${form.condition} | Feed: ${form.feed}${form.feedUnit} | Mortality: ${form.mortality || 0} | ${form.notes}`,
+      workflow_status: 'pending',
+    }
+    onSubmit(payload, `Livestock update: ${form.type} (Count: ${form.count})`)
     setDone(true)
   }
 
-  if (done) return <SuccessScreen message={`Livestock update for ${form.type} queued for owner approval.`} onClose={onClose} />
+  if (done) return <SuccessScreen message={isOffline ? `Livestock update for ${form.type} saved locally as draft.` : `Livestock update for ${form.type} queued for owner approval.`} onClose={onClose} isOffline={isOffline} />
 
   return (
     <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -241,20 +251,19 @@ function LivestockModal({ onClose }: { onClose: () => void }) {
         <textarea className="form-input" rows={2} style={{ height: 'auto', padding: '10px 14px', resize: 'vertical' }} placeholder="Health observations, abnormal behavior..." value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
       </div>
       <button type="submit" className="btn-primary" style={{ width: '100%', padding: 14 }}>
-        <Send size={15} /> Submit Livestock Update
+        <Send size={15} /> {isOffline ? 'Save Offline Draft' : 'Submit Livestock Update'}
       </button>
     </form>
   )
 }
 
 // ─── Labor Hours ──────────────────────────────────────────────────────────────
-function LaborModal({ onClose }: { onClose: () => void }) {
+function LaborModal({ onClose, onSubmit, isOffline }: { onClose: () => void; onSubmit: (payload: any, label: string) => void; isOffline: boolean }) {
   const [done, setDone] = useState(false)
   const [form, setForm] = useState({
     workerName: '', taskType: TASK_TYPES[0], date: today(),
     startTime: '07:00', endTime: '15:00', notes: ''
   })
-  const { addTransaction } = useDashboardStore()
 
   const calcHours = () => {
     const [sh, sm] = form.startTime.split(':').map(Number)
@@ -265,23 +274,20 @@ function LaborModal({ onClose }: { onClose: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    await executeAsWorker(async () => {
-      await addTransaction({
-        type: 'expense',
-        amount: hours * 1200, // Mock JMD 1200/hr
-        category: 'Payroll',
-        description: `Labor: ${form.workerName} - ${form.taskType} (${hours.toFixed(1)} hrs)`,
-        date: form.date,
-        status: 'pending',
-        notes: form.notes
-      } as any)
-    })
-    
+    const payload = {
+      type: 'expense',
+      amount: hours * 1200, // Mock JMD 1200/hr
+      category: 'Payroll',
+      description: `Labor: ${form.workerName} - ${form.taskType} (${hours.toFixed(1)} hrs)`,
+      date: form.date,
+      status: 'pending',
+      notes: form.notes
+    }
+    onSubmit(payload, `Log Hours: ${form.workerName} (${hours.toFixed(1)} hrs)`)
     setDone(true)
   }
 
-  if (done) return <SuccessScreen message={`${hours.toFixed(1)} hrs logged for ${form.workerName}. Queued for payroll approval.`} onClose={onClose} />
+  if (done) return <SuccessScreen message={isOffline ? `${hours.toFixed(1)} hrs for ${form.workerName} saved locally as draft.` : `${hours.toFixed(1)} hrs logged for ${form.workerName}. Queued for payroll approval.`} onClose={onClose} isOffline={isOffline} />
 
   return (
     <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -322,36 +328,34 @@ function LaborModal({ onClose }: { onClose: () => void }) {
         <input className="form-input" placeholder="Task details, location..." value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
       </div>
       <button type="submit" className="btn-primary" style={{ width: '100%', padding: 14 }}>
-        <Send size={15} /> Log Hours
+        <Send size={15} /> {isOffline ? 'Save Offline Draft' : 'Log Hours'}
       </button>
     </form>
   )
 }
 
 // ─── Expense ──────────────────────────────────────────────────────────────────
-function ExpenseModal({ onClose }: { onClose: () => void }) {
+function ExpenseModal({ onClose, onSubmit, isOffline }: { onClose: () => void; onSubmit: (payload: any, label: string) => void; isOffline: boolean }) {
   const [done, setDone] = useState(false)
   const [form, setForm] = useState({ category: EXPENSE_CATS[0], amount: '', vendor: '', desc: '', date: today() })
-  const { addTransaction } = useDashboardStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await executeAsWorker(async () => {
-      await addTransaction({
-        type: 'expense',
-        amount: parseFloat(form.amount) || 0,
-        category: form.category,
-        description: form.desc || form.category,
-        date: form.date,
-        reference: form.vendor,
-        status: 'pending',
-        created_by: 'worker-submission',
-      } as any)
-    })
+    const payload = {
+      type: 'expense',
+      amount: parseFloat(form.amount) || 0,
+      category: form.category,
+      description: form.desc || form.category,
+      date: form.date,
+      reference: form.vendor,
+      status: 'pending',
+      created_by: 'worker-submission',
+    }
+    onSubmit(payload, `Expense: JMD ${parseFloat(form.amount).toLocaleString()} (${form.category})`)
     setDone(true)
   }
 
-  if (done) return <SuccessScreen message={`Expense of JMD ${parseFloat(form.amount).toLocaleString()} queued for owner approval.`} onClose={onClose} />
+  if (done) return <SuccessScreen message={isOffline ? `Expense of JMD ${parseFloat(form.amount).toLocaleString()} saved locally as draft.` : `Expense of JMD ${parseFloat(form.amount).toLocaleString()} queued for owner approval.`} onClose={onClose} isOffline={isOffline} />
 
   return (
     <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -380,55 +384,58 @@ function ExpenseModal({ onClose }: { onClose: () => void }) {
         <input className="form-input" placeholder="What was purchased / paid for?" value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} />
       </div>
       <button type="submit" className="btn-primary" style={{ width: '100%', padding: 14 }}>
-        <Send size={15} /> Submit Expense
+        <Send size={15} /> {isOffline ? 'Save Offline Draft' : 'Submit Expense'}
       </button>
     </form>
   )
 }
 
 // ─── Receipt Upload ───────────────────────────────────────────────────────────
-function ReceiptModal({ onClose }: { onClose: () => void }) {
+function ReceiptModal({ onClose, onSubmit, isOffline }: { onClose: () => void; onSubmit: (payload: any, label: string) => void; isOffline: boolean }) {
   const [done, setDone] = useState(false)
   const [file, setFile] = useState<File | null>(null)
+  const [fileName, setFileName] = useState<string>('')
   const [form, setForm] = useState({ desc: '', amount: '', vendor: '', date: today() })
-  const { addTransaction } = useDashboardStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    await executeAsWorker(async () => {
-      await addTransaction({
-        type: 'expense',
-        amount: parseFloat(form.amount) || 0,
-        category: 'Other',
-        description: `Receipt: ${file?.name} - ${form.desc}`,
-        date: form.date,
-        reference: form.vendor,
-        status: 'pending',
-      } as any)
-    })
-    
+    const payload = {
+      type: 'expense',
+      amount: parseFloat(form.amount) || 0,
+      category: 'Other',
+      description: `Receipt: ${fileName || file?.name || 'Uploaded File'} - ${form.desc}`,
+      date: form.date,
+      reference: form.vendor,
+      status: 'pending',
+    }
+    onSubmit(payload, `Receipt: ${form.desc} (JMD ${parseFloat(form.amount).toLocaleString()})`)
     setDone(true)
   }
 
-  if (done) return <SuccessScreen message={`Receipt "${file?.name}" queued for owner review.`} onClose={onClose} />
+  if (done) return <SuccessScreen message={isOffline ? `Receipt "${fileName || file?.name || 'File'}" saved locally as draft.` : `Receipt "${fileName || file?.name || 'File'}" queued for owner review.`} onClose={onClose} isOffline={isOffline} />
 
   return (
     <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Drop zone */}
       <label style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        border: `2px dashed ${file ? 'var(--status-success)' : 'var(--border-strong)'}`,
+        border: `2px dashed ${file || fileName ? 'var(--status-success)' : 'var(--border-strong)'}`,
         borderRadius: 14, padding: '28px 16px', cursor: 'pointer',
-        background: file ? 'var(--status-success-glow)' : 'var(--bg-surface)',
+        background: file || fileName ? 'var(--status-success-glow)' : 'var(--bg-surface)',
         transition: 'all 0.2s',
       }}>
-        <Upload size={26} color={file ? 'var(--status-success)' : 'var(--text-muted)'} />
-        <span style={{ marginTop: 10, fontSize: 13, fontWeight: 700, color: file ? 'var(--status-success)' : 'var(--text-muted)' }}>
-          {file ? file.name : 'Tap to upload receipt'}
+        <Upload size={26} color={file || fileName ? 'var(--status-success)' : 'var(--text-muted)'} />
+        <span style={{ marginTop: 10, fontSize: 13, fontWeight: 700, color: file || fileName ? 'var(--status-success)' : 'var(--text-muted)' }}>
+          {fileName || file?.name || 'Tap to upload receipt'}
         </span>
         <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>JPG, PNG, PDF</span>
-        <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => setFile(e.target.files?.[0] || null)} required />
+        <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} onChange={e => {
+          const uploaded = e.target.files?.[0] || null;
+          if (uploaded) {
+            setFile(uploaded);
+            setFileName(uploaded.name);
+          }
+        }} required={!fileName} />
       </label>
       <div className="form-group">
         <label className="form-label">Description</label>
@@ -449,38 +456,36 @@ function ReceiptModal({ onClose }: { onClose: () => void }) {
         <input className="form-input" placeholder="e.g. Agro Grace, Hi-Pro" value={form.vendor} onChange={e => setForm(f => ({ ...f, vendor: e.target.value }))} />
       </div>
       <button type="submit" className="btn-primary" style={{ width: '100%', padding: 14 }}>
-        <Send size={15} /> Upload Receipt
+        <Send size={15} /> {isOffline ? 'Save Offline Draft' : 'Upload Receipt'}
       </button>
     </form>
   )
 }
 
 // ─── Inventory Update ─────────────────────────────────────────────────────────
-function InventoryModal({ onClose }: { onClose: () => void }) {
+function InventoryModal({ onClose, onSubmit, isOffline }: { onClose: () => void; onSubmit: (payload: any, label: string) => void; isOffline: boolean }) {
   const [done, setDone] = useState(false)
   const [form, setForm] = useState({ item: '', category: INV_CATS[0], qty: '', unit: 'bags', action: 'used', notes: '' })
-  const { addItem } = useInventoryStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await executeAsWorker(async () => {
-      await addItem({
-        itemName: form.item,
-        category: form.category as any,
-        quantity: parseInt(form.qty) || 0,
-        unit: form.unit,
-        reorderThreshold: 0,
-        criticalThreshold: 0,
-        unitCost: 0,
-        vendorName: '',
-        workflow_status: 'pending',
-        notes: `${form.action === 'used' ? 'Used' : 'Restocked'} ${form.qty} ${form.unit}. ${form.notes}`,
-      } as any)
-    })
+    const payload = {
+      itemName: form.item,
+      category: form.category as any,
+      quantity: parseInt(form.qty) || 0,
+      unit: form.unit,
+      reorderThreshold: 0,
+      criticalThreshold: 0,
+      unitCost: 0,
+      vendorName: '',
+      workflow_status: 'pending',
+      notes: `${form.action === 'used' ? 'Used' : 'Restocked'} ${form.qty} ${form.unit}. ${form.notes}`,
+    }
+    onSubmit(payload, `Inventory: ${form.action === 'used' ? 'Used' : 'Restocked'} ${form.qty} ${form.unit} of ${form.item}`)
     setDone(true)
   }
 
-  if (done) return <SuccessScreen message={`Inventory update for ${form.item} queued for owner review.`} onClose={onClose} />
+  if (done) return <SuccessScreen message={isOffline ? `Inventory update for ${form.item} saved locally as draft.` : `Inventory update for ${form.item} queued for owner review.`} onClose={onClose} isOffline={isOffline} />
 
   return (
     <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -520,26 +525,20 @@ function InventoryModal({ onClose }: { onClose: () => void }) {
         <input className="form-input" placeholder="Supplier, batch number, condition..." value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
       </div>
       <button type="submit" className="btn-primary" style={{ width: '100%', padding: 14 }}>
-        <Send size={15} /> Submit Inventory Update
+        <Send size={15} /> {isOffline ? 'Save Offline Draft' : 'Submit Inventory Update'}
       </button>
     </form>
   )
 }
 
 // ─── Incident Report ──────────────────────────────────────────────────────────
-function IncidentModal({ onClose }: { onClose: () => void }) {
+function IncidentModal({ onClose, onSubmit, isOffline }: { onClose: () => void; onSubmit: (payload: any, label: string) => void; isOffline: boolean }) {
   const [done, setDone] = useState(false)
   const [form, setForm] = useState({ type: INC_TYPES[0], severity: 'Medium', location: '', desc: '', action: '' })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // Import useAlertStore dynamically or at top-level; 
-    // it's fine to require it here if we don't have it imported, 
-    // but wait we need it imported at the top!
-    const { useAlertStore } = require('@/store/useAlertStore');
-    
-    await useAlertStore.getState().addAlert({
+    const payload = {
       category: 'system',
       severity: form.severity === 'High' ? 'critical' : form.severity === 'Medium' ? 'warning' : 'info',
       priority_score: form.severity === 'High' ? 95 : form.severity === 'Medium' ? 75 : 50,
@@ -547,20 +546,22 @@ function IncidentModal({ onClose }: { onClose: () => void }) {
       message: `${form.desc} (Location: ${form.location})`,
       why_it_matters: 'Worker-reported incident requiring immediate attention.',
       recommended_action: form.action || 'Investigate and resolve.',
-    })
-    
+    }
+    onSubmit(payload, `Incident Report: ${form.type} (${form.severity})`)
     setDone(true)
   }
 
   const sevColor = { High: 'var(--status-critical)', Medium: 'var(--status-warning)', Low: 'var(--status-success)' }[form.severity] || 'var(--text-primary)'
 
-  if (done) return <SuccessScreen message="Incident report filed. Owner has been immediately notified." onClose={onClose} />
+  if (done) return <SuccessScreen message={isOffline ? `Incident saved locally as draft. Will alert owner immediately when online.` : "Incident report filed. Owner has been immediately notified."} onClose={onClose} isOffline={isOffline} />
 
   return (
     <form onSubmit={handleSubmit} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="alert alert-danger" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <AlertTriangle size={16} />
-        <span style={{ fontSize: 12, fontWeight: 700 }}>This report will immediately alert the estate owner.</span>
+        <span style={{ fontSize: 12, fontWeight: 700 }}>
+          {isOffline ? 'Offline Mode: Will immediately alert owner once connected.' : 'This report will immediately alert the estate owner.'}
+        </span>
       </div>
       <div className="form-grid">
         <div className="form-group">
@@ -591,7 +592,7 @@ function IncidentModal({ onClose }: { onClose: () => void }) {
         <textarea className="form-input" rows={2} style={{ height: 'auto', padding: '10px 14px', resize: 'vertical' }} placeholder="What steps have you already taken?" value={form.action} onChange={e => setForm(f => ({ ...f, action: e.target.value }))} />
       </div>
       <button type="submit" className="btn-primary" style={{ width: '100%', padding: 14, background: 'var(--status-critical)', color: '#fff' }}>
-        <AlertTriangle size={15} /> File Incident Report
+        <AlertTriangle size={15} /> {isOffline ? 'Save Offline Incident Draft' : 'File Incident Report'}
       </button>
     </form>
   )
@@ -610,8 +611,19 @@ const CARDS = [
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function WorkerHubPage() {
+  const router = useRouter()
   const [activeModal, setActiveModal] = useState<string | null>(null)
   const [tasksDone, setTasksDone] = useState<Set<string>>(new Set())
+  
+  // PWA and Offline states
+  const [isOnline, setIsOnline] = useState<boolean>(true)
+  const [draftsList, setDraftsList] = useState<any[]>([])
+  const [showInstallPrompt, setShowInstallPrompt] = useState<boolean>(true)
+  const [installGuideOpen, setInstallGuideOpen] = useState<boolean>(false)
+  const [activeInstallTab, setActiveInstallTab] = useState<'ios' | 'android'>('ios')
+
+  const { currentUser, switchRole } = useAppStore()
+
   const close = () => setActiveModal(null)
 
   const toggleTask = (id: string) => {
@@ -620,6 +632,115 @@ export default function WorkerHubPage() {
       if (next.has(id)) { next.delete(id) } else { next.add(id) }
       return next
     })
+  }
+
+  // Load drafts and set online listeners
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsOnline(navigator.onLine)
+      const list = JSON.parse(localStorage.getItem('worker-drafts') || '[]')
+      setDraftsList(list)
+
+      const updateOnline = () => {
+        setIsOnline(true)
+        syncDrafts()
+      }
+      const updateOffline = () => {
+        setIsOnline(false)
+      }
+
+      window.addEventListener('online', updateOnline)
+      window.addEventListener('offline', updateOffline)
+
+      // Auto-trigger sync on mount if online and drafts exist
+      if (navigator.onLine && list.length > 0) {
+        syncDrafts()
+      }
+
+      return () => {
+        window.removeEventListener('online', updateOnline)
+        window.removeEventListener('offline', updateOffline)
+      }
+    }
+  }, [])
+
+  const syncDrafts = async () => {
+    const list = JSON.parse(localStorage.getItem('worker-drafts') || '[]')
+    if (list.length === 0) return
+
+    const toastId = toast.loading(`Syncing ${list.length} offline draft(s)...`)
+
+    try {
+      await executeAsWorker(async () => {
+        for (const draft of list) {
+          if (draft.type === 'crop') {
+            await useCropStore.getState().addCrop(draft.payload)
+          } else if (draft.type === 'livestock') {
+            await useLivestockStore.getState().addUnit(draft.payload)
+          } else if (draft.type === 'labor') {
+            await useDashboardStore.getState().addTransaction(draft.payload)
+          } else if (draft.type === 'expense') {
+            await useDashboardStore.getState().addTransaction(draft.payload)
+          } else if (draft.type === 'receipt') {
+            await useDashboardStore.getState().addTransaction(draft.payload)
+          } else if (draft.type === 'inventory') {
+            await useInventoryStore.getState().addItem(draft.payload)
+          } else if (draft.type === 'incident') {
+            const { useAlertStore } = require('@/store/useAlertStore')
+            await useAlertStore.getState().addAlert(draft.payload)
+          }
+        }
+      })
+
+      localStorage.removeItem('worker-drafts')
+      setDraftsList([])
+      toast.dismiss(toastId)
+      toast.success(`Synced ${list.length} field drafts to approval center!`)
+    } catch (err) {
+      console.error(err)
+      toast.dismiss(toastId)
+      toast.error('Sync failed. Will retry when connection improves.')
+    }
+  }
+
+  const handleModalSubmit = async (payload: any, label: string) => {
+    const type = activeModal as any
+    if (!type) return
+
+    if (!navigator.onLine) {
+      // Save offline draft
+      const newDraft = {
+        id: `draft-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type,
+        label,
+        payload,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+      const updated = [...draftsList, newDraft]
+      localStorage.setItem('worker-drafts', JSON.stringify(updated))
+      setDraftsList(updated)
+      toast.success('Saved locally as offline draft.')
+    } else {
+      // Standard Online submission
+      await executeAsWorker(async () => {
+        if (type === 'crop') {
+          await useCropStore.getState().addCrop(payload)
+        } else if (type === 'livestock') {
+          await useLivestockStore.getState().addUnit(payload)
+        } else if (type === 'labor') {
+          await useDashboardStore.getState().addTransaction(payload)
+        } else if (type === 'expense') {
+          await useDashboardStore.getState().addTransaction(payload)
+        } else if (type === 'receipt') {
+          await useDashboardStore.getState().addTransaction(payload)
+        } else if (type === 'inventory') {
+          await useInventoryStore.getState().addItem(payload)
+        } else if (type === 'incident') {
+          const { useAlertStore } = require('@/store/useAlertStore')
+          await useAlertStore.getState().addAlert(payload)
+        }
+      })
+    }
   }
 
   const priorityStyle = {
@@ -637,6 +758,166 @@ export default function WorkerHubPage() {
         <Topbar title="Worker Data Entry Hub" subtitle="Field Operations Interface — All submissions route to Approval Center" />
 
         <div className="page-container" style={{ maxWidth: 960, margin: '0 auto' }}>
+
+          {/* 🛠️ Admin Sandbox & Role Switcher */}
+          {currentUser && (currentUser.role === 'admin' || currentUser.role === 'data-entry') && (
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid var(--border-soft)',
+              borderRadius: 14,
+              padding: '12px 18px',
+              marginBottom: 24,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
+                  🛠️ Sandbox Mode:
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 800, color: currentUser.role === 'data-entry' ? 'var(--status-success)' : 'var(--status-info)' }}>
+                  {currentUser.role === 'data-entry' ? 'Mary Operator (Data Entry Mode)' : 'Peter Admin (Estate Owner)'}
+                </span>
+              </div>
+              <button 
+                onClick={() => switchRole(currentUser.role === 'admin' ? 'data-entry' : 'admin')} 
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid var(--border-strong)',
+                  borderRadius: 8,
+                  padding: '6px 12px',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer'
+                }}
+              >
+                Switch to {currentUser.role === 'admin' ? 'Data Entry UX' : 'Owner Control UX'}
+              </button>
+            </div>
+          )}
+
+          {/* 📱 PWA Install Prompt Guidance */}
+          {showInstallPrompt && (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.04) 100%)',
+              border: '1px solid rgba(34, 197, 94, 0.22)',
+              borderRadius: 16,
+              padding: '16px 20px',
+              marginBottom: 24,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 12,
+              boxShadow: 'var(--shadow-soft)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--status-success-glow)', border: '1px solid var(--status-success)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Smartphone size={20} color="var(--status-success)" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>Add Worker Hub to your home screen</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>Access Worker Hub from your phone in the field like a native app.</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <button 
+                  onClick={() => setInstallGuideOpen(true)} 
+                  className="btn-primary" 
+                  style={{ padding: '8px 16px', fontSize: 12, borderRadius: 10, background: 'var(--status-success)', color: 'var(--text-inverse)' }}
+                >
+                  Install Guide
+                </button>
+                <button onClick={() => setShowInstallPrompt(false)} style={{ padding: 6, background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 📡 Connection Status Banner */}
+          {!isOnline && (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              borderRadius: 16,
+              padding: '16px 20px',
+              marginBottom: 24,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              boxShadow: 'var(--shadow-soft)'
+            }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--status-warning-glow)', border: '1px solid var(--status-warning)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <WifiOff size={20} color="var(--status-warning)" />
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>Offline Mode Active</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>Internet connection dropped. Submissions will be saved locally as Offline Drafts and auto-synced when connection returns.</div>
+              </div>
+            </div>
+          )}
+
+          {/* 📥 Offline Draft Queue */}
+          {draftsList.length > 0 && (
+            <section style={{ marginBottom: 32 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <RefreshCw size={14} className="animate-spin" color="var(--status-warning)" />
+                  <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', color: 'var(--status-warning)', textTransform: 'uppercase' }}>
+                    Offline Draft Queue
+                  </span>
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--status-warning)' }}>
+                  {draftsList.length} draft(s) pending sync
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {draftsList.map(draft => (
+                  <div key={draft.id} style={{
+                    background: 'var(--bg-card-elevated)',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    borderRadius: 14,
+                    padding: '14px 18px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12
+                  }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)' }}>{draft.label}</span>
+                        <span style={{ fontSize: 10, fontWeight: 950, color: 'var(--status-warning)', background: 'var(--status-warning-glow)', padding: '2px 8px', borderRadius: 8, border: '1px solid rgba(245,158,11,0.2)', textTransform: 'uppercase' }}>
+                          Offline Draft
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Saved locally at {draft.timestamp}</div>
+                    </div>
+                    {isOnline && (
+                      <button 
+                        onClick={() => syncDrafts()} 
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: 11,
+                          fontWeight: 800,
+                          color: 'var(--status-success)',
+                          background: 'var(--status-success-glow)',
+                          border: '1px solid rgba(34,197,94,0.3)',
+                          borderRadius: 8,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Sync
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* ── Today's Tasks ── */}
           <section style={{ marginBottom: 40 }}>
@@ -768,14 +1049,209 @@ export default function WorkerHubPage() {
         </div>
       </div>
 
+      {/* ── Sticky Bottom Action Bar for Mobile ── */}
+      <div className="mobile-bottom-bar">
+        <button className="mobile-bottom-bar-btn active" onClick={() => router.push('/worker-hub')}>
+          <ClipboardList size={20} />
+          <span>Worker Hub</span>
+        </button>
+        <button className="mobile-bottom-bar-btn" onClick={() => router.push('/employee-tasks')}>
+          <CheckCircle size={20} />
+          <span>My Tasks</span>
+        </button>
+        <button className="mobile-bottom-bar-btn" onClick={() => router.push('/login')}>
+          <LogOut size={20} />
+          <span>Log Out</span>
+        </button>
+      </div>
+
       {/* ── Modals ── */}
-      {activeModal === 'crop'      && <Modal title="Log Crop Update"      subtitle="Field condition & yield" icon={<Sprout size={17} color="var(--status-success)" />}  onClose={close}><CropModal onClose={close} /></Modal>}
-      {activeModal === 'livestock' && <Modal title="Log Livestock Update"  subtitle="Daily count & feed log"  icon={<Beef size={17} color="var(--status-warning)" />}   onClose={close}><LivestockModal onClose={close} /></Modal>}
-      {activeModal === 'labor'     && <Modal title="Log Labor Hours"       subtitle="Worker time tracking"    icon={<Clock size={17} color="var(--status-info)" />}      onClose={close}><LaborModal onClose={close} /></Modal>}
-      {activeModal === 'expense'   && <Modal title="Add Expense"           subtitle="Pending owner approval"  icon={<DollarSign size={17} color="var(--text-secondary)" />} onClose={close}><ExpenseModal onClose={close} /></Modal>}
-      {activeModal === 'receipt'   && <Modal title="Upload Receipt"        subtitle="Attach invoice or image" icon={<Upload size={17} color="var(--status-ai)" />}       onClose={close}><ReceiptModal onClose={close} /></Modal>}
-      {activeModal === 'inventory' && <Modal title="Inventory Update"      subtitle="Log usage or restock"    icon={<Package size={17} color="var(--status-warning)" />}  onClose={close}><InventoryModal onClose={close} /></Modal>}
-      {activeModal === 'incident'  && <Modal title="Report Incident"       subtitle="Immediately alerts owner" icon={<AlertTriangle size={17} color="var(--status-critical)" />} onClose={close}><IncidentModal onClose={close} /></Modal>}
+      {activeModal === 'crop'      && <Modal title="Log Crop Update"      subtitle="Field condition & yield" icon={<Sprout size={17} color="var(--status-success)" />}  onClose={close}><CropModal onClose={close} onSubmit={handleModalSubmit} isOffline={!isOnline} /></Modal>}
+      {activeModal === 'livestock' && <Modal title="Log Livestock Update"  subtitle="Daily count & feed log"  icon={<Beef size={17} color="var(--status-warning)" />}   onClose={close}><LivestockModal onClose={close} onSubmit={handleModalSubmit} isOffline={!isOnline} /></Modal>}
+      {activeModal === 'labor'     && <Modal title="Log Labor Hours"       subtitle="Worker time tracking"    icon={<Clock size={17} color="var(--status-info)" />}      onClose={close}><LaborModal onClose={close} onSubmit={handleModalSubmit} isOffline={!isOnline} /></Modal>}
+      {activeModal === 'expense'   && <Modal title="Add Expense"           subtitle="Pending owner approval"  icon={<DollarSign size={17} color="var(--text-secondary)" />} onClose={close}><ExpenseModal onClose={close} onSubmit={handleModalSubmit} isOffline={!isOnline} /></Modal>}
+      {activeModal === 'receipt'   && <Modal title="Upload Receipt"        subtitle="Attach invoice or image" icon={<Upload size={17} color="var(--status-ai)" />}       onClose={close}><ReceiptModal onClose={close} onSubmit={handleModalSubmit} isOffline={!isOnline} /></Modal>}
+      {activeModal === 'inventory' && <Modal title="Inventory Update"      subtitle="Log usage or restock"    icon={<Package size={17} color="var(--status-warning)" />}  onClose={close}><InventoryModal onClose={close} onSubmit={handleModalSubmit} isOffline={!isOnline} /></Modal>}
+      {activeModal === 'incident'  && <Modal title="Report Incident"       subtitle="Immediately alerts owner" icon={<AlertTriangle size={17} color="var(--status-critical)" />} onClose={close}><IncidentModal onClose={close} onSubmit={handleModalSubmit} isOffline={!isOnline} /></Modal>}
+
+      {/* ── PWA Install Guide Modal ── */}
+      {installGuideOpen && (
+        <Modal 
+          title="PWA Install Guide" 
+          subtitle="Add Braes Creek Worker to your home screen" 
+          icon={<Smartphone size={17} color="var(--status-success)" />} 
+          onClose={() => setInstallGuideOpen(false)}
+        >
+          <div style={{ padding: '16px 24px' }}>
+            {/* Tabs */}
+            <div style={{ display: 'flex', borderBottom: '1px solid var(--border-soft)', marginBottom: 20 }}>
+              <button 
+                onClick={() => setActiveInstallTab('ios')} 
+                style={{
+                  flex: 1, padding: '12px', background: 'none', border: 'none',
+                  borderBottom: activeInstallTab === 'ios' ? '2px solid var(--status-success)' : 'none',
+                  color: activeInstallTab === 'ios' ? 'var(--status-success)' : 'var(--text-muted)',
+                  fontWeight: 800, fontSize: 13, cursor: 'pointer'
+                }}
+              >
+                 iPhone (Safari)
+              </button>
+              <button 
+                onClick={() => setActiveInstallTab('android')} 
+                style={{
+                  flex: 1, padding: '12px', background: 'none', border: 'none',
+                  borderBottom: activeInstallTab === 'android' ? '2px solid var(--status-success)' : 'none',
+                  color: activeInstallTab === 'android' ? 'var(--status-success)' : 'var(--text-muted)',
+                  fontWeight: 800, fontSize: 13, cursor: 'pointer'
+                }}
+              >
+                🤖 Android (Chrome)
+              </button>
+            </div>
+
+            {activeInstallTab === 'ios' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', gap: 14 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: 'var(--text-primary)', flexShrink: 0 }}>1</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    Open **Safari** and navigate to this Worker Hub on your iPhone.
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 14 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: 'var(--text-primary)', flexShrink: 0 }}>2</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    Tap the **Share** button (box with an arrow pointing up) in Safari's bottom toolbar.
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 14 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: 'var(--text-primary)', flexShrink: 0 }}>3</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    Scroll down and select **Add to Home Screen**.
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 14 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: 'var(--text-primary)', flexShrink: 0 }}>4</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    Tap **Add** in the top right. The app icon will now appear on your home screen!
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', gap: 14 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: 'var(--text-primary)', flexShrink: 0 }}>1</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    Open **Google Chrome** and navigate to this Worker Hub on your Android device.
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 14 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: 'var(--text-primary)', flexShrink: 0 }}>2</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    Tap the **Menu** button (3 dots) in Chrome's top right corner.
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 14 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: 'var(--text-primary)', flexShrink: 0 }}>3</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    Tap **Add to Home screen** or **Install app**.
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 14 }}>
+                  <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: 'var(--text-primary)', flexShrink: 0 }}>4</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    Confirm by tapping **Add** or **Install** to add the web app to your home screen and app drawer.
+                  </div>
+                </div>
+              </div>
+            )}
+            <button className="btn-primary" onClick={() => setInstallGuideOpen(false)} style={{ width: '100%', padding: 14, marginTop: 24 }}>
+              Got It
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Mobile First CSS Injector ── */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 767px) {
+          aside {
+            display: none !important;
+          }
+          .main-content {
+            margin-left: 0 !important;
+            padding: 16px 16px 88px 16px !important;
+          }
+          .topbar {
+            padding: 12px 16px !important;
+            margin-bottom: 16px !important;
+          }
+          .page-container {
+            padding: 0 !important;
+          }
+          /* Sticky Bottom Action Bar */
+          .mobile-bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: rgba(20, 20, 20, 0.96);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border-soft);
+            display: flex !important;
+            align-items: center;
+            justify-content: space-around;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            z-index: 999;
+            box-shadow: 0 -4px 30px rgba(0,0,0,0.5);
+          }
+          .mobile-bottom-bar-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 8px 12px;
+            transition: all 0.2s;
+            font-family: inherit;
+          }
+          .mobile-bottom-bar-btn.active {
+            color: var(--status-success);
+          }
+          .mobile-bottom-bar-btn span {
+            font-size: 10px;
+            font-weight: 800;
+          }
+          /* Large touch targets on mobile */
+          .btn-primary, button {
+            min-height: 48px;
+          }
+          .modal {
+            margin: 0;
+            border-radius: 20px 20px 0 0 !important;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 100% !important;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          }
+          @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+          }
+        }
+        @media (min-width: 768px) {
+          .mobile-bottom-bar {
+            display: none !important;
+          }
+        }
+      ` }} />
     </div>
   )
 }
